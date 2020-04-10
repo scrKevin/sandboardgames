@@ -1,0 +1,175 @@
+<!-- views/partials/head.ejs -->
+<meta charset="UTF-8">
+<!-- <meta name="viewport" content="width=device-width,user-scalable=no"> -->
+<title>SH - Sandboard</title>
+
+<!-- Bootstrap CSS -->
+<link href="/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js" integrity="sha256-pasqAKBDmFT4eHoN2ndd6lN370kFiGUFyTiUHWhU7k8=" crossorigin="anonymous"></script>
+<script src='/js/bootstrap.min.js'></script>
+<script src="/js/sh/sh.js"></script>
+<script src="/js/bundle.js"></script>
+
+<style>
+	body
+	{
+		overflow: hidden;
+		background-image: url(/img/sh/tweed.png)
+	}
+	
+	.scaleplane
+	{
+		position: absolute;
+		top: 0px;
+		left: 0px;
+		transform-origin: 0 0;
+	}
+
+	.webcam
+	{
+		position: absolute;
+		width: 250px;
+		height: 300px;
+		border: 1px solid black;
+		overflow: hidden;
+	}
+
+	.webcam video
+	{
+		height: 300px;
+		//margin-left: -75px;
+	}
+
+	.track
+	{
+		position: fixed
+	}
+
+	.cursor
+	{
+		position: absolute;
+		left: 20000px;
+		top: 0px;
+		width: 20px;
+		height: 20px;
+		border-radius: 10px;
+		border: 1px solid black;
+		z-index: 1000;
+	}
+
+	.colorSelectionContainer
+	{
+		width: 100%;
+	}
+
+	.playerbox
+	{
+		position: absolute;
+		width: 300px;
+		height: 300px;
+		background-color: #CCCCCC;
+		opacity: 0.5;
+		border-radius: 4px;
+		border: 1px solid grey;
+	}
+
+	.playerName
+	{
+		position: relative;
+		width: 300px;
+		height: 20px;
+		top: 20px;
+		text-align: center;
+		
+	}
+
+	.playerNameText
+	{
+		padding: 10px;
+		font-size: 20px;
+		font-weight: bold;
+		background-color: white;
+		border: 1px solid black;
+		display: inline-block;
+		border-radius: 3px;
+	}
+
+	.card
+	{
+		position: absolute;
+	}
+
+	.ballot img
+	{
+		height: 75px;
+	}
+
+	.openbox
+	{
+		position: fixed;
+		border: 5px solid #77ff77;
+	}
+
+	.policy img
+	{
+		height: 120px;
+	}
+
+	.token img
+	{
+		width: 250px;
+	}
+
+	.deck
+	{
+		//width: 600px;
+		//height: 600px;
+		background-color: #b9b9b9;
+		border-radius: 3px;
+		border: 1px solid black;
+	}
+
+	.policydeck
+	{
+		width: 160px;
+		height: 207px;
+	}
+
+	.rolecardsdeck
+	{
+		width: 160px;
+		height: 207px;
+	}
+
+	.webcambox
+	{
+		position: absolute;
+		padding: 8px;
+		border-radius: 6px;
+		background-color: #cccccc;
+		border: 1px solid black;
+		-webkit-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+		-moz-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+		box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+	}
+
+	.moveBtn
+	{
+		z-index: 2000;
+		padding: 8px;
+		border: 1px solid black;
+		border-radius: 6px;
+		background-color: white;
+		top: -5px;
+		-webkit-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+		-moz-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+		box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+	}
+
+	.webcamContainer
+	{
+		transform-origin: 50% 0
+	}
+</style>

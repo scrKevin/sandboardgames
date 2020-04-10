@@ -1,0 +1,23 @@
+<div class='card' id='mrx-board'>
+	<table>
+		<% for (var i =0; i <8;  i++ ) { %>
+		<tr>
+			<% if (i == 2 || i == 7) { %>
+				<td class='moveText' style="color: #FF8800"><%= i + 1 %></td><td class='moveSpace'></td>
+			<% } else {%>
+				<td class='moveText'><%= i + 1 %></td><td class='moveSpace'></td>
+			<% } %>
+			<% if (i == 4) { %>
+				<td class='moveText' style="color: #FF8800"><%= i + 9 %></td><td class='moveSpace'></td>
+			<% } else {%>
+				<td class='moveText'><%= i + 9 %></td><td class='moveSpace'></td>
+			<% } %>
+			<% if (i == 1 || i == 7) { %>
+				<td class='moveText' style="color: #FF8800"><%= i + 17 %></td><td class='moveSpace'></td>
+			<% } else {%>
+				<td class='moveText'><%= i + 17 %></td><td class='moveSpace'></td>
+			<% } %>
+		</tr>
+		<% } %>
+	</table>
+</div>

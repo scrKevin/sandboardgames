@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   id="svg4149"
+   viewBox="0 0 60.000001 36.000001"
+   height="36"
+   width="60"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="metro.svg">
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1920"
+     inkscape:window-height="983"
+     id="namedview4178"
+     showgrid="false"
+     inkscape:zoom="5.4833333"
+     inkscape:cx="9.4832827"
+     inkscape:cy="18"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g4703" />
+  <defs
+     id="defs4151" />
+  <metadata
+     id="metadata4154">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     transform="translate(0,-1016.3622)"
+     id="layer1">
+    <g
+       transform="translate(0.44642857,-0.26785714)"
+       id="g4703">
+      <rect
+         style="color:#000000;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;fill:#f93926;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:1.64300001;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate"
+         id="rect4697"
+         width="58.165283"
+         height="34.30352"
+         x="0.49610263"
+         y="1017.5489"
+         ry="5.8083773" />
+      <g
+         style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:21.38529778px;line-height:125%;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Semi-Bold';text-align:start;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         id="text4699">
+        <path
+           d="m 9.3702003,1032.3837 0,7.0857 -1.8712136,0 0,-9.0941 2.7943453,0 1.646668,7.2353 1.596769,-7.2353 2.819295,0 0,9.0941 -1.871213,0 0,-7.0857 -1.609244,7.0857 -1.871214,0 -1.6341927,-7.0857 z"
+           style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:12.47475719px;line-height:125%;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Semi-Bold';text-align:start;writing-mode:lr-tb;text-anchor:start"
+           id="path4721" />
+        <path
+           d="m 20.212519,1035.5523 0,2.3577 4.927529,0 0,1.5594 -6.798743,0 0,-9.0941 6.574197,0 0,1.5593 -4.702983,0 0,2.0583 4.35369,0 0,1.5594 -4.35369,0 z"
+           style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:12.47475719px;line-height:125%;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Semi-Bold';text-align:start;writing-mode:lr-tb;text-anchor:start"
+           id="path4723" />
+        <path
+           d="m 30.629721,1031.9346 0,7.5348 -1.871214,0 0,-7.5348 -2.756921,0 0,-1.5593 7.285258,0 0,1.5593 -2.657123,0 z"
+           style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:12.47475719px;line-height:125%;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Semi-Bold';text-align:start;writing-mode:lr-tb;text-anchor:start"
+           id="path4725" />
+        <path
+           d="m 39.817769,1037.91 q 0,-0.3742 0.01248,-0.5863 0.01248,-0.2121 0.01248,-0.3742 0,-0.5739 -0.274445,-0.8234 -0.274444,-0.2619 -0.885707,-0.2619 l -2.145659,0 0,3.6052 -1.871213,0 0,-9.0941 4.87763,0 q 0.698586,0 1.197576,0.237 0.511465,0.237 0.760961,0.6237 0.26197,0.3867 0.374242,0.7859 0.112273,0.3867 0.112273,0.8109 0,1.6467 -1.534395,2.2454 0.336818,0.1373 0.49899,0.2246 0.162172,0.075 0.324344,0.262 0.174647,0.1871 0.224546,0.3368 0.06237,0.1497 0.112272,0.5489 0.06237,0.3992 0.07485,0.7859 0.01248,0.3867 0.02495,1.1477 0,0.5239 0.399192,0.7484 l 0,0.3369 -2.008436,0 q -0.174647,-0.3244 -0.237021,-0.6238 -0.0499,-0.2994 -0.0499,-0.9356 z m 0.299395,-4.8152 q 0,-0.6986 -0.324344,-0.9232 -0.324344,-0.237 -0.997981,-0.237 l -2.257931,0 0,2.3702 2.257931,0 q 0.661162,0 0.985506,-0.237 0.336819,-0.237 0.336819,-0.973 z"
+           style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:12.47475719px;line-height:125%;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Semi-Bold';text-align:start;writing-mode:lr-tb;text-anchor:start"
+           id="path4727" />
+        <path
+           d="m 44.379244,1038.4215 q -1.197576,-1.3348 -1.197576,-3.4306 0,-2.0957 1.197576,-3.4305 1.210052,-1.3348 3.168589,-1.3348 1.971011,0 3.181063,1.3348 1.210051,1.3223 1.210051,3.4929 0,2.0209 -1.197577,3.3682 -1.185102,1.3348 -3.181063,1.3348 -1.983486,0 -3.181063,-1.3348 z m 3.181063,-6.5992 q -1.135203,0 -1.821314,0.8733 -0.686112,0.8607 -0.686112,2.2953 0,1.4346 0.686112,2.3079 0.686111,0.8607 1.821314,0.8607 1.122728,0 1.80884,-0.8607 0.698587,-0.8608 0.698587,-2.258 0,-1.472 -0.686112,-2.3452 -0.673637,-0.8733 -1.821315,-0.8733 z"
+           style="font-style:normal;font-variant:normal;font-weight:600;font-stretch:normal;font-size:12.47475719px;line-height:125%;font-family:FreeSans;-inkscape-font-specification:'FreeSans, Semi-Bold';text-align:start;writing-mode:lr-tb;text-anchor:start"
+           id="path4729" />
+      </g>
+    </g>
+  </g>
+</svg>

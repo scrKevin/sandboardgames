@@ -1,0 +1,10 @@
+<ul class="list-group">
+	<% for (gameRoom of gameRooms) { %>
+
+	  <a class="joinGroup" name="<%= gameRoom.name %>"><li class="list-group-item">
+	    <span class="badge">nr. of Players: <%= gameRoom.getNrOfPlayers(); %></span>
+	    <%= gameRoom.name %>
+	  </li></a>
+
+	<% } %>
+</ul>

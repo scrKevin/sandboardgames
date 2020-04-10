@@ -1,0 +1,15 @@
+<!-- <div class=playerbox id="player0box" style="top: 70px; left: 0px"><div class="playerName"><span class="playerNameText" id="player0NameText"></span></div></div>
+<div class=playerbox id="player1box" style="top: 710px; left: 1620px"><div class="playerName"><span class="playerNameText" id="player1NameText"></span></div></div>
+<div class=playerbox id="player2box" style="top: 390px; left: 0px"><div class="playerName"><span class="playerNameText" id="player2NameText"></span></div></div>
+<div class=playerbox id="player3box" style="top: 390px; left: 1620px"><div class="playerName"><span class="playerNameText" id="player3NameText"></span></div></div>
+<div class=playerbox id="player4box" style="top: 710px; left: 0px"><div class="playerName"><span class="playerNameText" id="player4NameText"></span></div></div>
+<div class=playerbox id="player5box" style="top: 70px; left: 1620px"><div class="playerName"><span class="playerNameText" id="player5NameText"></span></div></div>
+<div class=playerbox id="player6box" style="top: 0px; left: 650px"><div class="playerName"><span class="playerNameText" id="player6NameText"></span></div></div>
+<div class=playerbox id="player7box" style="top: 780px; left: 650px"><div class="playerName"><span class="playerNameText" id="player7NameText"></span></div></div>
+<div class=playerbox id="player8box" style="top: 0px; left: 970px"><div class="playerName"><span class="playerNameText" id="player8NameText"></span></div></div>
+<div class=playerbox id="player9box" style="top: 780px; left: 970px"><div class="playerName"><span class="playerNameText" id="player9NameText"></span></div></div> -->
+
+
+<% for (var i = 0; i < 10;  i++ ) { %>
+	<div class=playerbox id="player<%= i %>box" style="top: <%= playerboxStartPos[i].top %>px; left: <%= playerboxStartPos[i].left %>px"><div class="playerName"><span class="playerNameText" id="player<%= i %>NameText"></span></div></div>
+<% } %>

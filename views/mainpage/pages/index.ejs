@@ -1,0 +1,11 @@
+<html>
+	<head>
+		<%- include ("../partials/head") %>
+	</head>
+	<body>
+		<%- include ("../partials/joinModal") %>
+		<%- include ("../partials/createModal") %>
+		<button class='btn btn-primary' id="joinBtn">Join</button> or <button class='btn btn-success' id="createBtn">Create</button> 
+		<%- include ("../partials/gameRooms", {gameRooms: gameRooms}) %>
+	</body>
+</html>

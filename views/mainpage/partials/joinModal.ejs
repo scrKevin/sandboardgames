@@ -1,0 +1,20 @@
+<div class="modal fade" id="joinModal" tabindex="-1" role="dialog" aria-labelledby="createModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+    	<form action="/api/join/" method="post">
+	      <div class="modal-body">
+
+	          <div class="form-group">
+			    <label for="nameInput">Name:</label>
+			    <input type="name" class="form-control" id="nameJoin" name="nameJoin" aria-describedby="nameHelp" placeholder="The name of the room you want to join.">
+			    <label for="nameInput">Pass:</label>
+			    <input type="name" class="form-control" id="passJoin" name="passJoin" aria-describedby="nameHelp" placeholder="...">
+			</div>
+	      </div>
+	      <div class="modal-footer">
+	        <button type="submit" id="joinRoomBtn" class="btn btn-success btn-lg">Join Room</button>
+	      </div>
+	    </div>
+	</form>
+  </div>
+</div>
