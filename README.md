@@ -20,8 +20,8 @@ Working example @ https://bitwiseworkshop.nl/
 
 To automatically update the `bundle.js` file:
 * `cd` into the /public/js folder.
-* `watchify shared-game-logic.js -o bundle.js -v'
+* `watchify shared-game-logic.js -o bundle.js -v`
 
 In a separate terminal:
 run `npm run dev`
-browse to `http://localhost:8080` or go to https://your-domain-name
+browse to http://localhost:8080 or go to https://your-domain-name
