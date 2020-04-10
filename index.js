@@ -5,7 +5,6 @@ const http = require('http');
 const crypto = require('crypto');
 const url = require('url');
 const fs = require('fs');
-const basicAuth = require('express-basic-auth');
 
 let GameRoom = require("./game_modules/game_room").GameRoom;
 
@@ -36,16 +35,6 @@ const availableGames = {
 const app = express();
 const httpsPort = process.env.PORT || "8000";
 const httpPort = "8080";
-
-var authSettings = {
-    challenge: true,
-    users: { 
-    	'gdn': 'gdn',
-		'pa': 'pa',
-		'ma': 'ma',
-		'guest': 'guestmode'
-	}
-}
 
 app.set("view engine", "ejs");
 app.use(express.static(path.join(__dirname, "public")));
