@@ -1,9 +1,11 @@
 var webcamBoxWidth = 320;
 var webcamBoxHeight = 240;
 
-var wsLocation = "cah";
+var wsLocation = "rmk";
 
-var maxPlayers = 20;
+var maxPlayers = 4;
+
+var maxSpectators = 20;
 
 function toggleVisible(selector, shouldBeVisible)
 {
@@ -17,7 +19,7 @@ function toggleVisible(selector, shouldBeVisible)
 $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
 
   var shouldBeVisibleArray = [];
-  for (var i = 0; i < maxPlayers; i++)
+  for (var i = 0; i < maxSpectators; i++)
   {
     shouldBeVisibleArray.push(false);
   }

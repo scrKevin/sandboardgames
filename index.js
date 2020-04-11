@@ -10,11 +10,13 @@ let GameRoom = require("./game_modules/game_room").GameRoom;
 
 const StartpositionsSH = require("./game_modules/sh/startpositions")
 const StartpositionsSY = require("./game_modules/sy/startpositions")
+const StartpositionsRMK = require("./game_modules/rmk/startpositions")
 
 let SY_Game = require("./game_modules/sy/sy_game").SY_Game;
 let SH_Game = require("./game_modules/sh/sh_game").SH_Game;
 let Lobby_Game = require("./game_modules/lobby/lobby_game").Lobby_Game;
 let CAH_Game = require("./game_modules/cah/cah_game").CAH_Game;
+let RMK_Game = require("./game_modules/rmk/rmk_game").RMK_Game;
 
 function ImplementedGame(name, wsLocation, GameClass, routerLocation, viewsLocation, objectToPassToView)
 {
@@ -30,7 +32,8 @@ const availableGames = {
   'lobby': new ImplementedGame('Lobby', 'lobby', Lobby_Game, "lobby", 'lobby', {}),
   'sy': new ImplementedGame('Scotland Yard', 'sy', SY_Game, "sy", 'sy', {webcamPos: StartpositionsSY.webcamPos}),
   'sh': new ImplementedGame('Secret Hitler', 'sh', SH_Game, "sh", 'sh', {playerboxStartPos: StartpositionsSH.playerBoxes, webcamPos: StartpositionsSH.webcamPos}),
-  'cah': new ImplementedGame('Cards against Humanity', 'cah', CAH_Game, 'cah', 'cah', {})
+  'cah': new ImplementedGame('Cards against Humanity', 'cah', CAH_Game, 'cah', 'cah', {}),
+  'rmk': new ImplementedGame("Rummikub", 'rmk', RMK_Game, 'rmk', 'rmk', {playerboxStartPos: StartpositionsRMK.playerBoxes, webcamPos: StartpositionsRMK.webcamPos})
 }
 
 

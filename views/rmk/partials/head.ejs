@@ -1,7 +1,7 @@
 <!-- views/partials/head.ejs -->
 <meta charset="UTF-8">
 <!-- <meta name="viewport" content="width=device-width,user-scalable=no"> -->
-<title>CAH Sandboard</title>
+<title>Rummikub Sandboard</title>
 
 <!-- Bootstrap CSS -->
 <link href="/css/bootstrap.min.css" rel="stylesheet" type="text/css">
@@ -9,15 +9,15 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js" integrity="sha256-pasqAKBDmFT4eHoN2ndd6lN370kFiGUFyTiUHWhU7k8=" crossorigin="anonymous"></script>
 <script src='/js/bootstrap.min.js'></script>
-<script src="/js/cah/cah.js"></script>
+<script src="/js/rmk/rmk.js"></script>
 <script src="/js/bundle.js"></script>
 
 <style>
 
 body
 {
-  background-color: #000a0f;
-  background-image: url("/img/cah/crissxcross.png");
+  background-color: #020808;
+  background-image: url("/img/rmk/3px-tile.png");
 }
 
 .scaleplane
@@ -73,7 +73,6 @@ body
   height: 240px;
 }
 
-
 .card
 {
   position: absolute;
@@ -83,8 +82,8 @@ body
 .deck
 {
   background-color: grey;
-  width: 168px;
-  height: 180px;
+  width: 134px;
+  height: 172px;
 }
 
 .playcard
@@ -93,6 +92,18 @@ body
   transform: scale(0.65);
 }
 
+.tile
+{
+  width: 88px;
+  height: 85px;
+  background-color: #ffffff;
+  padding: 5px;
+  font-size: 48px;
+  font-family: "Arial", sans;
+  font-weight: bold;
+  text-align: center;
+  border-radius: 20px;
+}
 
 .moveBtn
 {
@@ -116,7 +127,38 @@ body
 .openbox
 {
   position: fixed;
-  border: 5px solid #77ff77;
+  /*border: 1px solid #77ff77;*/
+}
+
+.playerbox
+{
+  position: absolute;
+  border: 3px solid white;
+  opacity: 0.25;
+}
+
+#player0box
+{
+  width: 1590px;
+  height: 240px;
+}
+
+#player1box
+{
+  width: 1590px;
+  height: 240px;
+}
+
+#player2box
+{
+  width: 320px;
+  height: 830px;
+}
+
+#player3box
+{
+  width: 320px;
+  height: 830px;
 }
 
 </style>

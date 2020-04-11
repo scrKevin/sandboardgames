@@ -249,7 +249,7 @@ $(document).bind('touchmove mousemove', function (e) {
     }
     sendToWs(sendData);
     isIntervalSet = false;
-    }, 33);
+    }, 50);
 });
 
 
@@ -328,15 +328,15 @@ $( document ).ready(function() {
       mouseclicked = true;
       var currentY = event.originalEvent.touches[0].pageY;
       var currentX = event.originalEvent.touches[0].pageX;
-    latestMouseY = currentY * (1 / scale);
-    latestMouseX = currentX * (1 / scale);
-    sendData = {
-      type: "mouse",
-      mouseclicked: mouseclicked,
-      pos: {x: Math.round(latestMouseX), y: Math.round(latestMouseY)},
-      card: dragCardId
-    }
-    sendToWs(sendData);
+      latestMouseY = currentY * (1 / scale);
+      latestMouseX = currentX * (1 / scale);
+      sendData = {
+        type: "mouse",
+        mouseclicked: mouseclicked,
+        pos: {x: Math.round(latestMouseX), y: Math.round(latestMouseY)},
+        card: dragCardId
+      }
+      sendToWs(sendData);
       dragCardId = event.currentTarget.id;
       event.preventDefault();
       
@@ -347,15 +347,15 @@ $( document ).ready(function() {
       var currentY = e.originalEvent.touches ?  e.originalEvent.touches[0].pageY : e.pageY;
       var currentX = e.originalEvent.touches ?  e.originalEvent.touches[0].pageX : e.pageX;
 
-    latestMouseY = currentY * (1 / scale);
-    latestMouseX = currentX * (1 / scale);
-    sendData = {
-      type: "mouse",
-      mouseclicked: mouseclicked,
-      pos: {x: Math.round(latestMouseX), y: Math.round(latestMouseY)},
-      card: dragCardId
-    }
-    sendToWs(sendData);
+      latestMouseY = currentY * (1 / scale);
+      latestMouseX = currentX * (1 / scale);
+      sendData = {
+        type: "mouse",
+        mouseclicked: mouseclicked,
+        pos: {x: Math.round(latestMouseX), y: Math.round(latestMouseY)},
+        card: dragCardId
+      }
+      sendToWs(sendData);
       dragCardId = null;
     });
 
@@ -396,11 +396,24 @@ function updateParentCss(selector, property, value)
   }
 }
 
-function updateCardFace(id, value)
+function updateCardFace(card, value)
 {
-  if ($("#" + id).children('img').attr("src") !== value)
+  if(card.faceType === 'image')
   {
-    $("#" + id).children('img').attr("src", value);
+    if ($("#" + card.id).children('img').attr("src") !== value)
+    {
+      $("#" + card.id).children('img').attr("src", value);
+    }
+  }
+  else if(card.faceType === 'text')
+  {
+    if ($("#" + card.id).html() !== value.text)
+    {
+      $("#" + card.id).html(value.text);
+      $("#" + card.id).css("color", value.color);
+      $("#" + card.id).css("border", "4px solid " + value.color);
+      $("#" + card.id).css("background-color", value.backgroundcolor);
+    }
   }
 }
 
@@ -511,26 +524,26 @@ function updateGame(gameObj){
       if (cardIsInMyOwnBox(gameObj.cards[i]))
       {
         // $("#" + gameObj.cards[i].id).children('img').attr('src', gameObj.cards[i].frontface);
-        updateCardFace(gameObj.cards[i].id, gameObj.cards[i].frontface);
+        updateCardFace(gameObj.cards[i], gameObj.cards[i].frontface);
       }
       else
       {
         if(cardIsInInspectorBox(gameObj.cards[i]))
         {
           // $("#" + gameObj.cards[i].id).children('img').attr('src', gameObj.cards[i].altFrontface);
-          updateCardFace(gameObj.cards[i].id, gameObj.cards[i].altFrontface);
+          updateCardFace(gameObj.cards[i], gameObj.cards[i].altFrontface);
         }
         else
         {
           if (gameObj.cards[i].show == "backface")
           {
             // $("#" + gameObj.cards[i].id).children('img').attr('src', gameObj.cards[i].backface);
-            updateCardFace(gameObj.cards[i].id, gameObj.cards[i].backface);
+            updateCardFace(gameObj.cards[i], gameObj.cards[i].backface);
           }
           else if (gameObj.cards[i].show == "frontface")
           {
             // $("#" + gameObj.cards[i].id).children('img').attr('src', gameObj.cards[i].frontface);
-            updateCardFace(gameObj.cards[i].id, gameObj.cards[i].frontface);
+            updateCardFace(gameObj.cards[i], gameObj.cards[i].frontface);
           }
         }
       }

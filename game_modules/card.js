@@ -4,6 +4,7 @@ function Card(id, x, y){
 	this.y = y;
 	this.z = 0;
 	this.lastTouchedBy = -1;
+  this.faceType = 'image';
 }
 
 Card.prototype.setLastTouchedBy = function(playerId)
