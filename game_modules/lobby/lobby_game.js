@@ -6,7 +6,7 @@ let Openbox = require('../openbox').Openbox;
 
 let Game = require('../base_game').Game;
 
-var games = ['sh', 'scotland-yard']
+var games = ['sh', 'scotland-yard', 'cah']
 
 function Lobby_Game(wss){
   this.game = new Game(wss, this.resetGame);
