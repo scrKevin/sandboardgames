@@ -17486,28 +17486,89 @@ $( document ).ready(function() {
   });
 });
 
+function updateCss(selector, property, value)
+{
+  if ($(selector).css(property) !== value)
+  {
+    $(selector).css(property, value);
+  }
+}
+
+function updateParentCss(selector, property, value)
+{
+  if($(selector).parent().css(property) !== value)
+  {
+    $(selector).parent().css(property, value);
+  }
+}
+
+function updateCardFace(id, value)
+{
+  if ($("#" + id).children('img').attr("src") !== value)
+  {
+    $("#" + id).children('img').attr("src", value);
+  }
+}
+
+function updateHtml(selector, html)
+{
+  if($(selector).html() !== html)
+  {
+    $(selector).html(html)
+  }
+}
+
+function addOrRemoveAttr(selector, attrName, add)
+{
+  var attr = $(selector).attr(attrName);
+
+  // For some browsers, `attr` is undefined; for others, `attr` is false. Check for both.
+  if (typeof attr !== typeof undefined && attr !== false && !add) {
+    // Element has this attribute
+    $(selector).removeAttr(attrName);
+  }
+  else
+  {
+    if(add)
+    {
+      $(selector).attr(attrName, true);
+    }
+  }
+}
 
 function updateGame(gameObj){
   for (openbox of gameObj.openboxes)
   {
-    $("#" + openbox.id).css("left", (openbox.x) + "px")
-    $("#" + openbox.id).css("top", (openbox.y) + "px")
-    $("#" + openbox.id).css("width", (openbox.width) + "px")
-    $("#" + openbox.id).css("height", (openbox.height) + "px")
+    updateCss("#" + openbox.id, "left", (openbox.x) + "px");
+    updateCss("#" + openbox.id, "top", (openbox.y) + "px");
+    updateCss("#" + openbox.id, "width", (openbox.width) + "px");
+    updateCss("#" + openbox.id, "height", (openbox.height) + "px");
+    // $("#" + openbox.id).css("left", (openbox.x) + "px")
+    // $("#" + openbox.id).css("top", (openbox.y) + "px")
+    // $("#" + openbox.id).css("width", (openbox.width) + "px")
+    // $("#" + openbox.id).css("height", (openbox.height) + "px")
   }
 
   playerIndex = 0;
   for (player of gameObj.players){
-    $("#cursor" + playerIndex).css("background-color", player.color)
-    $("#player" + player.id + "box").css("background-color", player.color)
-    $("#player" + player.id + "NameText").html(player.name)
-    $("#cursor" + playerIndex).css("left", (player.pos.x - 22) + "px")
-    $("#cursor" + playerIndex).css("top", (player.pos.y - 22) + "px")
+    updateCss("#cursor" + playerIndex, "background-color", player.color);
+    updateCss("#player" + player.id + "box", "background-color", player.color);
+    // $("#cursor" + playerIndex).css("background-color", player.color)
+    // $("#player" + player.id + "box").css("background-color", player.color)
+    updateHtml("#player" + player.id + "NameText", player.name)
+    // $("#player" + player.id + "NameText").html(player.name)
+    updateCss("#cursor" + playerIndex, "left", (player.pos.x - 22) + "px");
+    updateCss("#cursor" + playerIndex, "top", (player.pos.y - 22) + "px");
+    // $("#cursor" + playerIndex).css("left", (player.pos.x - 22) + "px")
+    // $("#cursor" + playerIndex).css("top", (player.pos.y - 22) + "px")
     playerIndex++;
   }
   for (var i = playerIndex; i < 20; i++){
-    $("#cursor" + i).css("left", "20000px")
-    $("#cursor" + i).css("top", "0px")
+    // $("#cursor" + i).css("left", "20000px")
+    // $("#cursor" + i).css("top", "0px")
+    updateCss("#cursor" + i, "left", "20000px");
+    updateCss("#cursor" + i, "top", "0px");
+
   }
 
   var nColorSelection = 0;
@@ -17517,50 +17578,65 @@ function updateGame(gameObj){
 
     if (colorIsTaken(gameObj, color))
     {
-      $("#inlineCheckbox" + nColorSelection).attr("disabled", true);
-      $("#inlineCheckbox" + nColorSelection).parent().css("background-image",  "URL(/img/color-taken.svg)");
+
+      // $("#inlineCheckbox" + nColorSelection).attr("disabled", true);
+      addOrRemoveAttr("#inlineCheckbox" + nColorSelection, "disabled", true);
+      updateParentCss("#inlineCheckbox" + nColorSelection, "background-image", "URL(/img/color-taken.svg)");
+      // $("#inlineCheckbox" + nColorSelection).parent().css("background-image",  "URL(/img/color-taken.svg)");
     }
     else
     {
-      $("#inlineCheckbox" + nColorSelection).removeAttr("disabled");
-      $("#inlineCheckbox" + nColorSelection).parent().css("background-image",  "none");
+      addOrRemoveAttr("#inlineCheckbox" + nColorSelection, "disabled", false);
+      // $("#inlineCheckbox" + nColorSelection).removeAttr("disabled");
+      // $("#inlineCheckbox" + nColorSelection).parent().css("background-image",  "none");
+      updateParentCss("#inlineCheckbox" + nColorSelection, "background-image", "none");
     }
     if (nColorSelection == myColor)
     {
-      $("#inlineCheckbox" + nColorSelection).parent().css("background-image",  "URL(/img/color-chosen.svg)");
+      // $("#inlineCheckbox" + nColorSelection).parent().css("background-image",  "URL(/img/color-chosen.svg)");
+      updateParentCss("#inlineCheckbox" + nColorSelection, "background-image", "URL(/img/color-chosen.svg)")
     }
   }
   for (var i = 0; i < gameObj.decks.length; i++)
   {
-    $("#" + gameObj.decks[i].id).css("left", gameObj.decks[i].x + "px");
-    $("#" + gameObj.decks[i].id).css("top", gameObj.decks[i].y + "px");
+    // $("#" + gameObj.decks[i].id).css("left", gameObj.decks[i].x + "px");
+    // $("#" + gameObj.decks[i].id).css("top", gameObj.decks[i].y + "px");
+    updateCss("#" + gameObj.decks[i].id, "left", gameObj.decks[i].x + "px");
+    updateCss("#" + gameObj.decks[i].id, "top", gameObj.decks[i].y + "px");
   }
   for (var i = 0; i < gameObj.cards.length; i++)
   {
-    $("#" + gameObj.cards[i].id).css("z-index", gameObj.cards[i].z + 60);
-    $("#" + gameObj.cards[i].id).css("left", gameObj.cards[i].x + "px");
-    $("#" + gameObj.cards[i].id).css("top", gameObj.cards[i].y + "px");
+    // $("#" + gameObj.cards[i].id).css("z-index", gameObj.cards[i].z + 60);
+    // $("#" + gameObj.cards[i].id).css("left", gameObj.cards[i].x + "px");
+    // $("#" + gameObj.cards[i].id).css("top", gameObj.cards[i].y + "px");
+    updateCss("#" + gameObj.cards[i].id, "z-index", String(gameObj.cards[i].z + 60));
+    updateCss("#" + gameObj.cards[i].id, "left", gameObj.cards[i].x + "px");
+    updateCss("#" + gameObj.cards[i].id, "top", gameObj.cards[i].y + "px");
     if (gameObj.cards[i].hasOwnProperty("show"))
     {
       if (cardIsInMyOwnBox(gameObj.cards[i]))
       {
-        $("#" + gameObj.cards[i].id).children('img').attr('src', gameObj.cards[i].frontface);
+        // $("#" + gameObj.cards[i].id).children('img').attr('src', gameObj.cards[i].frontface);
+        updateCardFace(gameObj.cards[i].id, gameObj.cards[i].frontface);
       }
       else
       {
         if(cardIsInInspectorBox(gameObj.cards[i]))
         {
-          $("#" + gameObj.cards[i].id).children('img').attr('src', gameObj.cards[i].altFrontface);
+          // $("#" + gameObj.cards[i].id).children('img').attr('src', gameObj.cards[i].altFrontface);
+          updateCardFace(gameObj.cards[i].id, gameObj.cards[i].altFrontface);
         }
         else
         {
           if (gameObj.cards[i].show == "backface")
           {
-            $("#" + gameObj.cards[i].id).children('img').attr('src', gameObj.cards[i].backface);
+            // $("#" + gameObj.cards[i].id).children('img').attr('src', gameObj.cards[i].backface);
+            updateCardFace(gameObj.cards[i].id, gameObj.cards[i].backface);
           }
           else if (gameObj.cards[i].show == "frontface")
           {
-            $("#" + gameObj.cards[i].id).children('img').attr('src', gameObj.cards[i].frontface);
+            // $("#" + gameObj.cards[i].id).children('img').attr('src', gameObj.cards[i].frontface);
+            updateCardFace(gameObj.cards[i].id, gameObj.cards[i].frontface);
           }
         }
       }

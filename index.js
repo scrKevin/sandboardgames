@@ -14,6 +14,7 @@ const StartpositionsSY = require("./game_modules/sy/startpositions")
 let SY_Game = require("./game_modules/sy/sy_game").SY_Game;
 let SH_Game = require("./game_modules/sh/sh_game").SH_Game;
 let Lobby_Game = require("./game_modules/lobby/lobby_game").Lobby_Game;
+let CAH_Game = require("./game_modules/cah/cah_game").CAH_Game;
 
 function ImplementedGame(name, wsLocation, GameClass, routerLocation, viewsLocation, objectToPassToView)
 {
@@ -28,7 +29,8 @@ function ImplementedGame(name, wsLocation, GameClass, routerLocation, viewsLocat
 const availableGames = {
   'lobby': new ImplementedGame('Lobby', 'lobby', Lobby_Game, "lobby", 'lobby', {}),
   'sy': new ImplementedGame('Scotland Yard', 'sy', SY_Game, "sy", 'sy', {webcamPos: StartpositionsSY.webcamPos}),
-  'sh': new ImplementedGame('Secret Hitler', 'sh', SH_Game, "sh", 'sh', {playerboxStartPos: StartpositionsSH.playerBoxes, webcamPos: StartpositionsSH.webcamPos})
+  'sh': new ImplementedGame('Secret Hitler', 'sh', SH_Game, "sh", 'sh', {playerboxStartPos: StartpositionsSH.playerBoxes, webcamPos: StartpositionsSH.webcamPos}),
+  'cah': new ImplementedGame('Cards against Humanity', 'cah', CAH_Game, 'cah', 'cah', {})
 }
 
 
@@ -49,6 +51,15 @@ var httpsServer = https.createServer(httpsOptions, app);
 var httpServer = http.createServer(app);
 
 var gameRooms = [];
+
+if(process.env.NODE_ENV === 'development')
+{
+  // create a test gameroom on startup, this speeds up development..
+  console.log("test gameRoom created at /0/");
+  newGameRoom = new GameRoom("test", " ", availableGames);
+  newGameRoom.hash = "0";
+  gameRooms.push(newGameRoom);
+}
 
 function onUpgrade(request, socket, head)
 {
@@ -140,16 +151,20 @@ httpServer.listen(httpPort, () => {
   console.log('httpServer running at ' + httpPort)
 });
 
-setInterval(function(){
-  for (gameRoom of gameRooms)
-  {
-    if(!gameRoom.hasActivePlayers())
+
+if(process.env.NODE_ENV !== 'development')
+{
+  setInterval(function(){
+    for (gameRoom of gameRooms)
     {
-      gameRoom.close();
-      var index = gameRooms.map(function(item){ return item.name;}).indexOf(gameRoom.name);
-      gameRooms.splice(index, 1);
-      console.log("Removed GameRoom '" + gameRoom.name + "'");
+      if(!gameRoom.hasActivePlayers())
+      {
+        gameRoom.close();
+        var index = gameRooms.map(function(item){ return item.name;}).indexOf(gameRoom.name);
+        gameRooms.splice(index, 1);
+        console.log("Removed GameRoom '" + gameRoom.name + "'");
+      }
     }
-  }
-  //console.log(gameRooms)
-}, 10000);
+    //console.log(gameRooms)
+  }, 10000);
+}

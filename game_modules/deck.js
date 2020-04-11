@@ -21,6 +21,7 @@ function Deck(id, x, y, width, height){
   this.y = y;
   this.width = width;
   this.height = height;
+  this.immovable = false;
 }
 
 Deck.prototype.shuffleDeck = function()
@@ -31,11 +32,12 @@ Deck.prototype.shuffleDeck = function()
     numberArray.push(i);
   }
   shuffle(numberArray);
+  var incrementForStackEffect = 30 / this.attachedCards.length;
   for(var i = 0; i < this.attachedCards.length; i++)
   {
     this.attachedCards[i].setZ(numberArray[i]);
-    this.attachedCards[i].setX(this.x + 5 + (numberArray[i] * 2));
-    this.attachedCards[i].setY(this.y + 80 - (numberArray[i] * 2));
+    this.attachedCards[i].setX(this.x + 5 + Math.round(numberArray[i] * incrementForStackEffect));
+    this.attachedCards[i].setY(this.y + 80 - Math.round(numberArray[i] * incrementForStackEffect));
   }
 }
 
@@ -68,6 +70,11 @@ Deck.prototype.addToDeck = function(card){
     console.log("add " + card.id + " to " + this.id)
     this.attachedCards.push(card);
   }
+}
+
+Deck.prototype.setImmovable = function()
+{
+  this.immovable = true;
 }
 
 module.exports = {Deck: Deck}

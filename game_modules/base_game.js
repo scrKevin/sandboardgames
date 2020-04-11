@@ -55,7 +55,7 @@ function WS_distributor(wss, resetGameFunction)
           {
             for (deck of this.gameObj.decks)
             {
-              if (deck.id == json.card)
+              if (deck.id == json.card && !deck.immovable)
               {
                 deck.x -= moved.deltaX;
                 deck.y -= moved.deltaY;
