@@ -5,11 +5,33 @@ var wsLocation = "sh";
 
 var maxPlayers = 10;
 
-// function isInOpenBox(x, y)
-// {
-//  if ((x > 722 && x < (722 + 476) && y > 358 && y < (358 + 136)) || (x > 680 && x < (680 + 560) && y > 593 && y < (593 + 136)))
-//  {
-//    return true;
-//  }
-//  return false;
-// }
+var maxSpectators = 20;
+
+function toggleVisible(selector, shouldBeVisible)
+{
+  var displayValue = shouldBeVisible ? "block":"none"
+  if ($(selector).css("display") !== displayValue)
+  {
+    $(selector).css("display", displayValue);
+  }
+}
+
+$(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
+
+  var shouldBeVisibleArray = [];
+  for (var i = 0; i < maxSpectators; i++)
+  {
+    shouldBeVisibleArray.push(false);
+  }
+
+  for (player of gameObj.players)
+  {
+    shouldBeVisibleArray[player.id] = true;
+  }
+
+  shouldBeVisibleArray.forEach(function (shouldBeVisible, index) {
+    toggleVisible("#webcamMoveBtn" + index, shouldBeVisible);
+    toggleVisible("#webcambox" + index, shouldBeVisible);
+  });
+
+});

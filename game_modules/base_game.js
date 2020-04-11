@@ -281,7 +281,7 @@ WS_distributor.prototype.broadcast = function(){
     });
     this.isIntervalSet = false;
     
-  }, 33);
+  }, 50);
 }
 
 
