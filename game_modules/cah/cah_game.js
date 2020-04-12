@@ -1,15 +1,43 @@
+const fs = require('fs');
+var path = require('path');
+
 let Deck = require('../deck').Deck;
 let Card = require('../card').Card;
 let Openbox = require('../openbox').Openbox;
 
 let Game = require('../base_game').Game;
 
+var cardsJson = JSON.parse(fs.readFileSync(path.join(__dirname, 'cards.json')));
+
+
 function CAH_Game(wss){
   this.game = new Game(wss, this.resetGame);
 }
 
+function getRandom(arr, n) {
+    var result = new Array(n),
+        len = arr.length,
+        taken = new Array(len);
+    if (n > len)
+        throw new RangeError("getRandom: more elements taken than available");
+    while (n--) {
+        var x = Math.floor(Math.random() * len);
+        result[n] = arr[x in taken ? taken[x] : x];
+        taken[x] = --len in taken ? taken[len] : len;
+    }
+    return result;
+}
+
+function getRandomCards()
+{
+  var black = getRandom(cardsJson.blackCards, 20);
+  var white = getRandom(cardsJson.whiteCards, 160);
+  return {blackCards: black, whiteCards: white}
+}
+
 CAH_Game.prototype.resetGame = function(game)
 {
+  var cah_cards = getRandomCards();
   game.gameObj.cards = [];
   game.gameObj.decks = [];
   game.gameObj.openboxes = [];
@@ -25,7 +53,7 @@ CAH_Game.prototype.resetGame = function(game)
       {
         var startPosX = j * 300;
         var startPosY = (i * 180) + 240;
-        var moveBtnDeck = new Deck('webcamMoveBtn' + ((i * columns) + j), startPosX, startPosY, 320 + 16, 240 + 16)
+        var moveBtnDeck = new Deck('webcamMoveBtn' + ((i * columns) + j), startPosX, startPosY, 435, 261)
         var webcamBox = new Card('player' + ((i * columns) + j) + "box", startPosX, startPosY)
         game.gameObj.cards.push(webcamBox)
         moveBtnDeck.attachedCards.push(webcamBox)
@@ -40,28 +68,16 @@ CAH_Game.prototype.resetGame = function(game)
   whiteDeck.setImmovable();
 
   var i = 0;
-  for (var p = 1; p <= 14; p++)
+  for (whiteCardText of cah_cards.whiteCards)
   {
-    if (p != 4)
-    {
-      var startN = 0;
-      if (p == 2)
-      {
-        startN = 20;
-      }
-      for (var n = startN; n < 40; n++)
-      {
-        var cardX = whiteDeckX + 5 + Math.round(i * 0.06);
-        var cardY = whiteDeckY + 80 - Math.round(i * 0.06);
-        var newWhiteCard = new Card(p + "_" + n, cardX, cardY);
-        newWhiteCard.backface = "/img/cah/whiteBackface.svg";
-        newWhiteCard.frontface = "/img/cah/" + p + "_" + n + ".png";
-        newWhiteCard.show = 'backface';
-        whiteDeck.attachedCards.push(newWhiteCard);
-        game.gameObj.cards.push(newWhiteCard);
-        i++;
-      }
-    }
+    var newCard = new Card('w' + i, whiteDeckX + 5, whiteDeckY + 80);
+    newCard.faceType = 'text';
+    newCard.backface = {color: "#000000", backgroundcolor: "#FFFFFF", text: " "};
+    newCard.frontface = {color: "#000000", backgroundcolor: "#FFFFFF", text: whiteCardText};
+    newCard.show = 'backface';
+    whiteDeck.attachedCards.push(newCard);
+    game.gameObj.cards.push(newCard);
+    i++;
   }
   game.gameObj.decks.push(whiteDeck)
 
@@ -71,20 +87,16 @@ CAH_Game.prototype.resetGame = function(game)
   blackDeck.setImmovable();
 
   var i = 0;
-  for (var p = 15; p <= 16; p++)
+  for (blackCard of cah_cards.blackCards)
   {
-    for (var n = 0; n < 40; n++)
-    {
-      var cardX = blackDeckX + 5 + Math.round(i * 0.06);
-      var cardY = blackDeckY + 80 - Math.round(i * 0.06);
-      var newBlackCard = new Card(p + "_" + n, cardX, cardY);
-      newBlackCard.backface = "/img/cah/blackBackface.svg";
-      newBlackCard.frontface = "/img/cah/" + p + "_" + n + ".png";
-      newBlackCard.show = 'backface';
-      blackDeck.attachedCards.push(newBlackCard);
-      game.gameObj.cards.push(newBlackCard);
-      i++;
-    }
+    var newCard = new Card('b' + i, blackDeckX + 5, blackDeckY + 80);
+    newCard.faceType = 'text';
+    newCard.backface = {color: "#FFFFFF", backgroundcolor: "#000000", text: " ", secondaryText: " "};
+    newCard.frontface = {color: "#FFFFFF", backgroundcolor: "#000000", text: blackCard.text, secondaryText: String(blackCard.pick)};
+    newCard.show = 'backface';
+    blackDeck.attachedCards.push(newCard);
+    game.gameObj.cards.push(newCard);
+    i++;
   }
   game.gameObj.decks.push(blackDeck);
 
@@ -93,5 +105,4 @@ CAH_Game.prototype.resetGame = function(game)
 }
 
 
-
-module.exports = {CAH_Game: CAH_Game}
+module.exports = {CAH_Game: {class: CAH_Game, nBlackCards: 20, nWhiteCards: 160}}

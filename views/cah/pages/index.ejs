@@ -6,7 +6,7 @@
     <%- include ('../partials/resetModal'); -%>
     <div class="scaleplane">
       <%- include ('../partials/webcams'); -%>
-      <%- include ('../partials/decks') %>
+      <%- include ('../partials/decks', {nBlackCards: nBlackCards, nWhiteCards: nWhiteCards}) %>
       <%- include ('../partials/cursors'); -%>
     </div>
   </body>

@@ -1,18 +1,12 @@
 <div class='card deck' id='whiteDeck'><button type="button" class="btn btn-primary btn-lg shuffleButton" style="width: 110px;">Shuffle</button></div>
 <div class='card deck' id='blackDeck'><button type="button" class="btn btn-primary btn-lg shuffleButton" style="width: 110px;">Shuffle</button></div>
 
-<% for (var p = 1; p <= 14; p++) { -%>
-  <% if (p != 4) { -%>
-    <% var startN = 0; if (p == 2){ startN = 20;}-%>
-    <% for (var n = startN; n < 40; n++) { -%>
-      <div class='card playcard' id='<%= p %>_<%= n%>'><img src='/img/cah/whiteBackface.svg'/></div>
-    <% } -%>
-  <% } -%>
+<% for (var i = 0; i < nWhiteCards; i++) { -%>
+  <div class='card playcard' id='w<%= i %>'><span></span></div>
 <% } -%>
-<% for (var p = 15; p <= 16; p++) { -%>
-  <% for (var n = 0; n < 40; n++) { -%>
-    <div class='card playcard' id='<%= p %>_<%= n%>'><img src='/img/cah/blackBackface.svg'/></div>
-  <% } -%>
+
+<% for (var i = 0; i < nBlackCards; i++) { -%>
+  <div class='card playcard' id='b<%= i %>'><span></span></div>
 <% } -%>
 
 <div class='openbox' id='openbox0'></div>

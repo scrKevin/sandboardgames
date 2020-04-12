@@ -17249,11 +17249,12 @@ function InitWebSocket()
         try
         {
           var newGameObj = JSON.parse(lastGameObj);
-          updateGame(newGameObj);
+          updateGame(newGameObj, false);
         }
-        catch
+        catch (err)
         {
-          console.log("Error in parsing gameObj after Patch, request refresh for new gameObj.");
+
+          console.log(err);
           requestPlayerId();
         }
       }
@@ -17270,7 +17271,7 @@ function InitWebSocket()
           addWebcam(myStream, myPlayerId, true, true);
           gameInitialized = true;
         }
-        updateGame(JSON.parse(lastGameObj));
+        updateGame(JSON.parse(lastGameObj, true));
       }
       else if (json.type == "newPeer")
       {
@@ -17513,12 +17514,17 @@ function updateCardFace(card, value)
   }
   else if(card.faceType === 'text')
   {
-    if ($("#" + card.id).html() !== value.text)
+    if ($("#" + card.id + " span").html() !== value.text)
     {
-      $("#" + card.id).html(value.text);
+      $("#" + card.id + " span").html(value.text);
       $("#" + card.id).css("color", value.color);
       $("#" + card.id).css("border", "4px solid " + value.color);
       $("#" + card.id).css("background-color", value.backgroundcolor);
+      if(value.hasOwnProperty("secondarytext"))
+      {
+        $("#" + card.id + "_sec").html(value.secondarytext);
+      }
+      $(document).trigger("cardTextChanged", [card.id]);
     }
   }
 }
@@ -17549,39 +17555,158 @@ function addOrRemoveAttr(selector, attrName, add)
   }
 }
 
-function updateGame(gameObj){
+function initCards(gameObj){
+  for (var i = 0; i < gameObj.decks.length; i++)
+  {
+    updateCss("#" + gameObj.decks[i].id, "left", gameObj.decks[i].x + "px");
+    updateCss("#" + gameObj.decks[i].id, "top", gameObj.decks[i].y + "px");
+  }
+  for (var i = 0; i < gameObj.cards.length; i++)
+  {
+    updateCss("#" + gameObj.cards[i].id, "z-index", String(gameObj.cards[i].z + 60));
+    updateCss("#" + gameObj.cards[i].id, "left", gameObj.cards[i].x + "px");
+    updateCss("#" + gameObj.cards[i].id, "top", gameObj.cards[i].y + "px");
+    if (gameObj.cards[i].hasOwnProperty("show"))
+    {
+      if (cardIsInMyOwnBox(gameObj.cards[i]))
+      {
+        updateCardFace(gameObj.cards[i], gameObj.cards[i].frontface);
+      }
+      else
+      {
+        if(cardIsInInspectorBox(gameObj.cards[i]))
+        {
+          updateCardFace(gameObj.cards[i], gameObj.cards[i].altFrontface);
+        }
+        else
+        {
+          if (gameObj.cards[i].show == "backface")
+          {
+            updateCardFace(gameObj.cards[i], gameObj.cards[i].backface);
+          }
+          else if (gameObj.cards[i].show == "frontface")
+          {
+            updateCardFace(gameObj.cards[i], gameObj.cards[i].frontface);
+          }
+        }
+      }
+    }
+  }
+}
+
+function moveCard(id, deltaX, deltaY)
+{
+  if (deltaX != 0)
+  {
+    var newX = Math.round($("#" + id).position().left * (1 / scale)) + deltaX;
+    updateCss("#" + id, "left", newX + "px");
+  }
+  if(deltaY != 0)
+  {
+    var newY = Math.round($("#" + id).position().top * (1 / scale)) + deltaY;
+    updateCss("#" + id, "top", newY + "px");
+  }
+}
+
+function updateCards(gameObj)
+{
+  for (deck of gameObj.decks)
+  {
+    var deltaX = deck.x - Math.round($("#" + deck.id).position().left * (1 / scale));
+    var deltaY = deck.y - Math.round($("#" + deck.id).position().top * (1 / scale));
+
+    if(deltaX != 0 || deltaY != 0)
+    {
+      moveCard(deck.id, deltaX, deltaY);
+    }
+  }
+
+  for (card of gameObj.cards)
+  {
+    var deltaX = card.x - Math.round($("#" + card.id).position().left * (1 / scale));
+    var deltaY = card.y - Math.round($("#" + card.id).position().top * (1 / scale));
+    updateCss("#" + card.id, "z-index", String(card.z + 60));
+    if(deltaX != 0 || deltaY != 0)
+    {
+      moveCard(card.id, deltaX, deltaY);
+    }
+
+    
+    if(card.hasOwnProperty("show") && card.isInAnOpenbox)
+    {
+      if (card.show == "backface")
+      {
+        updateCardFace(card, card.backface);
+      }
+      else if (card.show == "frontface")
+      {
+        updateCardFace(card, card.frontface);
+      }
+    }
+    else
+    {
+      var cardInMyBox = cardIsInMyOwnBox(card);
+
+      if (card.hasOwnProperty("show") && (!card.attachedToDeck || cardInMyBox))
+      {
+        if (cardInMyBox)
+        {
+          updateCardFace(card, card.frontface);
+        }
+        else
+        {
+          if(cardIsInInspectorBox(card))
+          {
+            updateCardFace(card, card.altFrontface);
+          }
+          else
+          {
+            if (card.show == "backface")
+            {
+              updateCardFace(card, card.backface);
+            }
+            else if (card.show == "frontface")
+            {
+              updateCardFace(card, card.frontface);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+function updateGame(gameObj, init){
+  if(init)
+  {
+    initCards(gameObj)
+  }
+  else
+  {
+    updateCards(gameObj);
+  }
   for (openbox of gameObj.openboxes)
   {
     updateCss("#" + openbox.id, "left", (openbox.x) + "px");
     updateCss("#" + openbox.id, "top", (openbox.y) + "px");
     updateCss("#" + openbox.id, "width", (openbox.width) + "px");
     updateCss("#" + openbox.id, "height", (openbox.height) + "px");
-    // $("#" + openbox.id).css("left", (openbox.x) + "px")
-    // $("#" + openbox.id).css("top", (openbox.y) + "px")
-    // $("#" + openbox.id).css("width", (openbox.width) + "px")
-    // $("#" + openbox.id).css("height", (openbox.height) + "px")
   }
 
   playerIndex = 0;
   for (player of gameObj.players){
     updateCss("#cursor" + playerIndex, "background-color", player.color);
     updateCss("#player" + player.id + "box", "background-color", player.color);
-    // $("#cursor" + playerIndex).css("background-color", player.color)
-    // $("#player" + player.id + "box").css("background-color", player.color)
     updateHtml("#player" + player.id + "NameText", player.name)
-    // $("#player" + player.id + "NameText").html(player.name)
     updateCss("#cursor" + playerIndex, "left", (player.pos.x - 22) + "px");
     updateCss("#cursor" + playerIndex, "top", (player.pos.y - 22) + "px");
-    // $("#cursor" + playerIndex).css("left", (player.pos.x - 22) + "px")
-    // $("#cursor" + playerIndex).css("top", (player.pos.y - 22) + "px")
+    updateCss("#cursor" + playerIndex, "display", "block");
     playerIndex++;
   }
   for (var i = playerIndex; i < 20; i++){
-    // $("#cursor" + i).css("left", "20000px")
-    // $("#cursor" + i).css("top", "0px")
     updateCss("#cursor" + i, "left", "20000px");
     updateCss("#cursor" + i, "top", "0px");
-
+    updateCss("#cursor" + playerIndex, "display", "none");
   }
 
   var nColorSelection = 0;
@@ -17592,67 +17717,17 @@ function updateGame(gameObj){
     if (colorIsTaken(gameObj, color))
     {
 
-      // $("#inlineCheckbox" + nColorSelection).attr("disabled", true);
       addOrRemoveAttr("#inlineCheckbox" + nColorSelection, "disabled", true);
       updateParentCss("#inlineCheckbox" + nColorSelection, "background-image", "URL(/img/color-taken.svg)");
-      // $("#inlineCheckbox" + nColorSelection).parent().css("background-image",  "URL(/img/color-taken.svg)");
     }
     else
     {
       addOrRemoveAttr("#inlineCheckbox" + nColorSelection, "disabled", false);
-      // $("#inlineCheckbox" + nColorSelection).removeAttr("disabled");
-      // $("#inlineCheckbox" + nColorSelection).parent().css("background-image",  "none");
       updateParentCss("#inlineCheckbox" + nColorSelection, "background-image", "none");
     }
     if (nColorSelection == myColor)
     {
-      // $("#inlineCheckbox" + nColorSelection).parent().css("background-image",  "URL(/img/color-chosen.svg)");
       updateParentCss("#inlineCheckbox" + nColorSelection, "background-image", "URL(/img/color-chosen.svg)")
-    }
-  }
-  for (var i = 0; i < gameObj.decks.length; i++)
-  {
-    // $("#" + gameObj.decks[i].id).css("left", gameObj.decks[i].x + "px");
-    // $("#" + gameObj.decks[i].id).css("top", gameObj.decks[i].y + "px");
-    updateCss("#" + gameObj.decks[i].id, "left", gameObj.decks[i].x + "px");
-    updateCss("#" + gameObj.decks[i].id, "top", gameObj.decks[i].y + "px");
-  }
-  for (var i = 0; i < gameObj.cards.length; i++)
-  {
-    // $("#" + gameObj.cards[i].id).css("z-index", gameObj.cards[i].z + 60);
-    // $("#" + gameObj.cards[i].id).css("left", gameObj.cards[i].x + "px");
-    // $("#" + gameObj.cards[i].id).css("top", gameObj.cards[i].y + "px");
-    updateCss("#" + gameObj.cards[i].id, "z-index", String(gameObj.cards[i].z + 60));
-    updateCss("#" + gameObj.cards[i].id, "left", gameObj.cards[i].x + "px");
-    updateCss("#" + gameObj.cards[i].id, "top", gameObj.cards[i].y + "px");
-    if (gameObj.cards[i].hasOwnProperty("show"))
-    {
-      if (cardIsInMyOwnBox(gameObj.cards[i]))
-      {
-        // $("#" + gameObj.cards[i].id).children('img').attr('src', gameObj.cards[i].frontface);
-        updateCardFace(gameObj.cards[i], gameObj.cards[i].frontface);
-      }
-      else
-      {
-        if(cardIsInInspectorBox(gameObj.cards[i]))
-        {
-          // $("#" + gameObj.cards[i].id).children('img').attr('src', gameObj.cards[i].altFrontface);
-          updateCardFace(gameObj.cards[i], gameObj.cards[i].altFrontface);
-        }
-        else
-        {
-          if (gameObj.cards[i].show == "backface")
-          {
-            // $("#" + gameObj.cards[i].id).children('img').attr('src', gameObj.cards[i].backface);
-            updateCardFace(gameObj.cards[i], gameObj.cards[i].backface);
-          }
-          else if (gameObj.cards[i].show == "frontface")
-          {
-            // $("#" + gameObj.cards[i].id).children('img').attr('src', gameObj.cards[i].frontface);
-            updateCardFace(gameObj.cards[i], gameObj.cards[i].frontface);
-          }
-        }
-      }
     }
   }
 
@@ -17661,15 +17736,21 @@ function updateGame(gameObj){
 
 function cardIsInMyOwnBox(card)
 {
-  if (card.lastTouchedBy == myPlayerId)
-  {
-    var boxX = $("#player" + myPlayerId + "box").position().left * (1 / scale);
-    var boxY = $("#player" + myPlayerId + "box").position().top * (1 / scale);
-    var width = $("#player" + myPlayerId + "box").width();
-    var height = $("#player" + myPlayerId + "box").height();
-    if (card.x > boxX && card.x < (boxX + width) && card.y > boxY && card.y < (boxY + height))
+  if ( $("#player" + myPlayerId + "box").length ) {
+    if (card.lastTouchedBy == myPlayerId)
     {
-      return true;
+      var boxX = $("#player" + myPlayerId + "box").position().left * (1 / scale);
+      var boxY = $("#player" + myPlayerId + "box").position().top * (1 / scale);
+      var width = $("#player" + myPlayerId + "box").width();
+      var height = $("#player" + myPlayerId + "box").height();
+      if (card.x > boxX && card.x < (boxX + width) && card.y > boxY && card.y < (boxY + height))
+      {
+        return true;
+      }
+      else
+      {
+        return false;
+      }
     }
     else
     {

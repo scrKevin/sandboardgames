@@ -36,6 +36,7 @@ SH_Game.prototype.resetGame = function(game)
     newPolicyCard.backface = '/img/sh/policy-l.png';
     newPolicyCard.frontface = '/img/sh/liberalp-l.png';
     newPolicyCard.show = "backface";
+    newPolicyCard.attachedToDeck = true;
     game.gameObj.cards.push(newPolicyCard);
     policyDeck1.attachedCards.push(newPolicyCard);
 
@@ -47,6 +48,7 @@ SH_Game.prototype.resetGame = function(game)
     newPolicyCard.backface = '/img/sh/policy-l.png';
     newPolicyCard.frontface = '/img/sh/fascistp-l.png';
     newPolicyCard.show = "backface";
+    newPolicyCard.attachedToDeck = true;
     game.gameObj.cards.push(newPolicyCard);
     policyDeck1.attachedCards.push(newPolicyCard);
   }
@@ -108,6 +110,7 @@ SH_Game.prototype.resetGame = function(game)
   hRoleCard.frontface = '/img/sh/h0.png';
   hRoleCard.altFrontface = '/img/sh/membership-fascist.png'
   hRoleCard.show = "backface";
+  hRoleCard.attachedToDeck = true;
 
   game.gameObj.cards.push(hRoleCard);
   rolecardsstartDeck.attachedCards.push(hRoleCard);
@@ -124,6 +127,7 @@ SH_Game.prototype.resetGame = function(game)
     newCard.frontface = '/img/sh/liberal' + i + '.png';
     newCard.altFrontface = '/img/sh/membership-liberal.png'
     newCard.show = "backface";
+    newCard.attachedToDeck = true;
     game.gameObj.cards.push(newCard);
     liberalsstartDeck.attachedCards.push(newCard);
   }
@@ -134,13 +138,14 @@ SH_Game.prototype.resetGame = function(game)
   fascistsstartY = 550;
   fascistsstartDeck = new Deck('rolecardsfascists', fascistsstartX, fascistsstartY, 160, 207);
 
-  for (var i = 0; i < 6; i++)
+  for (var i = 0; i < 3; i++)
   {
     newCard = new Card('fRoleCard' + i, fascistsstartX + 5 + (i * 2), fascistsstartY + 80 - (i * 2));
     newCard.backface = '/img/sh/partymembership.png';
     newCard.frontface = '/img/sh/fascist' + i + '.png';
     newCard.altFrontface = '/img/sh/membership-fascist.png'
     newCard.show = "backface";
+    newCard.attachedToDeck = true;
     game.gameObj.cards.push(newCard);
     fascistsstartDeck.attachedCards.push(newCard);
   }
@@ -153,6 +158,7 @@ SH_Game.prototype.resetGame = function(game)
     var startPosY = 20 + (35 * i);
     var moveBtnDeck = new Deck('webcamMoveBtn' + i, startPosX, startPosY, 32, 32)
     var webcamBox = new Card('webcambox' + i, startPosX, startPosY)
+    webcamBox.attachedToDeck = true;
     game.gameObj.cards.push(webcamBox)
     moveBtnDeck.attachedCards.push(webcamBox)
     game.gameObj.decks.push(moveBtnDeck)

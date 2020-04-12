@@ -5,6 +5,8 @@ function Card(id, x, y){
 	this.z = 0;
 	this.lastTouchedBy = -1;
   this.faceType = 'image';
+  this.attachedToDeck = false;
+  this.isInAnOpenbox = false;
 }
 
 Card.prototype.setLastTouchedBy = function(playerId)

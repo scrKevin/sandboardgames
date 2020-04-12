@@ -1,31 +1,31 @@
 <div class='card deck' id='tileDeck'><button type="button" class="btn btn-primary btn-lg shuffleButton" style="width: 110px;">Shuffle</button></div>
 
 <% for (var j = 0; j < 2; j++) { -%>
-  <% for (var i = 1; i < 13; i++) { -%>
-    <div class='card tile' id="blue_<%= j %>_<%= i%>"></div>
+  <% for (var i = 1; i <= 13; i++) { -%>
+    <div class='card tile' id="blue_<%= j %>_<%= i%>"><span></span></div>
   <% } -%>
 <% } -%>
 
 <% for (var j = 0; j < 2; j++) { -%>
-  <% for (var i = 1; i < 13; i++) { -%>
-    <div class='card tile' id="orange_<%= j %>_<%= i%>"></div>
+  <% for (var i = 1; i <= 13; i++) { -%>
+    <div class='card tile' id="orange_<%= j %>_<%= i%>"><span></span></div>
   <% } -%>
 <% } -%>
 
 <% for (var j = 0; j < 2; j++) { -%>
-  <% for (var i = 1; i < 13; i++) { -%>
-    <div class='card tile' id="red_<%= j %>_<%= i%>"></div>
+  <% for (var i = 1; i <= 13; i++) { -%>
+    <div class='card tile' id="red_<%= j %>_<%= i%>"><span></span></div>
   <% } -%>
 <% } -%>
 
 <% for (var j = 0; j < 2; j++) { -%>
-  <% for (var i = 1; i < 13; i++) { -%>
-    <div class='card tile' id="black_<%= j %>_<%= i%>"></div>
+  <% for (var i = 1; i <= 13; i++) { -%>
+    <div class='card tile' id="black_<%= j %>_<%= i%>"><span></span></div>
   <% } -%>
 <% } -%>
 
 <% for (var i = 0; i < 2; i++) { -%>
-  <div class='card tile' id="j_<%= i%>"></div>
+  <div class='card tile' id="j_<%= i%>"><span></span></div>
 <% } -%>
 
 <div class='openbox' id='openbox0'></div>

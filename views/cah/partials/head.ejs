@@ -9,10 +9,13 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js" integrity="sha256-pasqAKBDmFT4eHoN2ndd6lN370kFiGUFyTiUHWhU7k8=" crossorigin="anonymous"></script>
 <script src='/js/bootstrap.min.js'></script>
+<script src="/js/textFit.min.js"></script>
 <script src="/js/cah/cah.js"></script>
 <script src="/js/bundle.js"></script>
 
 <style>
+
+@import url('https://fonts.googleapis.com/css2?family=Lexend+Deca&display=swap');
 
 body
 {
@@ -44,10 +47,12 @@ body
 {
   position: absolute;
   z-index: 1;
+  width: 430px;
 }
 
 .webcambox
 {
+  height: 256px;
   position: relative;
   padding: 8px;
   border-radius: 6px;
@@ -60,7 +65,8 @@ body
 
 .webcamContainer
 {
-  transform-origin: 50% 0
+  transform-origin: 50% 0;
+  float: left;
 }
 
 .webcamContainer video
@@ -89,8 +95,13 @@ body
 
 .playcard
 {
-  transform-origin: 0 0;
-  transform: scale(0.65);
+  width: 120px;
+  height: 111px;
+  padding: 5px;
+  font-size: 12px;
+  font-family: "Arial", sans-serif;
+  border-radius: 11px;
+  font-weight: bold;
 }
 
 

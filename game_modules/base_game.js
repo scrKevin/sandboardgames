@@ -53,65 +53,64 @@ function WS_distributor(wss, resetGameFunction)
         {
           if (this.isDeck(json.card))
           {
-            for (deck of this.gameObj.decks)
+            var deck = this.gameObj.decks.find(function(deck){
+              return deck.id === json.card
+            });
+            if (!deck.immovable)
             {
-              if (deck.id == json.card && !deck.immovable)
+              deck.x -= moved.deltaX;
+              deck.y -= moved.deltaY;
+              for (card of deck.attachedCards)
               {
-                deck.x -= moved.deltaX;
-                deck.y -= moved.deltaY;
-                for (card of deck.attachedCards)
-                {
-                  card.x -= moved.deltaX;
-                  card.y -= moved.deltaY;
-                }
-                for (openbox of deck.attachedOpenboxes)
-                {
-                  openbox.x -= moved.deltaX;
-                  openbox.y -= moved.deltaY;
-                }
+                card.x -= moved.deltaX;
+                card.y -= moved.deltaY;
+              }
+              for (openbox of deck.attachedOpenboxes)
+              {
+                openbox.x -= moved.deltaX;
+                openbox.y -= moved.deltaY;
               }
             }
           }
           else
           {
-            for (card of this.gameObj.cards)
+            var card = this.gameObj.cards.find(function(card){
+              return card.id === json.card;
+            });
+            card.setLastTouchedBy(id);
+            card.x -= moved.deltaX;
+            card.y -= moved.deltaY;
+            for (deck of this.gameObj.decks)
             {
-              if (card.id == json.card)
+              if(deck.isInDeck(json.pos.x, json.pos.y))
               {
-                card.setLastTouchedBy(id);
-                card.x -= moved.deltaX;
-                card.y -= moved.deltaY;
-                for (deck of this.gameObj.decks)
+                deck.addToDeck(card);
+              }
+              else
+              {
+                deck.removeFromDeck(card);
+              }
+            }
+            if (card.hasOwnProperty("show"))
+            {
+              var isInAnOpenbox = false;
+              for (openbox of this.gameObj.openboxes)
+              {
+                if (openbox.isInOpenBox(json.pos.x, json.pos.y))
                 {
-                  if(deck.isInDeck(json.pos.x, json.pos.y))
-                  {
-                    deck.addToDeck(card);
-                  }
-                  else
-                  {
-                    deck.removeFromDeck(card);
-                  }
+                  isInAnOpenbox = true;
+                  break;
                 }
-                if (card.hasOwnProperty("show"))
-                {
-                  var isInAnOpenbox = false;
-                  for (openbox of this.gameObj.openboxes)
-                  {
-                    if (openbox.isInOpenBox(json.pos.x, json.pos.y))
-                    {
-                      isInAnOpenbox = true;
-                      break;
-                    }
-                  }
-                  if (isInAnOpenbox && !json.mouseclicked)
-                  {
-                    card.show = 'frontface'
-                  }
-                  else
-                  {
-                    card.show = 'backface'
-                  }
-                }
+              }
+              if (isInAnOpenbox && !json.mouseclicked)
+              {
+                card.show = 'frontface';
+                card.isInAnOpenbox = true;
+              }
+              else
+              {
+                card.show = 'backface';
+                card.isInAnOpenbox = false;
               }
             }
           }

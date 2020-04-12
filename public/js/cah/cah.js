@@ -5,6 +5,10 @@ var wsLocation = "cah";
 
 var maxPlayers = 20;
 
+$(document).on("cardTextChanged", function(e, cardId){
+  textFit($('#' + cardId)[0], {multiLine: true, maxFontSize: 18})
+})
+
 function toggleVisible(selector, shouldBeVisible)
 {
   var displayValue = shouldBeVisible ? "block":"none"

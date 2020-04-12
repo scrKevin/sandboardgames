@@ -59,6 +59,7 @@ Deck.prototype.removeFromDeck = function(card){
   {
     console.log("remove " + card.id + " from " + this.id)
     this.attachedCards.splice(removeIndexCard, 1);
+    card.attachedToDeck = false;
   }
 }
 
@@ -69,6 +70,7 @@ Deck.prototype.addToDeck = function(card){
   {
     console.log("add " + card.id + " to " + this.id)
     this.attachedCards.push(card);
+    card.attachedToDeck = true;
   }
 }
 
