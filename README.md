@@ -24,9 +24,9 @@ Run `npm start`.
 Invite your friends and enjoy some games.
 
 ### Development:
-To automatically update the `bundle.js` file:
-* `cd` into the `/public/js` folder.
-* `watchify shared-game-logic.js -o bundle.js -v`
+To automatically update the `bundle.js` file (client side javascript):
+* `cd sandboardgames` into the root directory.
+* `watchify game_modules/client_side/client-side.js -o public/js/bundle.js -v`
 
 Run the test server in a separate terminal:
 * `cd` into the root directory of `sandboardgames`.
