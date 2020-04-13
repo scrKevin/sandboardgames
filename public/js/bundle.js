@@ -2733,6 +2733,834 @@ process.chdir = function (dir) {
 process.umask = function() { return 0; };
 
 },{}],7:[function(require,module,exports){
+let pako = require('pako');
+let SimplePeer = require('simple-peer');
+let diff_match_patch = require('diff-match-patch');
+let FpsLimiter = require('../fps_limiter').FpsLimiter;
+
+var dmp = new diff_match_patch();
+
+var scale = 1;
+
+var myStream = null;
+var peers = {};
+
+var lastGameObj = "";
+
+var myPlayerId = -1;
+
+var state = {
+  color: "#FFFFFF"
+}
+
+var myColor = -1
+
+var colors = [
+  "#FF0000",
+  "#88ff91",
+  "#0000FF",
+  "#FFFF00",
+  "#00FFFF",
+  "#790079",
+  "#FF8800",
+  "#888888",
+  "#0e8200",
+  "#ffbff7"
+]
+
+var ws = null;
+
+var doorbell = new Audio('/wav/doorbell.wav');
+
+var mouseFpsLimiter = new FpsLimiter(20, sendMouseMove, null)
+var updateGameLimiter = new FpsLimiter(20, updateGame, false)
+
+var latestMouseX = 0;
+var latestMouseY = 0;
+
+var mouseclicked = false;
+var dragCardId = null;
+
+var changedCardsBuffer = [];
+
+function addWebcam(stream, playerId, mirrored, muted)
+{
+  var video = document.createElement('video');
+  $("#webcam" + playerId).html(video)
+  if (mirrored)
+  {
+    $("#webcam" + playerId).css("transform", "rotateY(180deg)")
+  }
+  video.muted = muted;
+  video.srcObject = stream;
+  video.addEventListener("playing", function () {
+        setTimeout(function () {
+            console.log("Stream dimensions: " + video.videoWidth + "x" + video.videoHeight);
+            var aspectRatio = video.videoWidth / video.videoHeight;
+            if (aspectRatio < 1)
+            {
+              var correctedHeight = video.videoHeight * (webcamBoxWidth / video.videoWidth);
+              $("#webcam" + playerId + " video").css("width", webcamBoxWidth + "px")
+              $("#webcam" + playerId + " video").css("height", correctedHeight + "px");
+              $("#webcam" + playerId + " video").css("margin-left", "0px")
+              $("#webcam" + playerId + " video").css("margin-top", ((webcamBoxHeight - correctedHeight) * 0.5) + "px")
+            }
+            else
+            {
+              var correctedWidth = video.videoWidth * (webcamBoxHeight / video.videoHeight);
+              $("#webcam" + playerId + " video").css("width", correctedWidth + "px")
+              $("#webcam" + playerId + " video").css("height", webcamBoxHeight + "px");
+              $("#webcam" + playerId + " video").css("margin-left", ((webcamBoxWidth - correctedWidth) * 0.5) + "px")
+              $("#webcam" + playerId + " video").css("margin-top", "0px")
+            }
+        }, 500);
+    });
+  video.play();
+}
+
+function requestPlayerId()
+{
+  var sendData = {
+    type: "requestId"
+  }
+  sendToWs(sendData);
+}
+
+function initGamePeer(playerId)
+{
+  console.log("initiating peer for player " + playerId)
+  
+  peers[playerId] = new SimplePeer({
+    initiator: true,
+    trickle: false,
+    stream: myStream
+  });
+
+  peers[playerId].on('signal', data => {
+    //console.log("signal ")
+    sendData = {
+      type: "initiatorReady",
+      playerId: playerId,
+      stp: data
+    }
+    sendToWs(sendData)
+  });
+
+  peers[playerId].on('stream', stream => {
+    addWebcam(stream, playerId, false, false);
+  });
+}
+
+var gameInitialized = false;
+
+function addToChangedCardsBuffer(newItem)
+{
+  if (!changedCardsBuffer.includes(newItem))
+  {
+    changedCardsBuffer.push(newItem);
+  }
+}
+
+function InitWebSocket()
+{
+  var scheme = "wss";
+  var port = "";
+  if (location.protocol !== 'https:') {
+    scheme = "ws";
+    port = ":8080";
+  }
+  if ("WebSocket" in window)
+  {
+     var host = window.location.hostname;
+     //console.log(window.location)
+     ws = new WebSocket(scheme + "://" + host + port + window.location.pathname);
+   
+     ws.onopen = function()
+     {
+      requestPlayerId()
+     };
+     ws.onmessage = function (evt) 
+     {
+      var json = JSON.parse(pako.inflate(evt.data, { to: 'string' }));
+      if(json.type == "patches")
+      {
+        lastGameObj = dmp.patch_apply(dmp.patch_fromText(json.patches), lastGameObj)[0];
+        try
+        {
+          for (changedCard of json.changedCards)
+          {
+            addToChangedCardsBuffer(changedCard);
+          }
+          updateGameLimiter.update();
+        }
+        catch (err)
+        {
+          console.log(err);
+          requestPlayerId();
+        }
+      }
+      else if (json.type == "playerId")
+      {
+        lastGameObj = json.gameObj;
+        myPlayerId = json.playerId;
+        if (myPlayerId + 1 > maxPlayers)
+        {
+          $('#welcomeModal').modal('hide');
+        }
+        if (!gameInitialized)
+        {
+          addWebcam(myStream, myPlayerId, true, true);
+          gameInitialized = true;
+        }
+        updateGame(true);
+      }
+      else if (json.type == "newPeer")
+      {
+        if (json.playerId != myPlayerId)
+        {
+          initGamePeer(json.playerId);
+          doorbell.play();
+        }
+      }
+      else if (json.type == "leftPeer")
+      {
+        peers[json.playerId].destroy();
+        $("#webcam" + json.playerId).html("");
+      }
+      else if (json.type == "peerConnect")
+      {
+        peers[json.fromPlayerId] = new SimplePeer({
+        initiator: false,
+        trickle: false,
+        stream: myStream
+      });
+
+        peers[json.fromPlayerId].on('stream', stream => {
+          addWebcam(stream, json.fromPlayerId, false, false);
+      });
+
+      peers[json.fromPlayerId].on('signal', data => {
+
+        sendData = {
+          type: "acceptPeer",
+          fromPlayerId: json.fromPlayerId,
+          stp: data
+        }
+        sendToWs(sendData);
+      });
+
+      peers[json.fromPlayerId].signal(json.stp);
+
+      }
+      else if (json.type == "peerAccepted")
+      {
+        peers[json.fromPlayerId].signal(json.stp);
+      }
+     };
+     ws.onclose = function()
+     { 
+        setTimeout(function(){InitWebSocket();}, 2000);
+     };
+  }
+  else
+  {
+     // The browser doesn't support WebSocket
+     //alert("WebSocket NOT supported by your Browser!");
+  }
+}
+
+function sendToWs(data){
+  if (ws != null && ws.readyState === WebSocket.OPEN)
+  {
+    ws.send(pako.deflate(JSON.stringify(data), { to: 'string' }));
+  }
+}
+
+
+$(document).bind('touchmove mousemove', function (e) {
+  e.preventDefault();
+  var currentY = e.originalEvent.touches ?  e.originalEvent.touches[0].pageY : e.pageY;
+  var currentX = e.originalEvent.touches ?  e.originalEvent.touches[0].pageX : e.pageX;
+
+  var currentXScaled = Math.round(currentX * (1 / scale));
+  var currentYScaled = Math.round(currentY * (1 / scale));
+
+  var deltaX = latestMouseX - currentXScaled;
+  var deltaY = latestMouseY - currentYScaled;
+
+
+  if (dragCardId != null)
+  {
+    //console.log(deltaX)
+    //console.log($("#" + dragCardId).position().left)
+    updateCss("#" + dragCardId, "left", (($("#" + dragCardId).position().left * (1 / scale)) - deltaX) + "px");
+    updateCss("#" + dragCardId, "top", (($("#" + dragCardId).position().top * (1 / scale)) - deltaY) + "px");
+  }
+
+  latestMouseY = currentYScaled
+  latestMouseX = currentXScaled;
+  mouseFpsLimiter.update();
+});
+
+function sendMouseMove()
+{
+  sendData = {
+    type: "mouse",
+    mouseclicked: mouseclicked,
+    pos: {x: Math.round(latestMouseX), y: Math.round(latestMouseY)},
+    card: dragCardId
+  }
+  sendToWs(sendData);
+}
+
+
+$( document ).on( "mouseup", function( e ) {
+  dragCardId = null;
+});
+
+$(document).on ("keydown", function (event) {
+    if (event.ctrlKey  && event.key === "q") { 
+        $('#resetModal').modal();
+    }
+});
+
+function adaptScale()
+{
+  var width = $(window).width();
+  var height = $(window).height();
+
+  var ratio = 1920 / 1080;
+
+  var ratioWindow = width / height;
+
+  if (ratioWindow > ratio)
+  {
+    scale = height / 1080;
+    $(".scaleplane").css("transform", "scale(" + scale + ")")
+  }
+  else
+  {
+    scale = width / 1920;
+    $(".scaleplane").css("transform", "scale(" + scale + ")")
+  }
+}
+
+$( window ).resize(function() {
+  adaptScale();
+
+});
+
+$( document ).ready(function() {
+  var colorSelectionHtml = "";
+  var nColorSelection = 0;
+  for (color of colors)
+  {
+    nColorSelection++;
+    colorSelectionHtml += '<div class="form-check form-check-inline" style="background-color: ' + color + '; padding: 20px; display: inline-block">';
+    colorSelectionHtml += '<input class="form-check-input colorSelector" type="checkbox" id="inlineCheckbox' + nColorSelection + '" value="' + nColorSelection + '">';
+    colorSelectionHtml += '<label class="form-check-label" for="inlineCheckbox' + nColorSelection + '"></label>';
+    colorSelectionHtml += '</div>';
+  }
+  $(".colorSelectionContainer").html(colorSelectionHtml);
+
+
+  adaptScale();
+
+  $('.colorSelector').on('click', selectColor);
+  $(".cursor").off();
+  $('#enterGameBtn').attr('disabled',true);
+  $('#enterGameBtn').on('click', enterGame);
+  $('#resetGameBtn').on('click', resetGame);
+  $(".shuffleButton").on('click', shuffleDeck);
+    $('#name').keyup(function(){
+        checkEnterIsAllowed();
+        sendData = {
+          type: "name",
+          name: $('#name').val()
+        }
+        sendToWs(sendData);
+    })
+
+    $(".card").on("mousedown", function(event){
+      dragCardId = event.currentTarget.id;
+      mouseclicked = true;
+    });
+    $(".card").on("touchstart", function(event){
+      mouseclicked = true;
+      var currentY = event.originalEvent.touches[0].pageY;
+      var currentX = event.originalEvent.touches[0].pageX;
+      latestMouseY = currentY * (1 / scale);
+      latestMouseX = currentX * (1 / scale);
+      sendData = {
+        type: "mouse",
+        mouseclicked: mouseclicked,
+        pos: {x: Math.round(latestMouseX), y: Math.round(latestMouseY)},
+        card: dragCardId
+      }
+      sendToWs(sendData);
+      dragCardId = event.currentTarget.id;
+      event.preventDefault();
+      
+    });
+     $(".card").bind("mouseup touchend", function(e){
+      mouseclicked = false;
+      e.preventDefault();
+      var currentY = e.originalEvent.touches ?  e.originalEvent.touches[0].pageY : e.pageY;
+      var currentX = e.originalEvent.touches ?  e.originalEvent.touches[0].pageX : e.pageX;
+
+      latestMouseY = currentY * (1 / scale);
+      latestMouseX = currentX * (1 / scale);
+      sendData = {
+        type: "mouse",
+        mouseclicked: mouseclicked,
+        pos: {x: Math.round(latestMouseX), y: Math.round(latestMouseY)},
+        card: dragCardId
+      }
+      sendToWs(sendData);
+      dragCardId = null;
+    });
+
+  navigator.mediaDevices.getUserMedia({video: {
+                          width: {
+                              max: 640,
+                              ideal: 320 
+                          },
+                          height: {
+                              max: 480,
+                              ideal: 240
+                          }
+                      }, audio: true})
+    .then(function(stream) {
+      myStream = stream;
+      InitWebSocket();
+      $('#welcomeModal').modal({
+                          show: true,
+                          backdrop: 'static',
+                          keyboard: false
+                          });
+  });
+});
+
+function updateCss(selector, property, value)
+{
+  if ($(selector).css(property) !== value)
+  {
+    $(selector).css(property, value);
+  }
+}
+
+function updateParentCss(selector, property, value)
+{
+  if($(selector).parent().css(property) !== value)
+  {
+    $(selector).parent().css(property, value);
+  }
+}
+
+function updateCardFace(card, value)
+{
+  if(card.faceType === 'image')
+  {
+    if ($("#" + card.id).children('img').attr("src") !== value)
+    {
+      $("#" + card.id).children('img').attr("src", value);
+    }
+  }
+  else if(card.faceType === 'text')
+  {
+    if ($("#" + card.id + " span").html() !== value.text)
+    {
+      $("#" + card.id + " span").html(value.text);
+      $("#" + card.id).css("color", value.color);
+      $("#" + card.id).css("border", "4px solid " + value.color);
+      $("#" + card.id).css("background-color", value.backgroundcolor);
+      if(value.hasOwnProperty("secondarytext"))
+      {
+        $("#" + card.id + "_sec").html(value.secondarytext);
+      }
+      $(document).trigger("cardTextChanged", [card.id]);
+    }
+  }
+}
+
+function updateHtml(selector, html)
+{
+  if($(selector).html() !== html)
+  {
+    $(selector).html(html)
+  }
+}
+
+function addOrRemoveAttr(selector, attrName, add)
+{
+  var attr = $(selector).attr(attrName);
+
+  // For some browsers, `attr` is undefined; for others, `attr` is false. Check for both.
+  if (typeof attr !== typeof undefined && attr !== false && !add) {
+    // Element has this attribute
+    $(selector).removeAttr(attrName);
+  }
+  else
+  {
+    if(add)
+    {
+      $(selector).attr(attrName, true);
+    }
+  }
+}
+
+function initCards(gameObj){
+  for (var i = 0; i < gameObj.decks.length; i++)
+  {
+    updateCss("#" + gameObj.decks[i].id, "left", gameObj.decks[i].x + "px");
+    updateCss("#" + gameObj.decks[i].id, "top", gameObj.decks[i].y + "px");
+  }
+  for (var i = 0; i < gameObj.cards.length; i++)
+  {
+    updateCss("#" + gameObj.cards[i].id, "z-index", String(gameObj.cards[i].z + 60));
+    updateCss("#" + gameObj.cards[i].id, "left", gameObj.cards[i].x + "px");
+    updateCss("#" + gameObj.cards[i].id, "top", gameObj.cards[i].y + "px");
+    if (gameObj.cards[i].hasOwnProperty("show"))
+    {
+      if (cardIsInMyOwnBox(gameObj.cards[i]))
+      {
+        updateCardFace(gameObj.cards[i], gameObj.cards[i].frontface);
+      }
+      else
+      {
+        if(cardIsInInspectorBox(gameObj.cards[i]))
+        {
+          updateCardFace(gameObj.cards[i], gameObj.cards[i].altFrontface);
+        }
+        else
+        {
+          if (gameObj.cards[i].show == "backface")
+          {
+            updateCardFace(gameObj.cards[i], gameObj.cards[i].backface);
+          }
+          else if (gameObj.cards[i].show == "frontface")
+          {
+            updateCardFace(gameObj.cards[i], gameObj.cards[i].frontface);
+          }
+        }
+      }
+    }
+  }
+}
+
+function moveCard(id, deltaX, deltaY)
+{
+  if (deltaX != 0)
+  {
+    var newX = Math.round($("#" + id).position().left * (1 / scale)) + deltaX;
+    updateCss("#" + id, "left", newX + "px");
+  }
+  if(deltaY != 0)
+  {
+    var newY = Math.round($("#" + id).position().top * (1 / scale)) + deltaY;
+    updateCss("#" + id, "top", newY + "px");
+  }
+}
+
+function updateCards(gameObj)
+{
+  for (var i = 0; i < gameObj.decks.length; i++)
+  {
+    updateCss("#" + gameObj.decks[i].id, "left", gameObj.decks[i].x + "px");
+    updateCss("#" + gameObj.decks[i].id, "top", gameObj.decks[i].y + "px");
+  }
+  var cards = gameObj.cards.filter(function(card){
+    return changedCardsBuffer.includes(card.id);
+  });
+  changedCardsBuffer = [];
+  for (card of cards)
+  {
+    if(card.id != dragCardId)
+    {
+      updateCss("#" + card.id, "z-index", String(card.z + 60));
+      updateCss("#" + card.id, "left", card.x + "px");
+      updateCss("#" + card.id, "top", card.y + "px");
+    }
+
+    
+    if(card.hasOwnProperty("show") && card.isInAnOpenbox)
+    {
+      if (card.show == "backface")
+      {
+        updateCardFace(card, card.backface);
+      }
+      else if (card.show == "frontface")
+      {
+        updateCardFace(card, card.frontface);
+      }
+    }
+    else
+    {
+      var cardInMyBox = cardIsInMyOwnBox(card);
+
+      if (card.hasOwnProperty("show") && (!card.attachedToDeck || cardInMyBox))
+      {
+        if (cardInMyBox)
+        {
+          updateCardFace(card, card.frontface);
+        }
+        else
+        {
+          if(cardIsInInspectorBox(card))
+          {
+            updateCardFace(card, card.altFrontface);
+          }
+          else
+          {
+            if (card.show == "backface")
+            {
+              updateCardFace(card, card.backface);
+            }
+            else if (card.show == "frontface")
+            {
+              updateCardFace(card, card.frontface);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+function updateOpenboxes(gameObj)
+{
+  for (openbox of gameObj.openboxes)
+  {
+    updateCss("#" + openbox.id, "left", (openbox.x) + "px");
+    updateCss("#" + openbox.id, "top", (openbox.y) + "px");
+    updateCss("#" + openbox.id, "width", (openbox.width) + "px");
+    updateCss("#" + openbox.id, "height", (openbox.height) + "px");
+  }
+}
+
+function updateCursors (gameObj)
+{
+  playerIndex = 0;
+  for (player of gameObj.players){
+    updateCss("#cursor" + playerIndex, "background-color", player.color);
+    updateCss("#player" + player.id + "box", "background-color", player.color);
+    updateHtml("#player" + player.id + "NameText", player.name)
+    updateCss("#cursor" + playerIndex, "left", (player.pos.x - 22) + "px");
+    updateCss("#cursor" + playerIndex, "top", (player.pos.y - 22) + "px");
+    updateCss("#cursor" + playerIndex, "display", "block");
+    playerIndex++;
+  }
+  for (var i = playerIndex; i < 20; i++){
+    updateCss("#cursor" + i, "left", "20000px");
+    updateCss("#cursor" + i, "top", "0px");
+    updateCss("#cursor" + playerIndex, "display", "none");
+  }
+}
+
+function updateColorSelection(gameObj)
+{
+  var nColorSelection = 0;
+  for (color of colors)
+  {
+    nColorSelection++;
+
+    if (colorIsTaken(gameObj, color))
+    {
+
+      addOrRemoveAttr("#inlineCheckbox" + nColorSelection, "disabled", true);
+      updateParentCss("#inlineCheckbox" + nColorSelection, "background-image", "URL(/img/color-taken.svg)");
+    }
+    else
+    {
+      addOrRemoveAttr("#inlineCheckbox" + nColorSelection, "disabled", false);
+      updateParentCss("#inlineCheckbox" + nColorSelection, "background-image", "none");
+    }
+    if (nColorSelection == myColor)
+    {
+      updateParentCss("#inlineCheckbox" + nColorSelection, "background-image", "URL(/img/color-chosen.svg)")
+    }
+  }
+}
+
+function updateGame(init)
+{
+  var gameObj = JSON.parse(lastGameObj)
+  if(init)
+  {
+    initCards(gameObj)
+  }
+  else
+  {
+    updateCards(gameObj);
+  }
+
+  updateOpenboxes(gameObj);
+  updateCursors(gameObj);
+  updateColorSelection(gameObj);
+
+
+  $(document).trigger("gameObj", [gameObj, myPlayerId, scale]);
+}
+
+function _updateGame(gameObj, init){
+  if(init)
+  {
+    initCards(gameObj)
+  }
+  else
+  {
+    updateCards(gameObj);
+  }
+
+  updateOpenboxes(gameObj);
+  updateCursors(gameObj);
+  updateColorSelection(gameObj);
+
+
+  $(document).trigger("gameObj", [gameObj, myPlayerId, scale]);
+}
+
+
+
+function cardIsInMyOwnBox(card)
+{
+  if ( $("#player" + myPlayerId + "box").length ) {
+    if (card.lastTouchedBy == myPlayerId)
+    {
+      var boxX = $("#player" + myPlayerId + "box").position().left * (1 / scale);
+      var boxY = $("#player" + myPlayerId + "box").position().top * (1 / scale);
+      var width = $("#player" + myPlayerId + "box").width();
+      var height = $("#player" + myPlayerId + "box").height();
+      if (card.x > boxX && card.x < (boxX + width) && card.y > boxY && card.y < (boxY + height))
+      {
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    }
+    else
+    {
+      return false;
+    }
+  }
+  else
+  {
+    return false;
+  }
+}
+
+function cardIsInInspectorBox(card)
+{
+  if (card.lastTouchedBy == myPlayerId && card.hasOwnProperty("altFrontface"))
+  {
+    var boxX = $("#inpsectorbox0").position().left * (1 / scale);
+    var boxY = $("#inpsectorbox0").position().top * (1 / scale);
+    var width = $("#inpsectorbox0").width();
+    var height = $("#inpsectorbox0").height();
+    if (card.x > boxX && card.x < (boxX + width) && card.y > boxY && card.y < (boxY + height))
+    {
+      return true;
+    }
+    else
+    {
+      return false;
+    }
+  }
+  else
+  {
+    return false;
+  }
+}
+
+function colorIsTaken(gameObj, code){
+  for (player of gameObj.players)
+  {
+    if (player.color == code)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+function selectColor(e){
+  nr = Number(e.target.value);
+  myColor = nr;
+  for (var i = 0; i < colors.length; i++)
+  {
+    if (i != nr)
+    {
+      $("#inlineCheckbox" + i).prop( "checked", false );
+    }
+    else
+    {
+      $("#inlineCheckbox" + i).prop( "checked", true );
+    }
+  }
+  state.color = colors[nr - 1];
+  sendData = {
+    type: "color",
+    color: colors[nr - 1]
+  }
+  sendToWs(sendData);
+  checkEnterIsAllowed();
+}
+
+function shuffleDeck(e){
+  var deckId = e.target.parentElement.id;
+  sendData = {
+    type: "shuffleDeck",
+    deckId: deckId
+  }
+  sendToWs(sendData);
+}
+
+function checkEnterIsAllowed()
+{
+  if($('#name').val().length !=0 && state.color != "#FFFFFF")
+    $('#enterGameBtn').attr('disabled', false);            
+  else
+    $('#enterGameBtn').attr('disabled',true);
+}
+
+function enterGame()
+{
+  $('#welcomeModal').modal('hide');
+}
+
+function resetGame()
+{
+  var sendData = {
+    type: "reset"
+  }
+  sendToWs(sendData)
+}
+},{"../fps_limiter":8,"diff-match-patch":9,"pako":12,"simple-peer":31}],8:[function(require,module,exports){
+function FpsLimiter(fps, func, args) {
+  this.isIntervalSet = false;
+  this.ms = Math.round(1000 / fps);
+  this.func = func;
+  this.args = args;
+}
+
+FpsLimiter.prototype.update = function()
+{
+  if (this.isIntervalSet)
+  {
+    return;
+  }
+  this.isIntervalSet = true;
+  this.func(this.args);
+  setTimeout(function(){
+    this.isIntervalSet = false;
+  }.bind(this), this.ms);
+  return;
+}
+
+module.exports = {FpsLimiter: FpsLimiter}
+},{}],9:[function(require,module,exports){
 /**
  * Diff Match and Patch
  * Copyright 2018 The diff-match-patch Authors.
@@ -4923,7 +5751,7 @@ module.exports['diff_match_patch'] = diff_match_patch;
 module.exports['DIFF_DELETE'] = DIFF_DELETE;
 module.exports['DIFF_INSERT'] = DIFF_INSERT;
 module.exports['DIFF_EQUAL'] = DIFF_EQUAL;
-},{}],8:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 // originally pulled out of simple-peer
 
 module.exports = function getBrowserRTC () {
@@ -4940,7 +5768,7 @@ module.exports = function getBrowserRTC () {
   return wrtc
 }
 
-},{}],9:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -4965,7 +5793,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],10:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 // Top level file is just a mixin of submodules & constants
 'use strict';
 
@@ -4981,7 +5809,7 @@ assign(pako, deflate, inflate, constants);
 
 module.exports = pako;
 
-},{"./lib/deflate":11,"./lib/inflate":12,"./lib/utils/common":13,"./lib/zlib/constants":16}],11:[function(require,module,exports){
+},{"./lib/deflate":13,"./lib/inflate":14,"./lib/utils/common":15,"./lib/zlib/constants":18}],13:[function(require,module,exports){
 'use strict';
 
 
@@ -5383,7 +6211,7 @@ exports.deflate = deflate;
 exports.deflateRaw = deflateRaw;
 exports.gzip = gzip;
 
-},{"./utils/common":13,"./utils/strings":14,"./zlib/deflate":18,"./zlib/messages":23,"./zlib/zstream":25}],12:[function(require,module,exports){
+},{"./utils/common":15,"./utils/strings":16,"./zlib/deflate":20,"./zlib/messages":25,"./zlib/zstream":27}],14:[function(require,module,exports){
 'use strict';
 
 
@@ -5808,7 +6636,7 @@ exports.inflate = inflate;
 exports.inflateRaw = inflateRaw;
 exports.ungzip  = inflate;
 
-},{"./utils/common":13,"./utils/strings":14,"./zlib/constants":16,"./zlib/gzheader":19,"./zlib/inflate":21,"./zlib/messages":23,"./zlib/zstream":25}],13:[function(require,module,exports){
+},{"./utils/common":15,"./utils/strings":16,"./zlib/constants":18,"./zlib/gzheader":21,"./zlib/inflate":23,"./zlib/messages":25,"./zlib/zstream":27}],15:[function(require,module,exports){
 'use strict';
 
 
@@ -5915,7 +6743,7 @@ exports.setTyped = function (on) {
 
 exports.setTyped(TYPED_OK);
 
-},{}],14:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 // String encode/decode helpers
 'use strict';
 
@@ -6104,7 +6932,7 @@ exports.utf8border = function (buf, max) {
   return (pos + _utf8len[buf[pos]] > max) ? pos : max;
 };
 
-},{"./common":13}],15:[function(require,module,exports){
+},{"./common":15}],17:[function(require,module,exports){
 'use strict';
 
 // Note: adler32 takes 12% for level 0 and 2% for level 6.
@@ -6157,7 +6985,7 @@ function adler32(adler, buf, len, pos) {
 
 module.exports = adler32;
 
-},{}],16:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -6227,7 +7055,7 @@ module.exports = {
   //Z_NULL:                 null // Use -1 or null inline, depending on var type
 };
 
-},{}],17:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 'use strict';
 
 // Note: we can't get significant speed boost here.
@@ -6288,7 +7116,7 @@ function crc32(crc, buf, len, pos) {
 
 module.exports = crc32;
 
-},{}],18:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -8164,7 +8992,7 @@ exports.deflatePrime = deflatePrime;
 exports.deflateTune = deflateTune;
 */
 
-},{"../utils/common":13,"./adler32":15,"./crc32":17,"./messages":23,"./trees":24}],19:[function(require,module,exports){
+},{"../utils/common":15,"./adler32":17,"./crc32":19,"./messages":25,"./trees":26}],21:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -8224,7 +9052,7 @@ function GZheader() {
 
 module.exports = GZheader;
 
-},{}],20:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -8571,7 +9399,7 @@ module.exports = function inflate_fast(strm, start) {
   return;
 };
 
-},{}],21:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -10129,7 +10957,7 @@ exports.inflateSyncPoint = inflateSyncPoint;
 exports.inflateUndermine = inflateUndermine;
 */
 
-},{"../utils/common":13,"./adler32":15,"./crc32":17,"./inffast":20,"./inftrees":22}],22:[function(require,module,exports){
+},{"../utils/common":15,"./adler32":17,"./crc32":19,"./inffast":22,"./inftrees":24}],24:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -10474,7 +11302,7 @@ module.exports = function inflate_table(type, lens, lens_index, codes, table, ta
   return 0;
 };
 
-},{"../utils/common":13}],23:[function(require,module,exports){
+},{"../utils/common":15}],25:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -10508,7 +11336,7 @@ module.exports = {
   '-6':   'incompatible version' /* Z_VERSION_ERROR (-6) */
 };
 
-},{}],24:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -11732,7 +12560,7 @@ exports._tr_flush_block  = _tr_flush_block;
 exports._tr_tally = _tr_tally;
 exports._tr_align = _tr_align;
 
-},{"../utils/common":13}],25:[function(require,module,exports){
+},{"../utils/common":15}],27:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -11781,7 +12609,7 @@ function ZStream() {
 
 module.exports = ZStream;
 
-},{}],26:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 let promise
 
 module.exports = typeof queueMicrotask === 'function'
@@ -11791,7 +12619,7 @@ module.exports = typeof queueMicrotask === 'function'
     .then(cb)
     .catch(err => setTimeout(() => { throw err }, 0))
 
-},{}],27:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 (function (process,global){
 'use strict'
 
@@ -11845,7 +12673,7 @@ function randomBytes (size, cb) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":6,"safe-buffer":28}],28:[function(require,module,exports){
+},{"_process":6,"safe-buffer":30}],30:[function(require,module,exports){
 /* eslint-disable node/no-deprecated-api */
 var buffer = require('buffer')
 var Buffer = buffer.Buffer
@@ -11909,7 +12737,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
   return buffer.SlowBuffer(size)
 }
 
-},{"buffer":3}],29:[function(require,module,exports){
+},{"buffer":3}],31:[function(require,module,exports){
 (function (Buffer){
 var debug = require('debug')('simple-peer')
 var getBrowserRTC = require('get-browser-rtc')
@@ -12916,7 +13744,7 @@ Peer.channelConfig = {}
 module.exports = Peer
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":3,"debug":30,"get-browser-rtc":8,"queue-microtask":26,"randombytes":27,"readable-stream":47}],30:[function(require,module,exports){
+},{"buffer":3,"debug":32,"get-browser-rtc":10,"queue-microtask":28,"randombytes":29,"readable-stream":49}],32:[function(require,module,exports){
 (function (process){
 /* eslint-env browser */
 
@@ -13184,7 +14012,7 @@ formatters.j = function (v) {
 };
 
 }).call(this,require('_process'))
-},{"./common":31,"_process":6}],31:[function(require,module,exports){
+},{"./common":33,"_process":6}],33:[function(require,module,exports){
 
 /**
  * This is the common logic for both the Node.js and web browser
@@ -13452,7 +14280,7 @@ function setup(env) {
 
 module.exports = setup;
 
-},{"ms":32}],32:[function(require,module,exports){
+},{"ms":34}],34:[function(require,module,exports){
 /**
  * Helpers.
  */
@@ -13616,7 +14444,7 @@ function plural(ms, msAbs, n, name) {
   return Math.round(ms / n) + ' ' + name + (isPlural ? 's' : '');
 }
 
-},{}],33:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 'use strict';
 
 function _inheritsLoose(subClass, superClass) { subClass.prototype = Object.create(superClass.prototype); subClass.prototype.constructor = subClass; subClass.__proto__ = superClass; }
@@ -13745,7 +14573,7 @@ createErrorType('ERR_UNKNOWN_ENCODING', function (arg) {
 createErrorType('ERR_STREAM_UNSHIFT_AFTER_END_EVENT', 'stream.unshift() after end event');
 module.exports.codes = codes;
 
-},{}],34:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -13887,7 +14715,7 @@ Object.defineProperty(Duplex.prototype, 'destroyed', {
   }
 });
 }).call(this,require('_process'))
-},{"./_stream_readable":36,"./_stream_writable":38,"_process":6,"inherits":9}],35:[function(require,module,exports){
+},{"./_stream_readable":38,"./_stream_writable":40,"_process":6,"inherits":11}],37:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -13927,7 +14755,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":37,"inherits":9}],36:[function(require,module,exports){
+},{"./_stream_transform":39,"inherits":11}],38:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -15054,7 +15882,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../errors":33,"./_stream_duplex":34,"./internal/streams/async_iterator":39,"./internal/streams/buffer_list":40,"./internal/streams/destroy":41,"./internal/streams/from":43,"./internal/streams/state":45,"./internal/streams/stream":46,"_process":6,"buffer":3,"events":4,"inherits":9,"string_decoder/":48,"util":2}],37:[function(require,module,exports){
+},{"../errors":35,"./_stream_duplex":36,"./internal/streams/async_iterator":41,"./internal/streams/buffer_list":42,"./internal/streams/destroy":43,"./internal/streams/from":45,"./internal/streams/state":47,"./internal/streams/stream":48,"_process":6,"buffer":3,"events":4,"inherits":11,"string_decoder/":50,"util":2}],39:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -15256,7 +16084,7 @@ function done(stream, er, data) {
   if (stream._transformState.transforming) throw new ERR_TRANSFORM_ALREADY_TRANSFORMING();
   return stream.push(null);
 }
-},{"../errors":33,"./_stream_duplex":34,"inherits":9}],38:[function(require,module,exports){
+},{"../errors":35,"./_stream_duplex":36,"inherits":11}],40:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -15956,7 +16784,7 @@ Writable.prototype._destroy = function (err, cb) {
   cb(err);
 };
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../errors":33,"./_stream_duplex":34,"./internal/streams/destroy":41,"./internal/streams/state":45,"./internal/streams/stream":46,"_process":6,"buffer":3,"inherits":9,"util-deprecate":49}],39:[function(require,module,exports){
+},{"../errors":35,"./_stream_duplex":36,"./internal/streams/destroy":43,"./internal/streams/state":47,"./internal/streams/stream":48,"_process":6,"buffer":3,"inherits":11,"util-deprecate":51}],41:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -16166,7 +16994,7 @@ var createReadableStreamAsyncIterator = function createReadableStreamAsyncIterat
 
 module.exports = createReadableStreamAsyncIterator;
 }).call(this,require('_process'))
-},{"./end-of-stream":42,"_process":6}],40:[function(require,module,exports){
+},{"./end-of-stream":44,"_process":6}],42:[function(require,module,exports){
 'use strict';
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
@@ -16377,7 +17205,7 @@ function () {
 
   return BufferList;
 }();
-},{"buffer":3,"util":2}],41:[function(require,module,exports){
+},{"buffer":3,"util":2}],43:[function(require,module,exports){
 (function (process){
 'use strict'; // undocumented cb() API, needed for core, not for public API
 
@@ -16485,7 +17313,7 @@ module.exports = {
   errorOrDestroy: errorOrDestroy
 };
 }).call(this,require('_process'))
-},{"_process":6}],42:[function(require,module,exports){
+},{"_process":6}],44:[function(require,module,exports){
 // Ported from https://github.com/mafintosh/end-of-stream with
 // permission from the author, Mathias Buus (@mafintosh).
 'use strict';
@@ -16590,12 +17418,12 @@ function eos(stream, opts, callback) {
 }
 
 module.exports = eos;
-},{"../../../errors":33}],43:[function(require,module,exports){
+},{"../../../errors":35}],45:[function(require,module,exports){
 module.exports = function () {
   throw new Error('Readable.from is not available in the browser')
 };
 
-},{}],44:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 // Ported from https://github.com/mafintosh/pump with
 // permission from the author, Mathias Buus (@mafintosh).
 'use strict';
@@ -16693,7 +17521,7 @@ function pipeline() {
 }
 
 module.exports = pipeline;
-},{"../../../errors":33,"./end-of-stream":42}],45:[function(require,module,exports){
+},{"../../../errors":35,"./end-of-stream":44}],47:[function(require,module,exports){
 'use strict';
 
 var ERR_INVALID_OPT_VALUE = require('../../../errors').codes.ERR_INVALID_OPT_VALUE;
@@ -16721,10 +17549,10 @@ function getHighWaterMark(state, options, duplexKey, isDuplex) {
 module.exports = {
   getHighWaterMark: getHighWaterMark
 };
-},{"../../../errors":33}],46:[function(require,module,exports){
+},{"../../../errors":35}],48:[function(require,module,exports){
 module.exports = require('events').EventEmitter;
 
-},{"events":4}],47:[function(require,module,exports){
+},{"events":4}],49:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = exports;
 exports.Readable = exports;
@@ -16735,7 +17563,7 @@ exports.PassThrough = require('./lib/_stream_passthrough.js');
 exports.finished = require('./lib/internal/streams/end-of-stream.js');
 exports.pipeline = require('./lib/internal/streams/pipeline.js');
 
-},{"./lib/_stream_duplex.js":34,"./lib/_stream_passthrough.js":35,"./lib/_stream_readable.js":36,"./lib/_stream_transform.js":37,"./lib/_stream_writable.js":38,"./lib/internal/streams/end-of-stream.js":42,"./lib/internal/streams/pipeline.js":44}],48:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":36,"./lib/_stream_passthrough.js":37,"./lib/_stream_readable.js":38,"./lib/_stream_transform.js":39,"./lib/_stream_writable.js":40,"./lib/internal/streams/end-of-stream.js":44,"./lib/internal/streams/pipeline.js":46}],50:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -17032,7 +17860,7 @@ function simpleWrite(buf) {
 function simpleEnd(buf) {
   return buf && buf.length ? this.write(buf) : '';
 }
-},{"safe-buffer":28}],49:[function(require,module,exports){
+},{"safe-buffer":30}],51:[function(require,module,exports){
 (function (global){
 
 /**
@@ -17103,750 +17931,4 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],50:[function(require,module,exports){
-// let diff_match_patch = require('../../game_modules/diff-match-patch').diff_match_patch
-let pako = require('pako');
-let SimplePeer = require('simple-peer');
-let diff_match_patch = require('diff-match-patch');
-
-var dmp = new diff_match_patch();
-
-var scale = 1;
-
-var myStream = null;
-var peers = {};
-
-var lastGameObj = "";
-
-var myPlayerId = -1;
-
-var state = {
-  color: "#FFFFFF"
-}
-
-var myColor = -1
-
-var colors = [
-  "#FF0000",
-  "#88ff91",
-  "#0000FF",
-  "#FFFF00",
-  "#00FFFF",
-  "#790079",
-  "#FF8800",
-  "#888888",
-  "#0e8200",
-  "#ffbff7"
-]
-
-var ws = null;
-
-var doorbell = new Audio('/wav/doorbell.wav');
-
-var timer = null;
-var isIntervalSet = false;
-
-var latestMouseX = 0;
-var latestMouseY = 0;
-
-var mouseclicked = false;
-var dragCardId = null;
-
-function addWebcam(stream, playerId, mirrored, muted)
-{
-  var video = document.createElement('video');
-  $("#webcam" + playerId).html(video)
-  if (mirrored)
-  {
-    $("#webcam" + playerId).css("transform", "rotateY(180deg)")
-  }
-  video.muted = muted;
-  video.srcObject = stream;
-  video.addEventListener("playing", function () {
-        setTimeout(function () {
-            console.log("Stream dimensions: " + video.videoWidth + "x" + video.videoHeight);
-            var aspectRatio = video.videoWidth / video.videoHeight;
-            if (aspectRatio < 1)
-            {
-              var correctedHeight = video.videoHeight * (webcamBoxWidth / video.videoWidth);
-              $("#webcam" + playerId + " video").css("width", webcamBoxWidth + "px")
-              $("#webcam" + playerId + " video").css("height", correctedHeight + "px");
-              $("#webcam" + playerId + " video").css("margin-left", "0px")
-              $("#webcam" + playerId + " video").css("margin-top", ((webcamBoxHeight - correctedHeight) * 0.5) + "px")
-            }
-            else
-            {
-              var correctedWidth = video.videoWidth * (webcamBoxHeight / video.videoHeight);
-              $("#webcam" + playerId + " video").css("width", correctedWidth + "px")
-              $("#webcam" + playerId + " video").css("height", webcamBoxHeight + "px");
-              $("#webcam" + playerId + " video").css("margin-left", ((webcamBoxWidth - correctedWidth) * 0.5) + "px")
-              $("#webcam" + playerId + " video").css("margin-top", "0px")
-            }
-        }, 500);
-    });
-  video.play();
-}
-
-function requestPlayerId()
-{
-  var sendData = {
-    type: "requestId"
-  }
-  sendToWs(sendData);
-}
-
-function initGamePeer(playerId)
-{
-  console.log("initiating peer for player " + playerId)
-  
-  peers[playerId] = new SimplePeer({
-    initiator: true,
-    trickle: false,
-    stream: myStream
-  });
-
-  peers[playerId].on('signal', data => {
-    //console.log("signal ")
-    sendData = {
-      type: "initiatorReady",
-      playerId: playerId,
-      stp: data
-    }
-    sendToWs(sendData)
-  });
-
-  peers[playerId].on('stream', stream => {
-    addWebcam(stream, playerId, false, false);
-  });
-}
-
-var gameInitialized = false;
-
-function InitWebSocket()
-{
-  var scheme = "wss";
-  var port = "";
-  if (location.protocol !== 'https:') {
-    scheme = "ws";
-    port = ":8080";
-  }
-  if ("WebSocket" in window)
-  {
-     var host = window.location.hostname;
-     //console.log(window.location)
-     ws = new WebSocket(scheme + "://" + host + port + window.location.pathname);
-   
-     ws.onopen = function()
-     {
-      requestPlayerId()
-     };
-     ws.onmessage = function (evt) 
-     {
-      var json = JSON.parse(pako.inflate(evt.data, { to: 'string' }));
-      if(json.type == "patches")
-      {
-        lastGameObj = dmp.patch_apply(dmp.patch_fromText(json.patches), lastGameObj)[0];
-        try
-        {
-          var newGameObj = JSON.parse(lastGameObj);
-          updateGame(newGameObj, false);
-        }
-        catch (err)
-        {
-
-          console.log(err);
-          requestPlayerId();
-        }
-      }
-      else if (json.type == "playerId")
-      {
-        lastGameObj = json.gameObj;
-        myPlayerId = json.playerId;
-        if (myPlayerId + 1 > maxPlayers)
-        {
-          $('#welcomeModal').modal('hide');
-        }
-        if (!gameInitialized)
-        {
-          addWebcam(myStream, myPlayerId, true, true);
-          gameInitialized = true;
-        }
-        updateGame(JSON.parse(lastGameObj, true));
-      }
-      else if (json.type == "newPeer")
-      {
-        if (json.playerId != myPlayerId)
-        {
-          initGamePeer(json.playerId);
-          doorbell.play();
-        }
-      }
-      else if (json.type == "leftPeer")
-      {
-        peers[json.playerId].destroy();
-        $("#webcam" + json.playerId).html("");
-      }
-      else if (json.type == "peerConnect")
-      {
-        peers[json.fromPlayerId] = new SimplePeer({
-        initiator: false,
-        trickle: false,
-        stream: myStream
-      });
-
-        peers[json.fromPlayerId].on('stream', stream => {
-          addWebcam(stream, json.fromPlayerId, false, false);
-      });
-
-      peers[json.fromPlayerId].on('signal', data => {
-
-        sendData = {
-          type: "acceptPeer",
-          fromPlayerId: json.fromPlayerId,
-          stp: data
-        }
-        sendToWs(sendData);
-      });
-
-      peers[json.fromPlayerId].signal(json.stp);
-
-      }
-      else if (json.type == "peerAccepted")
-      {
-        peers[json.fromPlayerId].signal(json.stp);
-      }
-     };
-     ws.onclose = function()
-     { 
-        setTimeout(function(){InitWebSocket();}, 2000);
-     };
-  }
-  else
-  {
-     // The browser doesn't support WebSocket
-     //alert("WebSocket NOT supported by your Browser!");
-  }
-}
-
-function sendToWs(data){
-  if (ws != null && ws.readyState === WebSocket.OPEN)
-  {
-    ws.send(pako.deflate(JSON.stringify(data), { to: 'string' }));
-  }
-}
-
-
-$(document).bind('touchmove mousemove', function (e) {
-  e.preventDefault();
-    var currentY = e.originalEvent.touches ?  e.originalEvent.touches[0].pageY : e.pageY;
-    var currentX = e.originalEvent.touches ?  e.originalEvent.touches[0].pageX : e.pageX;
-
-  latestMouseY = currentY * (1 / scale);
-  latestMouseX = currentX * (1 / scale);
-    if (isIntervalSet) {
-        return;
-    }
-    isIntervalSet = true;
-    timer = window.setTimeout(function() {
-    sendData = {
-      type: "mouse",
-      mouseclicked: mouseclicked,
-      pos: {x: Math.round(latestMouseX), y: Math.round(latestMouseY)},
-      card: dragCardId
-    }
-    sendToWs(sendData);
-    isIntervalSet = false;
-    }, 50);
-});
-
-
-$( document ).on( "mouseup", function( e ) {
-  dragCardId = null;
-});
-
-$(document).on ("keydown", function (event) {
-    if (event.ctrlKey  && event.key === "q") { 
-        $('#resetModal').modal();
-    }
-});
-
-function adaptScale()
-{
-  var width = $(window).width();
-  var height = $(window).height();
-
-  var ratio = 1920 / 1080;
-
-  var ratioWindow = width / height;
-
-  if (ratioWindow > ratio)
-  {
-    scale = height / 1080;
-    $(".scaleplane").css("transform", "scale(" + scale + ")")
-  }
-  else
-  {
-    scale = width / 1920;
-    $(".scaleplane").css("transform", "scale(" + scale + ")")
-  }
-}
-
-$( window ).resize(function() {
-  adaptScale();
-
-});
-
-$( document ).ready(function() {
-  var colorSelectionHtml = "";
-  var nColorSelection = 0;
-  for (color of colors)
-  {
-    nColorSelection++;
-    colorSelectionHtml += '<div class="form-check form-check-inline" style="background-color: ' + color + '; padding: 20px; display: inline-block">';
-    colorSelectionHtml += '<input class="form-check-input colorSelector" type="checkbox" id="inlineCheckbox' + nColorSelection + '" value="' + nColorSelection + '">';
-    colorSelectionHtml += '<label class="form-check-label" for="inlineCheckbox' + nColorSelection + '"></label>';
-    colorSelectionHtml += '</div>';
-  }
-  $(".colorSelectionContainer").html(colorSelectionHtml);
-
-
-  adaptScale();
-
-  $('.colorSelector').on('click', selectColor);
-  $(".cursor").off();
-  $('#enterGameBtn').attr('disabled',true);
-  $('#enterGameBtn').on('click', enterGame);
-  $('#resetGameBtn').on('click', resetGame);
-  $(".shuffleButton").on('click', shuffleDeck);
-    $('#name').keyup(function(){
-        checkEnterIsAllowed();
-        sendData = {
-          type: "name",
-          name: $('#name').val()
-        }
-        sendToWs(sendData);
-    })
-
-    $(".card").on("mousedown", function(event){
-      dragCardId = event.currentTarget.id;
-      mouseclicked = true;
-    });
-    $(".card").on("touchstart", function(event){
-      mouseclicked = true;
-      var currentY = event.originalEvent.touches[0].pageY;
-      var currentX = event.originalEvent.touches[0].pageX;
-      latestMouseY = currentY * (1 / scale);
-      latestMouseX = currentX * (1 / scale);
-      sendData = {
-        type: "mouse",
-        mouseclicked: mouseclicked,
-        pos: {x: Math.round(latestMouseX), y: Math.round(latestMouseY)},
-        card: dragCardId
-      }
-      sendToWs(sendData);
-      dragCardId = event.currentTarget.id;
-      event.preventDefault();
-      
-    });
-     $(".card").bind("mouseup touchend", function(e){
-      mouseclicked = false;
-      e.preventDefault();
-      var currentY = e.originalEvent.touches ?  e.originalEvent.touches[0].pageY : e.pageY;
-      var currentX = e.originalEvent.touches ?  e.originalEvent.touches[0].pageX : e.pageX;
-
-      latestMouseY = currentY * (1 / scale);
-      latestMouseX = currentX * (1 / scale);
-      sendData = {
-        type: "mouse",
-        mouseclicked: mouseclicked,
-        pos: {x: Math.round(latestMouseX), y: Math.round(latestMouseY)},
-        card: dragCardId
-      }
-      sendToWs(sendData);
-      dragCardId = null;
-    });
-
-  navigator.mediaDevices.getUserMedia({video: {
-                          width: {
-                              max: 640,
-                              ideal: 320 
-                          },
-                          height: {
-                              max: 480,
-                              ideal: 240
-                          }
-                      }, audio: true})
-    .then(function(stream) {
-      myStream = stream;
-      InitWebSocket();
-      $('#welcomeModal').modal({
-                          show: true,
-                          backdrop: 'static',
-                          keyboard: false
-                          });
-  });
-});
-
-function updateCss(selector, property, value)
-{
-  if ($(selector).css(property) !== value)
-  {
-    $(selector).css(property, value);
-  }
-}
-
-function updateParentCss(selector, property, value)
-{
-  if($(selector).parent().css(property) !== value)
-  {
-    $(selector).parent().css(property, value);
-  }
-}
-
-function updateCardFace(card, value)
-{
-  if(card.faceType === 'image')
-  {
-    if ($("#" + card.id).children('img').attr("src") !== value)
-    {
-      $("#" + card.id).children('img').attr("src", value);
-    }
-  }
-  else if(card.faceType === 'text')
-  {
-    if ($("#" + card.id + " span").html() !== value.text)
-    {
-      $("#" + card.id + " span").html(value.text);
-      $("#" + card.id).css("color", value.color);
-      $("#" + card.id).css("border", "4px solid " + value.color);
-      $("#" + card.id).css("background-color", value.backgroundcolor);
-      if(value.hasOwnProperty("secondarytext"))
-      {
-        $("#" + card.id + "_sec").html(value.secondarytext);
-      }
-      $(document).trigger("cardTextChanged", [card.id]);
-    }
-  }
-}
-
-function updateHtml(selector, html)
-{
-  if($(selector).html() !== html)
-  {
-    $(selector).html(html)
-  }
-}
-
-function addOrRemoveAttr(selector, attrName, add)
-{
-  var attr = $(selector).attr(attrName);
-
-  // For some browsers, `attr` is undefined; for others, `attr` is false. Check for both.
-  if (typeof attr !== typeof undefined && attr !== false && !add) {
-    // Element has this attribute
-    $(selector).removeAttr(attrName);
-  }
-  else
-  {
-    if(add)
-    {
-      $(selector).attr(attrName, true);
-    }
-  }
-}
-
-function initCards(gameObj){
-  for (var i = 0; i < gameObj.decks.length; i++)
-  {
-    updateCss("#" + gameObj.decks[i].id, "left", gameObj.decks[i].x + "px");
-    updateCss("#" + gameObj.decks[i].id, "top", gameObj.decks[i].y + "px");
-  }
-  for (var i = 0; i < gameObj.cards.length; i++)
-  {
-    updateCss("#" + gameObj.cards[i].id, "z-index", String(gameObj.cards[i].z + 60));
-    updateCss("#" + gameObj.cards[i].id, "left", gameObj.cards[i].x + "px");
-    updateCss("#" + gameObj.cards[i].id, "top", gameObj.cards[i].y + "px");
-    if (gameObj.cards[i].hasOwnProperty("show"))
-    {
-      if (cardIsInMyOwnBox(gameObj.cards[i]))
-      {
-        updateCardFace(gameObj.cards[i], gameObj.cards[i].frontface);
-      }
-      else
-      {
-        if(cardIsInInspectorBox(gameObj.cards[i]))
-        {
-          updateCardFace(gameObj.cards[i], gameObj.cards[i].altFrontface);
-        }
-        else
-        {
-          if (gameObj.cards[i].show == "backface")
-          {
-            updateCardFace(gameObj.cards[i], gameObj.cards[i].backface);
-          }
-          else if (gameObj.cards[i].show == "frontface")
-          {
-            updateCardFace(gameObj.cards[i], gameObj.cards[i].frontface);
-          }
-        }
-      }
-    }
-  }
-}
-
-function moveCard(id, deltaX, deltaY)
-{
-  if (deltaX != 0)
-  {
-    var newX = Math.round($("#" + id).position().left * (1 / scale)) + deltaX;
-    updateCss("#" + id, "left", newX + "px");
-  }
-  if(deltaY != 0)
-  {
-    var newY = Math.round($("#" + id).position().top * (1 / scale)) + deltaY;
-    updateCss("#" + id, "top", newY + "px");
-  }
-}
-
-function updateCards(gameObj)
-{
-  for (deck of gameObj.decks)
-  {
-    var deltaX = deck.x - Math.round($("#" + deck.id).position().left * (1 / scale));
-    var deltaY = deck.y - Math.round($("#" + deck.id).position().top * (1 / scale));
-
-    if(deltaX != 0 || deltaY != 0)
-    {
-      moveCard(deck.id, deltaX, deltaY);
-    }
-  }
-
-  for (card of gameObj.cards)
-  {
-    var deltaX = card.x - Math.round($("#" + card.id).position().left * (1 / scale));
-    var deltaY = card.y - Math.round($("#" + card.id).position().top * (1 / scale));
-    updateCss("#" + card.id, "z-index", String(card.z + 60));
-    if(deltaX != 0 || deltaY != 0)
-    {
-      moveCard(card.id, deltaX, deltaY);
-    }
-
-    
-    if(card.hasOwnProperty("show") && card.isInAnOpenbox)
-    {
-      if (card.show == "backface")
-      {
-        updateCardFace(card, card.backface);
-      }
-      else if (card.show == "frontface")
-      {
-        updateCardFace(card, card.frontface);
-      }
-    }
-    else
-    {
-      var cardInMyBox = cardIsInMyOwnBox(card);
-
-      if (card.hasOwnProperty("show") && (!card.attachedToDeck || cardInMyBox))
-      {
-        if (cardInMyBox)
-        {
-          updateCardFace(card, card.frontface);
-        }
-        else
-        {
-          if(cardIsInInspectorBox(card))
-          {
-            updateCardFace(card, card.altFrontface);
-          }
-          else
-          {
-            if (card.show == "backface")
-            {
-              updateCardFace(card, card.backface);
-            }
-            else if (card.show == "frontface")
-            {
-              updateCardFace(card, card.frontface);
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-function updateGame(gameObj, init){
-  if(init)
-  {
-    initCards(gameObj)
-  }
-  else
-  {
-    updateCards(gameObj);
-  }
-  for (openbox of gameObj.openboxes)
-  {
-    updateCss("#" + openbox.id, "left", (openbox.x) + "px");
-    updateCss("#" + openbox.id, "top", (openbox.y) + "px");
-    updateCss("#" + openbox.id, "width", (openbox.width) + "px");
-    updateCss("#" + openbox.id, "height", (openbox.height) + "px");
-  }
-
-  playerIndex = 0;
-  for (player of gameObj.players){
-    updateCss("#cursor" + playerIndex, "background-color", player.color);
-    updateCss("#player" + player.id + "box", "background-color", player.color);
-    updateHtml("#player" + player.id + "NameText", player.name)
-    updateCss("#cursor" + playerIndex, "left", (player.pos.x - 22) + "px");
-    updateCss("#cursor" + playerIndex, "top", (player.pos.y - 22) + "px");
-    updateCss("#cursor" + playerIndex, "display", "block");
-    playerIndex++;
-  }
-  for (var i = playerIndex; i < 20; i++){
-    updateCss("#cursor" + i, "left", "20000px");
-    updateCss("#cursor" + i, "top", "0px");
-    updateCss("#cursor" + playerIndex, "display", "none");
-  }
-
-  var nColorSelection = 0;
-  for (color of colors)
-  {
-    nColorSelection++;
-
-    if (colorIsTaken(gameObj, color))
-    {
-
-      addOrRemoveAttr("#inlineCheckbox" + nColorSelection, "disabled", true);
-      updateParentCss("#inlineCheckbox" + nColorSelection, "background-image", "URL(/img/color-taken.svg)");
-    }
-    else
-    {
-      addOrRemoveAttr("#inlineCheckbox" + nColorSelection, "disabled", false);
-      updateParentCss("#inlineCheckbox" + nColorSelection, "background-image", "none");
-    }
-    if (nColorSelection == myColor)
-    {
-      updateParentCss("#inlineCheckbox" + nColorSelection, "background-image", "URL(/img/color-chosen.svg)")
-    }
-  }
-
-  $(document).trigger("gameObj", [gameObj, myPlayerId, scale]);
-}
-
-function cardIsInMyOwnBox(card)
-{
-  if ( $("#player" + myPlayerId + "box").length ) {
-    if (card.lastTouchedBy == myPlayerId)
-    {
-      var boxX = $("#player" + myPlayerId + "box").position().left * (1 / scale);
-      var boxY = $("#player" + myPlayerId + "box").position().top * (1 / scale);
-      var width = $("#player" + myPlayerId + "box").width();
-      var height = $("#player" + myPlayerId + "box").height();
-      if (card.x > boxX && card.x < (boxX + width) && card.y > boxY && card.y < (boxY + height))
-      {
-        return true;
-      }
-      else
-      {
-        return false;
-      }
-    }
-    else
-    {
-      return false;
-    }
-  }
-  else
-  {
-    return false;
-  }
-}
-
-function cardIsInInspectorBox(card)
-{
-  if (card.lastTouchedBy == myPlayerId && card.hasOwnProperty("altFrontface"))
-  {
-    var boxX = $("#inpsectorbox0").position().left * (1 / scale);
-    var boxY = $("#inpsectorbox0").position().top * (1 / scale);
-    var width = $("#inpsectorbox0").width();
-    var height = $("#inpsectorbox0").height();
-    if (card.x > boxX && card.x < (boxX + width) && card.y > boxY && card.y < (boxY + height))
-    {
-      return true;
-    }
-    else
-    {
-      return false;
-    }
-  }
-  else
-  {
-    return false;
-  }
-}
-
-function colorIsTaken(gameObj, code){
-  for (player of gameObj.players)
-  {
-    if (player.color == code)
-    {
-      return true;
-    }
-  }
-  return false;
-}
-
-function selectColor(e){
-  nr = Number(e.target.value);
-  myColor = nr;
-  for (var i = 0; i < colors.length; i++)
-  {
-    if (i != nr)
-    {
-      $("#inlineCheckbox" + i).prop( "checked", false );
-    }
-    else
-    {
-      $("#inlineCheckbox" + i).prop( "checked", true );
-    }
-  }
-  state.color = colors[nr - 1];
-  sendData = {
-    type: "color",
-    color: colors[nr - 1]
-  }
-  sendToWs(sendData);
-  checkEnterIsAllowed();
-}
-
-function shuffleDeck(e){
-  var deckId = e.target.parentElement.id;
-  sendData = {
-    type: "shuffleDeck",
-    deckId: deckId
-  }
-  sendToWs(sendData);
-}
-
-function checkEnterIsAllowed()
-{
-  if($('#name').val().length !=0 && state.color != "#FFFFFF")
-    $('#enterGameBtn').attr('disabled', false);            
-  else
-    $('#enterGameBtn').attr('disabled',true);
-}
-
-function enterGame()
-{
-  $('#welcomeModal').modal('hide');
-}
-
-function resetGame()
-{
-  var sendData = {
-    type: "reset"
-  }
-  sendToWs(sendData)
-}
-},{"diff-match-patch":7,"pako":10,"simple-peer":29}]},{},[50]);
+},{}]},{},[7]);

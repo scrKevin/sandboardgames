@@ -57,7 +57,7 @@ Deck.prototype.removeFromDeck = function(card){
   var removeIndexCard = this.attachedCards.map(function(item) { return item.id }).indexOf(card.id);
   if (removeIndexCard != -1)
   {
-    console.log("remove " + card.id + " from " + this.id)
+    //console.log("remove " + card.id + " from " + this.id)
     this.attachedCards.splice(removeIndexCard, 1);
     card.attachedToDeck = false;
   }
@@ -68,7 +68,7 @@ Deck.prototype.addToDeck = function(card){
   var allowedToAdd = this.attachedCards.map(function(item) { return item.id }).indexOf(card.id);
   if (allowedToAdd == -1)
   {
-    console.log("add " + card.id + " to " + this.id)
+    //console.log("add " + card.id + " to " + this.id)
     this.attachedCards.push(card);
     card.attachedToDeck = true;
   }

@@ -1,11 +1,14 @@
 const WebSocket = require('ws');
 let Player = require('./player').Player
-let diff_match_patch = require('./diff-match-patch').diff_match_patch
+let diff_match_patch = require('diff-match-patch')
 var pako = require('pako');
+
+let FpsLimiter = require('./fps_limiter').FpsLimiter;
 
 
 function WS_distributor(wss, resetGameFunction)
 {
+  this.broadcastLimiter = new FpsLimiter(20, broadcastGameObj, this);
   this.transmittedBytes = 0;
   this.dmp = new diff_match_patch();
 
@@ -25,6 +28,7 @@ function WS_distributor(wss, resetGameFunction)
     openboxes: []
   }
   this.lastSentGameObj = JSON.stringify(this.gameObj);
+  this.changedCardsBuffer = [];
 
   this.timer = null;
   this.isIntervalSet = false;
@@ -51,6 +55,7 @@ function WS_distributor(wss, resetGameFunction)
         var moved = player.updatePos(json.pos)
         if (json.card !== null)
         {
+          this.addToChangedCardsBuffer(json.card);
           if (this.isDeck(json.card))
           {
             var deck = this.gameObj.decks.find(function(deck){
@@ -64,6 +69,7 @@ function WS_distributor(wss, resetGameFunction)
               {
                 card.x -= moved.deltaX;
                 card.y -= moved.deltaY;
+                this.addToChangedCardsBuffer(card.id);
               }
               for (openbox of deck.attachedOpenboxes)
               {
@@ -124,6 +130,10 @@ function WS_distributor(wss, resetGameFunction)
           if (deck.id == json.deckId)
           {
             deck.shuffleDeck();
+            for (card of deck.attachedCards)
+            {
+              this.addToChangedCardsBuffer(card.id)
+            }
             break;
           }
         }
@@ -207,7 +217,13 @@ function WS_distributor(wss, resetGameFunction)
   this.lastSentGameObj = JSON.stringify(this.gameObj);
 }
 
-
+WS_distributor.prototype.addToChangedCardsBuffer = function(newItem)
+{
+  if (this.changedCardsBuffer.indexOf(newItem) === -1)
+  {
+    this.changedCardsBuffer.push(newItem);
+  }
+}
 
 WS_distributor.prototype.isDeck = function (id)
 {
@@ -254,33 +270,29 @@ WS_distributor.prototype.broadcastNewPeer = function (playerId, newWs){
 }
 
 WS_distributor.prototype.broadcast = function(){
-  if (this.isIntervalSet)
-  {
-    return;
-  }
-  this.isIntervalSet = true;
-  this.timer = setTimeout(() => {
-    var currentGameObj = JSON.stringify(this.gameObj)
-    var diffs = this.dmp.diff_main(this.lastSentGameObj, currentGameObj);
-    this.dmp.diff_cleanupEfficiency(diffs);
-    var patches = this.dmp.patch_make(this.lastSentGameObj, diffs);
-    this.lastSentGameObj = currentGameObj;
-    var patchToSend = this.dmp.patch_toText(patches)
+  this.broadcastLimiter.update();
+}
 
-    var sendData = {
-      type: "patches",
-      patches: patchToSend
+function broadcastGameObj(thisObj){
+  var currentGameObj = JSON.stringify(thisObj.gameObj)
+  var diffs = thisObj.dmp.diff_main(thisObj.lastSentGameObj, currentGameObj);
+  thisObj.dmp.diff_cleanupEfficiency(diffs);
+  var patches = thisObj.dmp.patch_make(thisObj.lastSentGameObj, diffs);
+  thisObj.lastSentGameObj = currentGameObj;
+  var patchToSend = thisObj.dmp.patch_toText(patches)
+  var sendData = {
+    type: "patches",
+    changedCards: thisObj.changedCardsBuffer,
+    patches: patchToSend
+  }
+  var strToSend = JSON.stringify(sendData);
+  thisObj.changedCardsBuffer = [];
+  var binaryString = pako.deflate(strToSend, { to: 'string' });
+  thisObj.wss.clients.forEach(function each(client) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(binaryString);
     }
-    var strToSend = JSON.stringify(sendData);
-    var binaryString = pako.deflate(strToSend, { to: 'string' });
-    this.wss.clients.forEach(function each(client) {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(binaryString);
-      }
-    });
-    this.isIntervalSet = false;
-    
-  }, 50);
+  });
 }
 
 
