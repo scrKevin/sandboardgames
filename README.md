@@ -11,7 +11,7 @@ Working example @ https://bitwiseworkshop.nl/
 * Watchify (`npm install --global watchify`).
 
 ### Getting started:
-* Ensure external port 443 is forwarded to your machine.
+* Ensure external port 443 of your internet connection is forwarded to your machine.
 * Install NodeJS (https://nodejs.org/).
 * Clone this repostitory: `git clone https://github.com/scrKevin/sandboardgames.git`.
 * `cd sandboardgames` into the created directory.
