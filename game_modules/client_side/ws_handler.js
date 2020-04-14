@@ -1,7 +1,7 @@
 let pako = require('pako');
 let diff_match_patch = require('diff-match-patch');
 let FpsLimiter = require('../fps_limiter').FpsLimiter;
-let events = require('events');
+let EventEmitter = require('events').EventEmitter;
 
 function WsHandler(ws)
 {
@@ -11,15 +11,13 @@ function WsHandler(ws)
 
   this.dmp = new diff_match_patch();
   this.changedCardsBuffer = [];
-  this.eventEmitter = new events.EventEmitter();
-
+  this.eventEmitter = new EventEmitter();
   this.updateGameLimiter = new FpsLimiter(20);
-  this.updateGameLimiter.eventEmitter.on("update", () => {
+  this.updateGameLimiter.on("update", () => {
     this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, false);
   });
 
-  this.ws.onopen = function()
-  {
+  this.ws.onopen = function () {
     this.requestPlayerId()
   }.bind(this);
 
@@ -54,8 +52,7 @@ function WsHandler(ws)
     {
       if (json.playerId != this.myPlayerId)
       {
-        initGamePeer(json.playerId);
-        doorbell.play();
+        this.eventEmitter.emit("newPeer", json.playerId)
       }
     }
     else if (json.type == "leftPeer")
@@ -65,37 +62,17 @@ function WsHandler(ws)
     }
     else if (json.type == "peerConnect")
     {
-      peers[json.fromPlayerId] = new SimplePeer({
-      initiator: false,
-      trickle: false,
-      stream: myStream
-    });
-
-      peers[json.fromPlayerId].on('stream', stream => {
-        addWebcam(stream, json.fromPlayerId, false, false);
-    });
-
-    peers[json.fromPlayerId].on('signal', data => {
-
-      sendData = {
-        type: "acceptPeer",
-        fromPlayerId: json.fromPlayerId,
-        stp: data
-      }
-      sendToWs(sendData);
-    });
-
-    peers[json.fromPlayerId].signal(json.stp);
-
+      this.eventEmitter.emit("peerConnect", json.fromPlayerId, json.stp)
     }
     else if (json.type == "peerAccepted")
     {
-      peers[json.fromPlayerId].signal(json.stp);
+      this.eventEmitter.emit("peerAccepted", json.fromPlayerId, json.stp)
     }
   }.bind(this);
   ws.onclose = function()
   { 
     //setTimeout(function(){InitWebSocket();}, 2000);
+    this.eventEmitter.emit("wsClosed")
   }.bind(this);
 }
 
@@ -103,6 +80,24 @@ WsHandler.prototype.requestPlayerId = function()
 {
   var sendData = {
     type: "requestId"
+  }
+  this.sendToWs(sendData);
+}
+
+WsHandler.prototype.shuffleDeck = function(deckId)
+{
+  var sendData = {
+    type: "shuffleDeck",
+    deckId: deckId
+  }
+  this.sendToWs(sendData);
+}
+
+WsHandler.prototype.selectColor = function(color)
+{
+  var sendData = {
+    type: "color",
+    color: color
   }
   this.sendToWs(sendData);
 }
@@ -121,6 +116,23 @@ WsHandler.prototype.addToChangedCardsBuffer = function(newItem)
   {
     this.changedCardsBuffer.push(newItem);
   }
+}
+
+WsHandler.prototype.resetGame = function()
+{
+  var sendData = {
+    type: "reset"
+  }
+  this.sendToWs(sendData)
+}
+
+WsHandler.prototype.typeName = function(name)
+{
+  sendData = {
+    type: "name",
+    name: name
+  }
+  this.sendToWs(sendData);
 }
 
 module.exports = {WsHandler: WsHandler}

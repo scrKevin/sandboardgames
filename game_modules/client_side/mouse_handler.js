@@ -5,7 +5,7 @@ function MouseHandler(wsHandler)
   this.wsHandler = wsHandler;
 
   this.mouseFpsLimiter = new FpsLimiter(20);
-  this.mouseFpsLimiter.eventEmitter.on("update", () => {
+  this.mouseFpsLimiter.on("update", () => {
     this.sendMouseMove()
   });
 
@@ -35,6 +35,18 @@ MouseHandler.prototype.clickOnCard = function(id)
   this.dragCardId = id;
   this.mouseclicked = true;
   this.mouseFpsLimiter.update();
+}
+
+MouseHandler.prototype.touchCard = function(id, x, y)
+{
+  this.dragCardId = id;
+  var sendData = {
+    type: "mouse",
+    mouseclicked: mouseclicked,
+    pos: {x: latestMouseX, y: latestMouseY},
+    card: id
+  }
+  this.wsHandler.sendToWs(sendData);
 }
 
 MouseHandler.prototype.releaseCard = function(x, y)

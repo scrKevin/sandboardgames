@@ -9,7 +9,7 @@ let FpsLimiter = require('./fps_limiter').FpsLimiter;
 function WS_distributor(wss, resetGameFunction)
 {
   this.broadcastLimiter = new FpsLimiter(20);
-  this.broadcastLimiter.eventEmitter.on("update", () => {
+  this.broadcastLimiter.on("update", () => {
     var currentGameObj = JSON.stringify(this.gameObj)
     var diffs = this.dmp.diff_main(this.lastSentGameObj, currentGameObj);
     this.dmp.diff_cleanupEfficiency(diffs);
@@ -63,7 +63,7 @@ function WS_distributor(wss, resetGameFunction)
     this.clients.push(client);
     this.gameObj.players.push(player);
 
-    console.log(this.gameObj)
+    //console.log(this.gameObj)
 
     ws.on('message', (message) => {
       var json = JSON.parse(pako.inflate(message, { to: 'string' }));
