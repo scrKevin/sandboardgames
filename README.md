@@ -11,7 +11,7 @@ Working example @ https://bitwiseworkshop.nl/
   - Use (https://greenlock.domains/) for a free certificate.
   - If you just want to quickly test locally (over _HTTP_), create a self-signed
     certificate:
-    `openssl req -nodes -x509 -newkey rsa:4096 -keyout security/privkey.pem -out security/fullchain.pemm -days 365`
+    `openssl req -nodes -x509 -newkey rsa:4096 -keyout security/privkey.pem -out security/fullchain.pem -days 365`
 - NodeJS (https://nodejs.org/).
 - Browserify (`npm install --global browserify`).
 
