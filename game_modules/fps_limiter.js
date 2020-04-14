@@ -1,8 +1,9 @@
-function FpsLimiter(fps, func, args) {
+var events = require('events');
+
+function FpsLimiter(fps) {
   this.isIntervalSet = false;
   this.ms = Math.round(1000 / fps);
-  this.func = func;
-  this.args = args;
+  this.eventEmitter = new events.EventEmitter();
 }
 
 FpsLimiter.prototype.update = function()
@@ -12,7 +13,8 @@ FpsLimiter.prototype.update = function()
     return;
   }
   this.isIntervalSet = true;
-  this.func(this.args);
+  //this.func(this.args);
+  this.eventEmitter.emit("update");
   setTimeout(function(){
     this.isIntervalSet = false;
   }.bind(this), this.ms);

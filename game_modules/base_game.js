@@ -8,7 +8,28 @@ let FpsLimiter = require('./fps_limiter').FpsLimiter;
 
 function WS_distributor(wss, resetGameFunction)
 {
-  this.broadcastLimiter = new FpsLimiter(20, broadcastGameObj, this);
+  this.broadcastLimiter = new FpsLimiter(20);
+  this.broadcastLimiter.eventEmitter.on("update", () => {
+    var currentGameObj = JSON.stringify(this.gameObj)
+    var diffs = this.dmp.diff_main(this.lastSentGameObj, currentGameObj);
+    this.dmp.diff_cleanupEfficiency(diffs);
+    var patches = this.dmp.patch_make(this.lastSentGameObj, diffs);
+    this.lastSentGameObj = currentGameObj;
+    var patchToSend = this.dmp.patch_toText(patches)
+    var sendData = {
+      type: "patches",
+      changedCards: this.changedCardsBuffer,
+      patches: patchToSend
+    }
+    var strToSend = JSON.stringify(sendData);
+    this.changedCardsBuffer = [];
+    var binaryString = pako.deflate(strToSend, { to: 'string' });
+    this.wss.clients.forEach(function each(client) {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(binaryString);
+      }
+    });
+  })
   this.transmittedBytes = 0;
   this.dmp = new diff_match_patch();
 
@@ -42,6 +63,7 @@ function WS_distributor(wss, resetGameFunction)
     this.clients.push(client);
     this.gameObj.players.push(player);
 
+    console.log(this.gameObj)
 
     ws.on('message', (message) => {
       var json = JSON.parse(pako.inflate(message, { to: 'string' }));

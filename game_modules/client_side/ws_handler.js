@@ -1,0 +1,126 @@
+let pako = require('pako');
+let diff_match_patch = require('diff-match-patch');
+let FpsLimiter = require('../fps_limiter').FpsLimiter;
+let events = require('events');
+
+function WsHandler(ws)
+{
+  this.ws = ws;
+  this.myPlayerId = -1;
+  this.lastGameObj = "";
+
+  this.dmp = new diff_match_patch();
+  this.changedCardsBuffer = [];
+  this.eventEmitter = new events.EventEmitter();
+
+  this.updateGameLimiter = new FpsLimiter(20);
+  this.updateGameLimiter.eventEmitter.on("update", () => {
+    this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, false);
+  });
+
+  this.ws.onopen = function()
+  {
+    this.requestPlayerId()
+  }.bind(this);
+
+  this.ws.onmessage = function (evt) 
+  {
+    var json = JSON.parse(pako.inflate(evt.data, { to: 'string' }));
+    if(json.type == "patches")
+    {
+      this.lastGameObj = this.dmp.patch_apply(this.dmp.patch_fromText(json.patches), this.lastGameObj)[0];
+      try
+      {
+        for (changedCard of json.changedCards)
+        {
+          this.addToChangedCardsBuffer(changedCard);
+        }
+        this.updateGameLimiter.update();
+      }
+      catch (err)
+      {
+        console.log(err);
+        this.requestPlayerId();
+      }
+    }
+    else if (json.type == "playerId")
+    {
+      this.lastGameObj = json.gameObj;
+      this.myPlayerId = json.playerId;
+      this.eventEmitter.emit('playerId', json.playerId);
+      this.eventEmitter.emit('updateGame', JSON.parse(this.lastGameObj), [], true)
+    }
+    else if (json.type == "newPeer")
+    {
+      if (json.playerId != this.myPlayerId)
+      {
+        initGamePeer(json.playerId);
+        doorbell.play();
+      }
+    }
+    else if (json.type == "leftPeer")
+    {
+      peers[json.playerId].destroy();
+      $("#webcam" + json.playerId).html("");
+    }
+    else if (json.type == "peerConnect")
+    {
+      peers[json.fromPlayerId] = new SimplePeer({
+      initiator: false,
+      trickle: false,
+      stream: myStream
+    });
+
+      peers[json.fromPlayerId].on('stream', stream => {
+        addWebcam(stream, json.fromPlayerId, false, false);
+    });
+
+    peers[json.fromPlayerId].on('signal', data => {
+
+      sendData = {
+        type: "acceptPeer",
+        fromPlayerId: json.fromPlayerId,
+        stp: data
+      }
+      sendToWs(sendData);
+    });
+
+    peers[json.fromPlayerId].signal(json.stp);
+
+    }
+    else if (json.type == "peerAccepted")
+    {
+      peers[json.fromPlayerId].signal(json.stp);
+    }
+  }.bind(this);
+  ws.onclose = function()
+  { 
+    //setTimeout(function(){InitWebSocket();}, 2000);
+  }.bind(this);
+}
+
+WsHandler.prototype.requestPlayerId = function()
+{
+  var sendData = {
+    type: "requestId"
+  }
+  this.sendToWs(sendData);
+}
+
+WsHandler.prototype.sendToWs = function(data)
+{
+  if (this.ws != null && this.ws.readyState === this.ws.constructor.OPEN)
+  {
+    this.ws.send(pako.deflate(JSON.stringify(data), { to: 'string' }));
+  }
+}
+
+WsHandler.prototype.addToChangedCardsBuffer = function(newItem)
+{
+  if (!this.changedCardsBuffer.includes(newItem))
+  {
+    this.changedCardsBuffer.push(newItem);
+  }
+}
+
+module.exports = {WsHandler: WsHandler}

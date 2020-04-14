@@ -17,7 +17,6 @@ function toggleVisible(selector, shouldBeVisible)
 $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
   myX = 0;
   myY = 0;
-  
   myX = $("#webcambox" + myPlayerId).position().left * (1 / scale) + (160 * (1 / scale));
   myY = $("#webcambox" + myPlayerId).position().top * (1 / scale) + (120 * (1 / scale));
 
