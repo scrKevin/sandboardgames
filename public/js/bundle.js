@@ -3661,7 +3661,7 @@ function WsHandler(ws)
   }.bind(this);
   ws.onclose = function()
   { 
-    //setTimeout(function(){InitWebSocket();}, 2000);
+    
     this.eventEmitter.emit("wsClosed")
   }.bind(this);
 }

@@ -1,6 +1,11 @@
 let SimplePeer = require('simple-peer');
 let EventEmitter = require('events').EventEmitter;
 
+if(process.env.NODE_ENV === 'test')
+{
+  var wrtc = require('wrtc');
+}
+
 function WebcamHandler(wsHandler, myStream)
 {
   this.wsHandler = wsHandler;
@@ -14,12 +19,16 @@ WebcamHandler.prototype = Object.create(EventEmitter.prototype);
 WebcamHandler.prototype.initWebcamPeer = function(playerId)
 {
   console.log("initiating peer for player " + playerId)
-  
-  this.peers[playerId] = new SimplePeer({
+  var peerOptions = {
     initiator: true,
     trickle: false,
     stream: this.myStream
-  });
+  }
+  if(process.env.NODE_ENV === 'test')
+  {
+    peerOptions.wrtc = wrtc;
+  }
+  this.peers[playerId] = new SimplePeer(peerOptions);
 
   this.peers[playerId].on('signal', (data) => {
     var sendData = {
@@ -37,11 +46,16 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId)
 
 WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
 {
-  this.peers[fromPlayerId] = new SimplePeer({
+  var peerOptions = {
     initiator: false,
     trickle: false,
     stream: this.myStream
-  });
+  }
+  if(process.env.NODE_ENV === 'test')
+  {
+    peerOptions.wrtc = wrtc;
+  }
+  this.peers[fromPlayerId] = new SimplePeer(peerOptions);
 
   this.peers[fromPlayerId].on('stream', stream => {
     this.emit("stream", fromPlayerId, stream)
