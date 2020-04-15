@@ -25,6 +25,10 @@ ClientController.prototype.initialize = function(ws, myStream)
     this.webcamHandler.initWebcamPeer(playerId);
     this.emit("newPeer", playerId);
   });
+  this.wsHandler.eventEmitter.on("leftPeer", (playerId) => {
+    this.webcamHandler.leftPeer(playerId);
+    this.emit("leftPeer", playerId);
+  });
   this.wsHandler.eventEmitter.on("peerConnect", (fromPlayerId, stp) => {
     this.webcamHandler.peerConnected(fromPlayerId, stp);
   });

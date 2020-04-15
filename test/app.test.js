@@ -6,18 +6,14 @@ var common = require('./common')
 
 const WebSocket = require('ws');
 let ClientController = require("../game_modules/client_side/client_controller").ClientController;
-clientControllerForUser1 = new ClientController();
-clientControllerForUser2 = new ClientController();
 
 chai.use(chaiHttp);
 
 var app = require('../index');
 var gameRooms = require('../index').appVariables.gameRooms;
 
-var wsUser1 = null;
-var wsUser2 = null;
-
 describe('Test reqests on server', function() {
+  this.timeout(15000);
   it('should get index', (done) =>{
     chai.request(app)
       .get('/')
@@ -51,35 +47,139 @@ describe('Test reqests on server', function() {
     })
   });
 
-  it ('users should receive each others streams', function(done) {
-    this.timeout(15000);
-    return new Promise(function(resolve, reject){
-      resolveObj = {
-        playerIdReceivedByUser1: -1,
-        playerIdReceivedByUser2: -1,
-        streamReceivedByUser1: null,
-        streamReceivedByUser2: null
-      }
-      wsUser1 = new WebSocket('ws://localhost:8080/' + gameRooms[0].hash + '/lobby')
-      clientControllerForUser1.initialize(wsUser1, common.getMediaStream());
-      clientControllerForUser1.on("playerId", (playerId) => {
-        expect(playerId).to.equal(0)
-      });
-      clientControllerForUser1.on("stream", (playerId, stream) => {
-        expect(playerId).to.equal(2)
-      });
+  it ('should add new players to the gameroom count', function () {
 
-      wsUser2 = new WebSocket('ws://localhost:8080/' + gameRooms[0].hash + '/lobby')
-      clientControllerForUser2.initialize(wsUser2, common.getMediaStream());
-      clientControllerForUser2.on("playerId", (playerId) => {
-        expect(playerId).to.equal(1)
+    function connectAndDisconnect()
+    { 
+      return new Promise(async function(resolve, reject){
+
+
+        function connect(clientController, wsUser){
+          return new Promise(function(resolve, reject){
+            clientController.on("playerId", (playerId) => {
+              resolve();
+            });
+            clientController.initialize(wsUser, common.getMediaStream());
+          });
+        }
+
+        function closeWs(clientController, wsUser){
+          return new Promise(function(resolve, reject){
+            clientController.on("wsClosed", () => {
+              resolve();
+            })
+            wsUser.close();
+          })
+        }
+
+
+        var testUsers = []
+        for(var i = 0; i < 10; i++)
+        {
+          var clientController = new ClientController();
+          var wsUser = new WebSocket('ws://localhost:8080/' + gameRooms[0].hash + '/lobby')
+          await connect(clientController, wsUser)
+          testUsers.push({cc: clientController, wsUser: wsUser});
+        }
+        expect(gameRooms[0].getNrOfPlayers()).to.equal(10);
+        for(var i = 0; i < 10; i++)
+        {
+          await closeWs(testUsers[i].cc, testUsers[i].wsUser);
+          console.log("closed")
+        }
+        expect(gameRooms[0].getNrOfPlayers()).to.equal(0);
+        resolve()
+      })
+    };
+
+    return connectAndDisconnect().then(function(){
+
+    }, function(err){
+      assert.fail(err)
+    }).catch(function(assertErr){
+      assert.fail(assertErr)
+    });
+  });
+
+  it ('users should receive each others streams', function() {
+    console.log("started")
+    function testReceivingStreams(){
+      return new Promise(function(resolve, reject){
+        function checkResolve(){
+          if (resolveObj.streamsReceivedByUser0.received.length == 2 && resolveObj.streamsReceivedByUser1.received.length == 2 && resolveObj.streamsReceivedByUser2.received.length == 2)
+          {
+            wsUser0.close()
+            wsUser1.close()
+            wsUser2.close()
+            resolve(resolveObj)
+          }
+        }
+        var clientControllerForUser0 = new ClientController();
+        var clientControllerForUser1 = new ClientController();
+        var clientControllerForUser2 = new ClientController();
+        var resolveObj = {
+          streamsReceivedByUser0: {ownPlayerId: 0, received: []},
+          streamsReceivedByUser1: {ownPlayerId: 1, received: []},
+          streamsReceivedByUser2: {ownPlayerId: 2, received: []},
+        }
+        var wsUser0 = new WebSocket('ws://localhost:8080/' + gameRooms[0].hash + '/lobby')
+        clientControllerForUser0.initialize(wsUser0, common.getMediaStream());
+        clientControllerForUser0.on("stream", (playerId, stream) => {
+          resolveObj.streamsReceivedByUser0.received.push({playerId: playerId, stream: stream})
+          checkResolve();
+        });
+
+        var wsUser1 = new WebSocket('ws://localhost:8080/' + gameRooms[0].hash + '/lobby')
+        clientControllerForUser1.initialize(wsUser1, common.getMediaStream());
+        clientControllerForUser1.on("stream", (playerId, stream) => {
+          resolveObj.streamsReceivedByUser1.received.push({playerId: playerId, stream: stream})
+          checkResolve();
+        });
+
+        var wsUser2 = new WebSocket('ws://localhost:8080/' + gameRooms[0].hash + '/lobby')
+        clientControllerForUser2.initialize(wsUser2, common.getMediaStream());
+        clientControllerForUser2.on("stream", (playerId, stream) => {
+          resolveObj.streamsReceivedByUser2.received.push({playerId: playerId, stream: stream})
+          checkResolve();
+        });
       });
-      clientControllerForUser2.on("stream", (playerId, stream) => {
-        expect(playerId).to.equal(0)
-      });
-    }).then(function(data){
-      done()
-    })
+    };
+
+    return testReceivingStreams().then(function(resolveObj){
+      var possibleUsers = [0, 1, 2]
+      for (user in resolveObj)
+      {
+        var shouldHaveReceived = possibleUsers.filter(function(userNr){
+          return userNr != resolveObj[user].ownPlayerId
+        });
+        for(received of resolveObj[user].received)
+        {
+          if(!shouldHaveReceived.includes(received.playerId))
+          {
+            console.log(shouldHaveReceived);
+            console.log(resolveObj[user].received);
+            assert.fail("user " + resolveObj[user].ownPlayerId + " received a stream it should not have received.")
+          }
+        }
+        for (userNr of shouldHaveReceived)
+        {
+          var nInReceived = 0;
+          for (received of resolveObj[user].received)
+          {
+            if (received.playerId == userNr)
+            {
+              nInReceived++;
+            }
+            expect(received.stream).not.to.be.null;
+          }
+          expect(nInReceived).to.equal(1);
+        }
+      }
+    }, function (err){
+      assert.fail();
+    }).catch(function(assertErr){
+      assert.fail(assertErr)
+    });
     
   });
 

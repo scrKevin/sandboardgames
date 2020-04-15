@@ -262,7 +262,7 @@ WS_distributor.prototype.isDeck = function (id)
 
 WS_distributor.prototype.broadcastLeftPeer = function (playerId)
 {
-  console.log("broadcasting left player " + playerId)
+  //console.log("broadcasting left player " + playerId)
   var sendData = {
     type: "leftPeer",
     playerId: playerId
@@ -277,7 +277,7 @@ WS_distributor.prototype.broadcastLeftPeer = function (playerId)
 }
 
 WS_distributor.prototype.broadcastNewPeer = function (playerId, newWs){
-  console.log("broadcasting new peer " + playerId)
+  //console.log("broadcasting new peer " + playerId)
   var sendData = {
     type: "newPeer",
     playerId: playerId

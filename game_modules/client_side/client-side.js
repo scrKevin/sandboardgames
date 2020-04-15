@@ -123,6 +123,10 @@ function InitWebSocket()
       doorbell.play();
     });
 
+    clientController.on("leftPeer", (playerId) => {
+      $("#webcam" + playerId).html("");
+    });
+
     clientController.on("stream", (playerId, stream) => {
       addWebcam(stream, playerId, false, false);
     });

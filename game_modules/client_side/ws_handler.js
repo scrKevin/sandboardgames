@@ -57,8 +57,7 @@ function WsHandler(ws)
     }
     else if (json.type == "leftPeer")
     {
-      peers[json.playerId].destroy();
-      $("#webcam" + json.playerId).html("");
+      this.eventEmitter.emit("leftPeer", json.playerId)
     }
     else if (json.type == "peerConnect")
     {

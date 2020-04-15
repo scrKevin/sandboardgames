@@ -18,7 +18,7 @@ WebcamHandler.prototype = Object.create(EventEmitter.prototype);
 
 WebcamHandler.prototype.initWebcamPeer = function(playerId)
 {
-  console.log("initiating peer for player " + playerId)
+  //console.log("initiating peer for player " + playerId)
   var peerOptions = {
     initiator: true,
     trickle: false,
@@ -77,6 +77,18 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
 WebcamHandler.prototype.peerAccepted = function(fromPlayerId, stp)
 {
   this.peers[fromPlayerId].signal(stp);
+}
+
+WebcamHandler.prototype.leftPeer = function(playerId)
+{
+  try {
+    this.peers[playerId].destroy();
+  }
+  catch (error)
+  {
+    //console.log(error)
+  }
+  delete this.peers[playerId]
 }
 
 module.exports = {WebcamHandler: WebcamHandler}
