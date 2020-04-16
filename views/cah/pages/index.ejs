@@ -3,11 +3,11 @@
     <%- include ("../partials/head") %>
   </head>
   <body>
-    <%- include ('../partials/resetModal'); -%>
+    <%- include ('../../common/resetModal'); -%>
     <div class="scaleplane">
       <%- include ('../partials/webcams'); -%>
       <%- include ('../partials/decks', {nBlackCards: nBlackCards, nWhiteCards: nWhiteCards}) %>
-      <%- include ('../partials/cursors'); -%>
+      <%- include ('../../common/cursors'); -%>
     </div>
   </body>
 </html>
