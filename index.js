@@ -55,6 +55,8 @@ var httpServer = http.createServer(app);
 
 var gameRooms = [];
 
+console.log("process.env.NODE_ENV = " + process.env.NODE_ENV);
+
 if(process.env.NODE_ENV === 'development')
 {
   // create a test gameroom on startup, this speeds up development..
@@ -171,3 +173,6 @@ if(process.env.NODE_ENV !== 'development')
     //console.log(gameRooms)
   }, 10000);
 }
+
+module.exports = app;
+module.exports.appVariables = {gameRooms: gameRooms}

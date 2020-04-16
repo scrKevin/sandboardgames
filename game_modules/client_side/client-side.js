@@ -1,16 +1,10 @@
-let pako = require('pako');
-let SimplePeer = require('simple-peer');
-let diff_match_patch = require('diff-match-patch');
-let FpsLimiter = require('../fps_limiter').FpsLimiter;
+let ClientController = require("./client_controller").ClientController;
 
-var dmp = new diff_match_patch();
+var clientController = new ClientController()
 
 var scale = 1;
 
 var myStream = null;
-var peers = {};
-
-var lastGameObj = "";
 
 var myPlayerId = -1;
 
@@ -37,16 +31,9 @@ var ws = null;
 
 var doorbell = new Audio('/wav/doorbell.wav');
 
-var mouseFpsLimiter = new FpsLimiter(20, sendMouseMove, null)
-var updateGameLimiter = new FpsLimiter(20, updateGame, false)
-
-var latestMouseX = 0;
-var latestMouseY = 0;
-
-var mouseclicked = false;
+var latestMouseX = -1;
+var latestMouseY = -1;
 var dragCardId = null;
-
-var changedCardsBuffer = [];
 
 function addWebcam(stream, playerId, mirrored, muted)
 {
@@ -59,72 +46,31 @@ function addWebcam(stream, playerId, mirrored, muted)
   video.muted = muted;
   video.srcObject = stream;
   video.addEventListener("playing", function () {
-        setTimeout(function () {
-            console.log("Stream dimensions: " + video.videoWidth + "x" + video.videoHeight);
-            var aspectRatio = video.videoWidth / video.videoHeight;
-            if (aspectRatio < 1)
-            {
-              var correctedHeight = video.videoHeight * (webcamBoxWidth / video.videoWidth);
-              $("#webcam" + playerId + " video").css("width", webcamBoxWidth + "px")
-              $("#webcam" + playerId + " video").css("height", correctedHeight + "px");
-              $("#webcam" + playerId + " video").css("margin-left", "0px")
-              $("#webcam" + playerId + " video").css("margin-top", ((webcamBoxHeight - correctedHeight) * 0.5) + "px")
-            }
-            else
-            {
-              var correctedWidth = video.videoWidth * (webcamBoxHeight / video.videoHeight);
-              $("#webcam" + playerId + " video").css("width", correctedWidth + "px")
-              $("#webcam" + playerId + " video").css("height", webcamBoxHeight + "px");
-              $("#webcam" + playerId + " video").css("margin-left", ((webcamBoxWidth - correctedWidth) * 0.5) + "px")
-              $("#webcam" + playerId + " video").css("margin-top", "0px")
-            }
-        }, 500);
-    });
+    setTimeout(function () {
+      console.log("Stream dimensions: " + video.videoWidth + "x" + video.videoHeight);
+      var aspectRatio = video.videoWidth / video.videoHeight;
+      if (aspectRatio < 1)
+      {
+        var correctedHeight = video.videoHeight * (webcamBoxWidth / video.videoWidth);
+        $("#webcam" + playerId + " video").css("width", webcamBoxWidth + "px")
+        $("#webcam" + playerId + " video").css("height", correctedHeight + "px");
+        $("#webcam" + playerId + " video").css("margin-left", "0px")
+        $("#webcam" + playerId + " video").css("margin-top", ((webcamBoxHeight - correctedHeight) * 0.5) + "px")
+      }
+      else
+      {
+        var correctedWidth = video.videoWidth * (webcamBoxHeight / video.videoHeight);
+        $("#webcam" + playerId + " video").css("width", correctedWidth + "px")
+        $("#webcam" + playerId + " video").css("height", webcamBoxHeight + "px");
+        $("#webcam" + playerId + " video").css("margin-left", ((webcamBoxWidth - correctedWidth) * 0.5) + "px")
+        $("#webcam" + playerId + " video").css("margin-top", "0px")
+      }
+    }, 500);
+  });
   video.play();
 }
 
-function requestPlayerId()
-{
-  var sendData = {
-    type: "requestId"
-  }
-  sendToWs(sendData);
-}
-
-function initGamePeer(playerId)
-{
-  console.log("initiating peer for player " + playerId)
-  
-  peers[playerId] = new SimplePeer({
-    initiator: true,
-    trickle: false,
-    stream: myStream
-  });
-
-  peers[playerId].on('signal', data => {
-    //console.log("signal ")
-    sendData = {
-      type: "initiatorReady",
-      playerId: playerId,
-      stp: data
-    }
-    sendToWs(sendData)
-  });
-
-  peers[playerId].on('stream', stream => {
-    addWebcam(stream, playerId, false, false);
-  });
-}
-
 var gameInitialized = false;
-
-function addToChangedCardsBuffer(newItem)
-{
-  if (!changedCardsBuffer.includes(newItem))
-  {
-    changedCardsBuffer.push(newItem);
-  }
-}
 
 function InitWebSocket()
 {
@@ -136,108 +82,63 @@ function InitWebSocket()
   }
   if ("WebSocket" in window)
   {
-     var host = window.location.hostname;
+    var host = window.location.hostname;
      //console.log(window.location)
-     ws = new WebSocket(scheme + "://" + host + port + window.location.pathname);
-   
-     ws.onopen = function()
-     {
-      requestPlayerId()
-     };
-     ws.onmessage = function (evt) 
-     {
-      var json = JSON.parse(pako.inflate(evt.data, { to: 'string' }));
-      if(json.type == "patches")
-      {
-        lastGameObj = dmp.patch_apply(dmp.patch_fromText(json.patches), lastGameObj)[0];
-        try
-        {
-          for (changedCard of json.changedCards)
-          {
-            addToChangedCardsBuffer(changedCard);
-          }
-          updateGameLimiter.update();
-        }
-        catch (err)
-        {
-          console.log(err);
-          requestPlayerId();
-        }
-      }
-      else if (json.type == "playerId")
-      {
-        lastGameObj = json.gameObj;
-        myPlayerId = json.playerId;
-        if (myPlayerId + 1 > maxPlayers)
-        {
-          $('#welcomeModal').modal('hide');
-        }
-        if (!gameInitialized)
-        {
-          addWebcam(myStream, myPlayerId, true, true);
-          gameInitialized = true;
-        }
-        updateGame(true);
-      }
-      else if (json.type == "newPeer")
-      {
-        if (json.playerId != myPlayerId)
-        {
-          initGamePeer(json.playerId);
-          doorbell.play();
-        }
-      }
-      else if (json.type == "leftPeer")
-      {
-        peers[json.playerId].destroy();
-        $("#webcam" + json.playerId).html("");
-      }
-      else if (json.type == "peerConnect")
-      {
-        peers[json.fromPlayerId] = new SimplePeer({
-        initiator: false,
-        trickle: false,
-        stream: myStream
-      });
+    ws = new WebSocket(scheme + "://" + host + port + window.location.pathname);
 
-        peers[json.fromPlayerId].on('stream', stream => {
-          addWebcam(stream, json.fromPlayerId, false, false);
-      });
+    clientController.initialize(ws, myStream);
 
-      peers[json.fromPlayerId].on('signal', data => {
-
-        sendData = {
-          type: "acceptPeer",
-          fromPlayerId: json.fromPlayerId,
-          stp: data
-        }
-        sendToWs(sendData);
-      });
-
-      peers[json.fromPlayerId].signal(json.stp);
-
-      }
-      else if (json.type == "peerAccepted")
+    clientController.on("playerId", (playerId) => {
+      myPlayerId = playerId;
+      if (myPlayerId + 1 > maxPlayers)
       {
-        peers[json.fromPlayerId].signal(json.stp);
+        $('#welcomeModal').modal('hide');
       }
-     };
-     ws.onclose = function()
-     { 
-        setTimeout(function(){InitWebSocket();}, 2000);
-     };
+      if (!gameInitialized)
+      {
+        addWebcam(myStream, myPlayerId, true, true);
+        gameInitialized = true;
+      }
+    });
+
+    clientController.on("updateGame", (gameObj, changedCardsBuffer, init) => {
+      if(init)
+      {
+        initCards(gameObj)
+      }
+      else
+      {
+        updateCards(gameObj, changedCardsBuffer);
+      }
+
+      updateOpenboxes(gameObj);
+      updateCursors(gameObj);
+      updateColorSelection(gameObj);
+
+
+      $(document).trigger("gameObj", [gameObj, myPlayerId, scale]);
+    });
+
+    clientController.on("newPeer", (playerId) => {
+      doorbell.play();
+    });
+
+    clientController.on("leftPeer", (playerId) => {
+      $("#webcam" + playerId).html("");
+    });
+
+    clientController.on("stream", (playerId, stream) => {
+      addWebcam(stream, playerId, false, false);
+    });
+
+    clientController.on("wsClosed", () => {
+      setTimeout(function(){InitWebSocket();}, 2000);
+    });
   }
   else
   {
      // The browser doesn't support WebSocket
      //alert("WebSocket NOT supported by your Browser!");
-  }
-}
-
-function sendToWs(data){
-  if (ws != null && ws.readyState === WebSocket.OPEN)
-  {
-    ws.send(pako.deflate(JSON.stringify(data), { to: 'string' }));
   }
 }
 
@@ -250,37 +151,28 @@ $(document).bind('touchmove mousemove', function (e) {
   var currentXScaled = Math.round(currentX * (1 / scale));
   var currentYScaled = Math.round(currentY * (1 / scale));
 
-  var deltaX = latestMouseX - currentXScaled;
-  var deltaY = latestMouseY - currentYScaled;
-
-
-  if (dragCardId != null)
+  if (latestMouseX != -1)
   {
-    //console.log(deltaX)
-    //console.log($("#" + dragCardId).position().left)
-    updateCss("#" + dragCardId, "left", (($("#" + dragCardId).position().left * (1 / scale)) - deltaX) + "px");
-    updateCss("#" + dragCardId, "top", (($("#" + dragCardId).position().top * (1 / scale)) - deltaY) + "px");
+    var deltaX = latestMouseX - currentXScaled;
+    var deltaY = latestMouseY - currentYScaled;
+
+
+    if (dragCardId != null)
+    {
+      updateCss("#" + dragCardId, "left", (($("#" + dragCardId).position().left * (1 / scale)) - deltaX) + "px");
+      updateCss("#" + dragCardId, "top", (($("#" + dragCardId).position().top * (1 / scale)) - deltaY) + "px");
+    }
   }
 
   latestMouseY = currentYScaled
   latestMouseX = currentXScaled;
-  mouseFpsLimiter.update();
+  clientController.mouseMove(currentXScaled, currentYScaled);
 });
-
-function sendMouseMove()
-{
-  sendData = {
-    type: "mouse",
-    mouseclicked: mouseclicked,
-    pos: {x: Math.round(latestMouseX), y: Math.round(latestMouseY)},
-    card: dragCardId
-  }
-  sendToWs(sendData);
-}
 
 
 $( document ).on( "mouseup", function( e ) {
   dragCardId = null;
+  clientController.mouseUp();
 });
 
 $(document).on ("keydown", function (event) {
@@ -337,53 +229,35 @@ $( document ).ready(function() {
   $('#enterGameBtn').on('click', enterGame);
   $('#resetGameBtn').on('click', resetGame);
   $(".shuffleButton").on('click', shuffleDeck);
-    $('#name').keyup(function(){
-        checkEnterIsAllowed();
-        sendData = {
-          type: "name",
-          name: $('#name').val()
-        }
-        sendToWs(sendData);
-    })
+  $('#name').keyup(function(){
+    checkEnterIsAllowed();
+    clientController.typeName($('#name').val())
+  })
 
-    $(".card").on("mousedown", function(event){
-      dragCardId = event.currentTarget.id;
-      mouseclicked = true;
-    });
-    $(".card").on("touchstart", function(event){
-      mouseclicked = true;
-      var currentY = event.originalEvent.touches[0].pageY;
-      var currentX = event.originalEvent.touches[0].pageX;
-      latestMouseY = currentY * (1 / scale);
-      latestMouseX = currentX * (1 / scale);
-      sendData = {
-        type: "mouse",
-        mouseclicked: mouseclicked,
-        pos: {x: Math.round(latestMouseX), y: Math.round(latestMouseY)},
-        card: dragCardId
-      }
-      sendToWs(sendData);
-      dragCardId = event.currentTarget.id;
-      event.preventDefault();
-      
-    });
-     $(".card").bind("mouseup touchend", function(e){
-      mouseclicked = false;
-      e.preventDefault();
-      var currentY = e.originalEvent.touches ?  e.originalEvent.touches[0].pageY : e.pageY;
-      var currentX = e.originalEvent.touches ?  e.originalEvent.touches[0].pageX : e.pageX;
+  $(".card").on("mousedown", function(event){
+    dragCardId = event.currentTarget.id;
+    clientController.clickOnCard(event.currentTarget.id);
+  });
 
-      latestMouseY = currentY * (1 / scale);
-      latestMouseX = currentX * (1 / scale);
-      sendData = {
-        type: "mouse",
-        mouseclicked: mouseclicked,
-        pos: {x: Math.round(latestMouseX), y: Math.round(latestMouseY)},
-        card: dragCardId
-      }
-      sendToWs(sendData);
-      dragCardId = null;
-    });
+  $(".card").on("touchstart", function(event){
+    mouseclicked = true;
+    var currentY = event.originalEvent.touches[0].pageY;
+    var currentX = event.originalEvent.touches[0].pageX;
+    latestMouseY = currentY * (1 / scale);
+    latestMouseX = currentX * (1 / scale);
+    dragCardId = event.currentTarget.id;
+    clientController.touchCard(dragCardId, Math.round(latestMouseX), Math.round(latestMouseY))
+    event.preventDefault();
+    
+  });
+   $(".card").bind("mouseup touchend", function(e){
+    e.preventDefault();
+    var currentY = e.originalEvent.touches ?  e.originalEvent.touches[0].pageY : e.pageY;
+    var currentX = e.originalEvent.touches ?  e.originalEvent.touches[0].pageX : e.pageX;
+
+    clientController.releaseCard(currentX * (1 / scale), currentY * (1 / scale));
+    dragCardId = null;
+  });
 
   navigator.mediaDevices.getUserMedia({video: {
                           width: {
@@ -513,21 +387,7 @@ function initCards(gameObj){
   }
 }
 
-function moveCard(id, deltaX, deltaY)
-{
-  if (deltaX != 0)
-  {
-    var newX = Math.round($("#" + id).position().left * (1 / scale)) + deltaX;
-    updateCss("#" + id, "left", newX + "px");
-  }
-  if(deltaY != 0)
-  {
-    var newY = Math.round($("#" + id).position().top * (1 / scale)) + deltaY;
-    updateCss("#" + id, "top", newY + "px");
-  }
-}
-
-function updateCards(gameObj)
+function updateCards(gameObj, changedCardsBuffer)
 {
   for (var i = 0; i < gameObj.decks.length; i++)
   {
@@ -647,45 +507,6 @@ function updateColorSelection(gameObj)
   }
 }
 
-function updateGame(init)
-{
-  var gameObj = JSON.parse(lastGameObj)
-  if(init)
-  {
-    initCards(gameObj)
-  }
-  else
-  {
-    updateCards(gameObj);
-  }
-
-  updateOpenboxes(gameObj);
-  updateCursors(gameObj);
-  updateColorSelection(gameObj);
-
-
-  $(document).trigger("gameObj", [gameObj, myPlayerId, scale]);
-}
-
-function _updateGame(gameObj, init){
-  if(init)
-  {
-    initCards(gameObj)
-  }
-  else
-  {
-    updateCards(gameObj);
-  }
-
-  updateOpenboxes(gameObj);
-  updateCursors(gameObj);
-  updateColorSelection(gameObj);
-
-
-  $(document).trigger("gameObj", [gameObj, myPlayerId, scale]);
-}
-
-
 
 function cardIsInMyOwnBox(card)
 {
@@ -765,21 +586,13 @@ function selectColor(e){
     }
   }
   state.color = colors[nr - 1];
-  sendData = {
-    type: "color",
-    color: colors[nr - 1]
-  }
-  sendToWs(sendData);
+  clientController.selectColor(colors[nr - 1]);
   checkEnterIsAllowed();
 }
 
 function shuffleDeck(e){
   var deckId = e.target.parentElement.id;
-  sendData = {
-    type: "shuffleDeck",
-    deckId: deckId
-  }
-  sendToWs(sendData);
+  clientController.shuffleDeck(deckId);
 }
 
 function checkEnterIsAllowed()
@@ -797,8 +610,5 @@ function enterGame()
 
 function resetGame()
 {
-  var sendData = {
-    type: "reset"
-  }
-  sendToWs(sendData)
+  clientController.resetGame();
 }

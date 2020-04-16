@@ -2,16 +2,16 @@
  * Shuffles array in place.
  * @param {Array} a items An array containing the items.
  */
-function shuffle(a) {
-    var j, x, i;
-    for (i = a.length - 1; i > 0; i--) {
-        j = Math.floor(Math.random() * (i + 1));
-        x = a[i];
-        a[i] = a[j];
-        a[j] = x;
-    }
-    return a;
-}
+// function shuffle(a) {
+//   var j, x, i;
+//   for (i = a.length - 1; i > 0; i--) {
+//     j = Math.floor(Math.random() * (i + 1));
+//     x = a[i];
+//     a[i] = a[j];
+//     a[j] = x;
+//   }
+//   return a;
+// }
 
 function Deck(id, x, y, width, height){
   this.id = id;
@@ -24,6 +24,17 @@ function Deck(id, x, y, width, height){
   this.immovable = false;
 }
 
+Deck.prototype.shuffle = function(a){
+  var j, x, i;
+  for (i = a.length - 1; i > 0; i--) {
+    j = Math.floor(Math.random() * (i + 1));
+    x = a[i];
+    a[i] = a[j];
+    a[j] = x;
+  }
+  return a;
+}
+
 Deck.prototype.shuffleDeck = function()
 {
   var numberArray = []
@@ -31,7 +42,7 @@ Deck.prototype.shuffleDeck = function()
   {
     numberArray.push(i);
   }
-  shuffle(numberArray);
+  this.shuffle(numberArray);
   var incrementForStackEffect = 30 / this.attachedCards.length;
   for(var i = 0; i < this.attachedCards.length; i++)
   {

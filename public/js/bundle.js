@@ -2733,19 +2733,13 @@ process.chdir = function (dir) {
 process.umask = function() { return 0; };
 
 },{}],7:[function(require,module,exports){
-let pako = require('pako');
-let SimplePeer = require('simple-peer');
-let diff_match_patch = require('diff-match-patch');
-let FpsLimiter = require('../fps_limiter').FpsLimiter;
+let ClientController = require("./client_controller").ClientController;
 
-var dmp = new diff_match_patch();
+var clientController = new ClientController()
 
 var scale = 1;
 
 var myStream = null;
-var peers = {};
-
-var lastGameObj = "";
 
 var myPlayerId = -1;
 
@@ -2772,16 +2766,9 @@ var ws = null;
 
 var doorbell = new Audio('/wav/doorbell.wav');
 
-var mouseFpsLimiter = new FpsLimiter(20, sendMouseMove, null)
-var updateGameLimiter = new FpsLimiter(20, updateGame, false)
-
-var latestMouseX = 0;
-var latestMouseY = 0;
-
-var mouseclicked = false;
+var latestMouseX = -1;
+var latestMouseY = -1;
 var dragCardId = null;
-
-var changedCardsBuffer = [];
 
 function addWebcam(stream, playerId, mirrored, muted)
 {
@@ -2794,72 +2781,31 @@ function addWebcam(stream, playerId, mirrored, muted)
   video.muted = muted;
   video.srcObject = stream;
   video.addEventListener("playing", function () {
-        setTimeout(function () {
-            console.log("Stream dimensions: " + video.videoWidth + "x" + video.videoHeight);
-            var aspectRatio = video.videoWidth / video.videoHeight;
-            if (aspectRatio < 1)
-            {
-              var correctedHeight = video.videoHeight * (webcamBoxWidth / video.videoWidth);
-              $("#webcam" + playerId + " video").css("width", webcamBoxWidth + "px")
-              $("#webcam" + playerId + " video").css("height", correctedHeight + "px");
-              $("#webcam" + playerId + " video").css("margin-left", "0px")
-              $("#webcam" + playerId + " video").css("margin-top", ((webcamBoxHeight - correctedHeight) * 0.5) + "px")
-            }
-            else
-            {
-              var correctedWidth = video.videoWidth * (webcamBoxHeight / video.videoHeight);
-              $("#webcam" + playerId + " video").css("width", correctedWidth + "px")
-              $("#webcam" + playerId + " video").css("height", webcamBoxHeight + "px");
-              $("#webcam" + playerId + " video").css("margin-left", ((webcamBoxWidth - correctedWidth) * 0.5) + "px")
-              $("#webcam" + playerId + " video").css("margin-top", "0px")
-            }
-        }, 500);
-    });
+    setTimeout(function () {
+      console.log("Stream dimensions: " + video.videoWidth + "x" + video.videoHeight);
+      var aspectRatio = video.videoWidth / video.videoHeight;
+      if (aspectRatio < 1)
+      {
+        var correctedHeight = video.videoHeight * (webcamBoxWidth / video.videoWidth);
+        $("#webcam" + playerId + " video").css("width", webcamBoxWidth + "px")
+        $("#webcam" + playerId + " video").css("height", correctedHeight + "px");
+        $("#webcam" + playerId + " video").css("margin-left", "0px")
+        $("#webcam" + playerId + " video").css("margin-top", ((webcamBoxHeight - correctedHeight) * 0.5) + "px")
+      }
+      else
+      {
+        var correctedWidth = video.videoWidth * (webcamBoxHeight / video.videoHeight);
+        $("#webcam" + playerId + " video").css("width", correctedWidth + "px")
+        $("#webcam" + playerId + " video").css("height", webcamBoxHeight + "px");
+        $("#webcam" + playerId + " video").css("margin-left", ((webcamBoxWidth - correctedWidth) * 0.5) + "px")
+        $("#webcam" + playerId + " video").css("margin-top", "0px")
+      }
+    }, 500);
+  });
   video.play();
 }
 
-function requestPlayerId()
-{
-  var sendData = {
-    type: "requestId"
-  }
-  sendToWs(sendData);
-}
-
-function initGamePeer(playerId)
-{
-  console.log("initiating peer for player " + playerId)
-  
-  peers[playerId] = new SimplePeer({
-    initiator: true,
-    trickle: false,
-    stream: myStream
-  });
-
-  peers[playerId].on('signal', data => {
-    //console.log("signal ")
-    sendData = {
-      type: "initiatorReady",
-      playerId: playerId,
-      stp: data
-    }
-    sendToWs(sendData)
-  });
-
-  peers[playerId].on('stream', stream => {
-    addWebcam(stream, playerId, false, false);
-  });
-}
-
 var gameInitialized = false;
-
-function addToChangedCardsBuffer(newItem)
-{
-  if (!changedCardsBuffer.includes(newItem))
-  {
-    changedCardsBuffer.push(newItem);
-  }
-}
 
 function InitWebSocket()
 {
@@ -2871,108 +2817,59 @@ function InitWebSocket()
   }
   if ("WebSocket" in window)
   {
-     var host = window.location.hostname;
+    var host = window.location.hostname;
      //console.log(window.location)
-     ws = new WebSocket(scheme + "://" + host + port + window.location.pathname);
-   
-     ws.onopen = function()
-     {
-      requestPlayerId()
-     };
-     ws.onmessage = function (evt) 
-     {
-      var json = JSON.parse(pako.inflate(evt.data, { to: 'string' }));
-      if(json.type == "patches")
-      {
-        lastGameObj = dmp.patch_apply(dmp.patch_fromText(json.patches), lastGameObj)[0];
-        try
-        {
-          for (changedCard of json.changedCards)
-          {
-            addToChangedCardsBuffer(changedCard);
-          }
-          updateGameLimiter.update();
-        }
-        catch (err)
-        {
-          console.log(err);
-          requestPlayerId();
-        }
-      }
-      else if (json.type == "playerId")
-      {
-        lastGameObj = json.gameObj;
-        myPlayerId = json.playerId;
-        if (myPlayerId + 1 > maxPlayers)
-        {
-          $('#welcomeModal').modal('hide');
-        }
-        if (!gameInitialized)
-        {
-          addWebcam(myStream, myPlayerId, true, true);
-          gameInitialized = true;
-        }
-        updateGame(true);
-      }
-      else if (json.type == "newPeer")
-      {
-        if (json.playerId != myPlayerId)
-        {
-          initGamePeer(json.playerId);
-          doorbell.play();
-        }
-      }
-      else if (json.type == "leftPeer")
-      {
-        peers[json.playerId].destroy();
-        $("#webcam" + json.playerId).html("");
-      }
-      else if (json.type == "peerConnect")
-      {
-        peers[json.fromPlayerId] = new SimplePeer({
-        initiator: false,
-        trickle: false,
-        stream: myStream
-      });
+    ws = new WebSocket(scheme + "://" + host + port + window.location.pathname);
 
-        peers[json.fromPlayerId].on('stream', stream => {
-          addWebcam(stream, json.fromPlayerId, false, false);
-      });
+    clientController.initialize(ws, myStream);
 
-      peers[json.fromPlayerId].on('signal', data => {
-
-        sendData = {
-          type: "acceptPeer",
-          fromPlayerId: json.fromPlayerId,
-          stp: data
-        }
-        sendToWs(sendData);
-      });
-
-      peers[json.fromPlayerId].signal(json.stp);
-
-      }
-      else if (json.type == "peerAccepted")
+    clientController.on("playerId", (playerId) => {
+      myPlayerId = playerId;
+      if (myPlayerId + 1 > maxPlayers)
       {
-        peers[json.fromPlayerId].signal(json.stp);
+        $('#welcomeModal').modal('hide');
       }
-     };
-     ws.onclose = function()
-     { 
-        setTimeout(function(){InitWebSocket();}, 2000);
-     };
+      if (!gameInitialized)
+      {
+        addWebcam(myStream, myPlayerId, true, true);
+        gameInitialized = true;
+      }
+    });
+
+    clientController.on("updateGame", (gameObj, changedCardsBuffer, init) => {
+      if(init)
+      {
+        initCards(gameObj)
+      }
+      else
+      {
+        updateCards(gameObj, changedCardsBuffer);
+      }
+
+      updateOpenboxes(gameObj);
+      updateCursors(gameObj);
+      updateColorSelection(gameObj);
+
+
+      $(document).trigger("gameObj", [gameObj, myPlayerId, scale]);
+    });
+
+    clientController.on("newPeer", (playerId) => {
+      doorbell.play();
+    });
+
+    clientController.on("stream", (playerId, stream) => {
+      addWebcam(stream, playerId, false, false);
+    });
+
+    clientController.on("wsClosed", () => {
+      setTimeout(function(){InitWebSocket();}, 2000);
+    });
   }
   else
   {
      // The browser doesn't support WebSocket
      //alert("WebSocket NOT supported by your Browser!");
-  }
-}
-
-function sendToWs(data){
-  if (ws != null && ws.readyState === WebSocket.OPEN)
-  {
-    ws.send(pako.deflate(JSON.stringify(data), { to: 'string' }));
   }
 }
 
@@ -2985,37 +2882,28 @@ $(document).bind('touchmove mousemove', function (e) {
   var currentXScaled = Math.round(currentX * (1 / scale));
   var currentYScaled = Math.round(currentY * (1 / scale));
 
-  var deltaX = latestMouseX - currentXScaled;
-  var deltaY = latestMouseY - currentYScaled;
-
-
-  if (dragCardId != null)
+  if (latestMouseX != -1)
   {
-    //console.log(deltaX)
-    //console.log($("#" + dragCardId).position().left)
-    updateCss("#" + dragCardId, "left", (($("#" + dragCardId).position().left * (1 / scale)) - deltaX) + "px");
-    updateCss("#" + dragCardId, "top", (($("#" + dragCardId).position().top * (1 / scale)) - deltaY) + "px");
+    var deltaX = latestMouseX - currentXScaled;
+    var deltaY = latestMouseY - currentYScaled;
+
+
+    if (dragCardId != null)
+    {
+      updateCss("#" + dragCardId, "left", (($("#" + dragCardId).position().left * (1 / scale)) - deltaX) + "px");
+      updateCss("#" + dragCardId, "top", (($("#" + dragCardId).position().top * (1 / scale)) - deltaY) + "px");
+    }
   }
 
   latestMouseY = currentYScaled
   latestMouseX = currentXScaled;
-  mouseFpsLimiter.update();
+  clientController.mouseMove(currentXScaled, currentYScaled);
 });
-
-function sendMouseMove()
-{
-  sendData = {
-    type: "mouse",
-    mouseclicked: mouseclicked,
-    pos: {x: Math.round(latestMouseX), y: Math.round(latestMouseY)},
-    card: dragCardId
-  }
-  sendToWs(sendData);
-}
 
 
 $( document ).on( "mouseup", function( e ) {
   dragCardId = null;
+  clientController.mouseUp();
 });
 
 $(document).on ("keydown", function (event) {
@@ -3072,53 +2960,35 @@ $( document ).ready(function() {
   $('#enterGameBtn').on('click', enterGame);
   $('#resetGameBtn').on('click', resetGame);
   $(".shuffleButton").on('click', shuffleDeck);
-    $('#name').keyup(function(){
-        checkEnterIsAllowed();
-        sendData = {
-          type: "name",
-          name: $('#name').val()
-        }
-        sendToWs(sendData);
-    })
+  $('#name').keyup(function(){
+    checkEnterIsAllowed();
+    clientController.typeName($('#name').val())
+  })
 
-    $(".card").on("mousedown", function(event){
-      dragCardId = event.currentTarget.id;
-      mouseclicked = true;
-    });
-    $(".card").on("touchstart", function(event){
-      mouseclicked = true;
-      var currentY = event.originalEvent.touches[0].pageY;
-      var currentX = event.originalEvent.touches[0].pageX;
-      latestMouseY = currentY * (1 / scale);
-      latestMouseX = currentX * (1 / scale);
-      sendData = {
-        type: "mouse",
-        mouseclicked: mouseclicked,
-        pos: {x: Math.round(latestMouseX), y: Math.round(latestMouseY)},
-        card: dragCardId
-      }
-      sendToWs(sendData);
-      dragCardId = event.currentTarget.id;
-      event.preventDefault();
-      
-    });
-     $(".card").bind("mouseup touchend", function(e){
-      mouseclicked = false;
-      e.preventDefault();
-      var currentY = e.originalEvent.touches ?  e.originalEvent.touches[0].pageY : e.pageY;
-      var currentX = e.originalEvent.touches ?  e.originalEvent.touches[0].pageX : e.pageX;
+  $(".card").on("mousedown", function(event){
+    dragCardId = event.currentTarget.id;
+    clientController.clickOnCard(event.currentTarget.id);
+  });
 
-      latestMouseY = currentY * (1 / scale);
-      latestMouseX = currentX * (1 / scale);
-      sendData = {
-        type: "mouse",
-        mouseclicked: mouseclicked,
-        pos: {x: Math.round(latestMouseX), y: Math.round(latestMouseY)},
-        card: dragCardId
-      }
-      sendToWs(sendData);
-      dragCardId = null;
-    });
+  $(".card").on("touchstart", function(event){
+    mouseclicked = true;
+    var currentY = event.originalEvent.touches[0].pageY;
+    var currentX = event.originalEvent.touches[0].pageX;
+    latestMouseY = currentY * (1 / scale);
+    latestMouseX = currentX * (1 / scale);
+    dragCardId = event.currentTarget.id;
+    clientController.touchCard(dragCardId, Math.round(latestMouseX), Math.round(latestMouseY))
+    event.preventDefault();
+    
+  });
+   $(".card").bind("mouseup touchend", function(e){
+    e.preventDefault();
+    var currentY = e.originalEvent.touches ?  e.originalEvent.touches[0].pageY : e.pageY;
+    var currentX = e.originalEvent.touches ?  e.originalEvent.touches[0].pageX : e.pageX;
+
+    clientController.releaseCard(currentX * (1 / scale), currentY * (1 / scale));
+    dragCardId = null;
+  });
 
   navigator.mediaDevices.getUserMedia({video: {
                           width: {
@@ -3248,21 +3118,7 @@ function initCards(gameObj){
   }
 }
 
-function moveCard(id, deltaX, deltaY)
-{
-  if (deltaX != 0)
-  {
-    var newX = Math.round($("#" + id).position().left * (1 / scale)) + deltaX;
-    updateCss("#" + id, "left", newX + "px");
-  }
-  if(deltaY != 0)
-  {
-    var newY = Math.round($("#" + id).position().top * (1 / scale)) + deltaY;
-    updateCss("#" + id, "top", newY + "px");
-  }
-}
-
-function updateCards(gameObj)
+function updateCards(gameObj, changedCardsBuffer)
 {
   for (var i = 0; i < gameObj.decks.length; i++)
   {
@@ -3382,45 +3238,6 @@ function updateColorSelection(gameObj)
   }
 }
 
-function updateGame(init)
-{
-  var gameObj = JSON.parse(lastGameObj)
-  if(init)
-  {
-    initCards(gameObj)
-  }
-  else
-  {
-    updateCards(gameObj);
-  }
-
-  updateOpenboxes(gameObj);
-  updateCursors(gameObj);
-  updateColorSelection(gameObj);
-
-
-  $(document).trigger("gameObj", [gameObj, myPlayerId, scale]);
-}
-
-function _updateGame(gameObj, init){
-  if(init)
-  {
-    initCards(gameObj)
-  }
-  else
-  {
-    updateCards(gameObj);
-  }
-
-  updateOpenboxes(gameObj);
-  updateCursors(gameObj);
-  updateColorSelection(gameObj);
-
-
-  $(document).trigger("gameObj", [gameObj, myPlayerId, scale]);
-}
-
-
 
 function cardIsInMyOwnBox(card)
 {
@@ -3500,21 +3317,13 @@ function selectColor(e){
     }
   }
   state.color = colors[nr - 1];
-  sendData = {
-    type: "color",
-    color: colors[nr - 1]
-  }
-  sendToWs(sendData);
+  clientController.selectColor(colors[nr - 1]);
   checkEnterIsAllowed();
 }
 
 function shuffleDeck(e){
   var deckId = e.target.parentElement.id;
-  sendData = {
-    type: "shuffleDeck",
-    deckId: deckId
-  }
-  sendToWs(sendData);
+  clientController.shuffleDeck(deckId);
 }
 
 function checkEnterIsAllowed()
@@ -3532,18 +3341,401 @@ function enterGame()
 
 function resetGame()
 {
+  clientController.resetGame();
+}
+},{"./client_controller":8}],8:[function(require,module,exports){
+let WsHandler = require("./ws_handler").WsHandler;
+let WebcamHandler = require("./webcam_handler").WebcamHandler;
+let MouseHandler = require("./mouse_handler").MouseHandler;
+let EventEmitter = require('events').EventEmitter;
+
+
+function ClientController()
+{
+  this.init = false;
+  EventEmitter.call(this);
+}
+
+ClientController.prototype = Object.create(EventEmitter.prototype);
+
+ClientController.prototype.initialize = function(ws, myStream)
+{
+  this.wsHandler = new WsHandler(ws);
+  this.wsHandler.eventEmitter.on("playerId", (playerId) => {
+    this.emit("playerId", playerId);
+  });
+  this.wsHandler.eventEmitter.on("updateGame", (gameObj, changedCardsBuffer, init) => {
+    this.emit("updateGame", gameObj, changedCardsBuffer, init);
+  });
+  this.wsHandler.eventEmitter.on("newPeer", (playerId) => {
+    this.webcamHandler.initWebcamPeer(playerId);
+    this.emit("newPeer", playerId);
+  });
+  this.wsHandler.eventEmitter.on("peerConnect", (fromPlayerId, stp) => {
+    this.webcamHandler.peerConnected(fromPlayerId, stp);
+  });
+  this.wsHandler.eventEmitter.on("peerAccepted", (fromPlayerId, stp) => {
+    this.webcamHandler.peerAccepted(fromPlayerId, stp);
+  });
+  this.wsHandler.eventEmitter.on("wsClosed", () => {
+    this.emit("wsClosed");
+  });
+
+  this.webcamHandler = new WebcamHandler(this.wsHandler, myStream);
+  this.webcamHandler.on("stream", (playerId, stream) => {
+    this.emit("stream", playerId, stream);
+  });
+
+  this.mouseHandler = new MouseHandler(this.wsHandler);
+  
+  this.init = true;
+}
+
+ClientController.prototype.mouseMove = function(x, y)
+{
+  this.init && this.mouseHandler.mouseMove(x, y);
+}
+
+ClientController.prototype.mouseUp = function()
+{
+  this.init && this.mouseHandler.mouseUp();
+}
+
+ClientController.prototype.clickOnCard = function(id)
+{
+  this.init && this.mouseHandler.clickOnCard(id);
+}
+
+ClientController.prototype.touchCard = function(id, x, y)
+{
+  this.init && this.mouseHandler.touchCard(id, x, y);
+}
+
+ClientController.prototype.releaseCard = function(x, y)
+{
+  this.init && this.mouseHandler.releaseCard(x, y);
+}
+
+ClientController.prototype.shuffleDeck = function(deckId)
+{
+  this.init && this.wsHandler.shuffleDeck(deckId);
+}
+
+ClientController.prototype.selectColor = function(color)
+{
+  this.init && this.wsHandler.selectColor(color);
+}
+
+ClientController.prototype.resetGame = function()
+{
+  this.init && this.wsHandler.resetGame();
+}
+
+ClientController.prototype.typeName = function(name)
+{
+  this.init && this.wsHandler.typeName(name);
+}
+
+
+module.exports = {ClientController: ClientController}
+},{"./mouse_handler":9,"./webcam_handler":10,"./ws_handler":11,"events":4}],9:[function(require,module,exports){
+let FpsLimiter = require('../fps_limiter').FpsLimiter;
+
+function MouseHandler(wsHandler)
+{
+  this.wsHandler = wsHandler;
+
+  this.mouseFpsLimiter = new FpsLimiter(20);
+  this.mouseFpsLimiter.on("update", () => {
+    this.sendMouseMove()
+  });
+
+  this.latestMouseX = 0;
+  this.latestMouseY = 0;
+
+  this.mouseclicked = false;
+  this.dragCardId = null;
+}
+
+MouseHandler.prototype.mouseMove = function(x, y)
+{
+  this.latestMouseY = y;
+  this.latestMouseX = x;
+  this.mouseFpsLimiter.update();
+}
+
+MouseHandler.prototype.mouseUp = function()
+{
+  this.dragCardId = null;
+  this.mouseclicked = false;
+  this.mouseFpsLimiter.update();
+}
+
+MouseHandler.prototype.clickOnCard = function(id)
+{
+  this.dragCardId = id;
+  this.mouseclicked = true;
+  this.mouseFpsLimiter.update();
+}
+
+MouseHandler.prototype.touchCard = function(id, x, y)
+{
+  this.dragCardId = id;
+  var sendData = {
+    type: "mouse",
+    mouseclicked: mouseclicked,
+    pos: {x: latestMouseX, y: latestMouseY},
+    card: id
+  }
+  this.wsHandler.sendToWs(sendData);
+}
+
+MouseHandler.prototype.releaseCard = function(x, y)
+{
+  this.mouseclicked = false;
+
+  this.latestMouseY = y;
+  this.latestMouseX = x;
+  var sendData = {
+    type: "mouse",
+    mouseclicked: this.mouseclicked,
+    pos: {x: this.latestMouseX, y: this.latestMouseY},
+    card: this.dragCardId
+  }
+  this.wsHandler.sendToWs(sendData);
+  this.dragCardId = null;
+}
+
+MouseHandler.prototype.sendMouseMove = function()
+{
+  var sendData = {
+    type: "mouse",
+    mouseclicked: this.mouseclicked,
+    pos: {x: this.latestMouseX, y: this.latestMouseY},
+    card: this.dragCardId
+  }
+  this.wsHandler.sendToWs(sendData);
+}
+
+module.exports = {MouseHandler: MouseHandler}
+},{"../fps_limiter":12}],10:[function(require,module,exports){
+let SimplePeer = require('simple-peer');
+let EventEmitter = require('events').EventEmitter;
+
+function WebcamHandler(wsHandler, myStream)
+{
+  this.wsHandler = wsHandler;
+  this.myStream = myStream;
+  this.peers = {};
+  EventEmitter.call(this);
+}
+
+WebcamHandler.prototype = Object.create(EventEmitter.prototype);
+
+WebcamHandler.prototype.initWebcamPeer = function(playerId)
+{
+  console.log("initiating peer for player " + playerId)
+  
+  this.peers[playerId] = new SimplePeer({
+    initiator: true,
+    trickle: false,
+    stream: this.myStream
+  });
+
+  this.peers[playerId].on('signal', (data) => {
+    var sendData = {
+      type: "initiatorReady",
+      playerId: playerId,
+      stp: data
+    }
+    this.wsHandler.sendToWs(sendData)
+  });
+
+  this.peers[playerId].on('stream', stream => {
+    this.emit("stream", playerId, stream);
+  });
+}
+
+WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
+{
+  this.peers[fromPlayerId] = new SimplePeer({
+    initiator: false,
+    trickle: false,
+    stream: this.myStream
+  });
+
+  this.peers[fromPlayerId].on('stream', stream => {
+    this.emit("stream", fromPlayerId, stream)
+  });
+
+  this.peers[fromPlayerId].on('signal', data => {
+
+    var sendData = {
+      type: "acceptPeer",
+      fromPlayerId: fromPlayerId,
+      stp: data
+    }
+    this.wsHandler.sendToWs(sendData);
+  });
+
+  this.peers[fromPlayerId].signal(stp);
+}
+
+WebcamHandler.prototype.peerAccepted = function(fromPlayerId, stp)
+{
+  this.peers[fromPlayerId].signal(stp);
+}
+
+module.exports = {WebcamHandler: WebcamHandler}
+},{"events":4,"simple-peer":35}],11:[function(require,module,exports){
+let pako = require('pako');
+let diff_match_patch = require('diff-match-patch');
+let FpsLimiter = require('../fps_limiter').FpsLimiter;
+let EventEmitter = require('events').EventEmitter;
+
+function WsHandler(ws)
+{
+  this.ws = ws;
+  this.myPlayerId = -1;
+  this.lastGameObj = "";
+
+  this.dmp = new diff_match_patch();
+  this.changedCardsBuffer = [];
+  this.eventEmitter = new EventEmitter();
+  this.updateGameLimiter = new FpsLimiter(20);
+  this.updateGameLimiter.on("update", () => {
+    this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, false);
+  });
+
+  this.ws.onopen = function () {
+    this.requestPlayerId()
+  }.bind(this);
+
+  this.ws.onmessage = function (evt) 
+  {
+    var json = JSON.parse(pako.inflate(evt.data, { to: 'string' }));
+    if(json.type == "patches")
+    {
+      this.lastGameObj = this.dmp.patch_apply(this.dmp.patch_fromText(json.patches), this.lastGameObj)[0];
+      try
+      {
+        for (changedCard of json.changedCards)
+        {
+          this.addToChangedCardsBuffer(changedCard);
+        }
+        this.updateGameLimiter.update();
+      }
+      catch (err)
+      {
+        console.log(err);
+        this.requestPlayerId();
+      }
+    }
+    else if (json.type == "playerId")
+    {
+      this.lastGameObj = json.gameObj;
+      this.myPlayerId = json.playerId;
+      this.eventEmitter.emit('playerId', json.playerId);
+      this.eventEmitter.emit('updateGame', JSON.parse(this.lastGameObj), [], true)
+    }
+    else if (json.type == "newPeer")
+    {
+      if (json.playerId != this.myPlayerId)
+      {
+        this.eventEmitter.emit("newPeer", json.playerId)
+      }
+    }
+    else if (json.type == "leftPeer")
+    {
+      peers[json.playerId].destroy();
+      $("#webcam" + json.playerId).html("");
+    }
+    else if (json.type == "peerConnect")
+    {
+      this.eventEmitter.emit("peerConnect", json.fromPlayerId, json.stp)
+    }
+    else if (json.type == "peerAccepted")
+    {
+      this.eventEmitter.emit("peerAccepted", json.fromPlayerId, json.stp)
+    }
+  }.bind(this);
+  ws.onclose = function()
+  { 
+    
+    this.eventEmitter.emit("wsClosed")
+  }.bind(this);
+}
+
+WsHandler.prototype.requestPlayerId = function()
+{
+  var sendData = {
+    type: "requestId"
+  }
+  this.sendToWs(sendData);
+}
+
+WsHandler.prototype.shuffleDeck = function(deckId)
+{
+  var sendData = {
+    type: "shuffleDeck",
+    deckId: deckId
+  }
+  this.sendToWs(sendData);
+}
+
+WsHandler.prototype.selectColor = function(color)
+{
+  var sendData = {
+    type: "color",
+    color: color
+  }
+  this.sendToWs(sendData);
+}
+
+WsHandler.prototype.sendToWs = function(data)
+{
+  if (this.ws != null && this.ws.readyState === this.ws.constructor.OPEN)
+  {
+    this.ws.send(pako.deflate(JSON.stringify(data), { to: 'string' }));
+  }
+}
+
+WsHandler.prototype.addToChangedCardsBuffer = function(newItem)
+{
+  if (!this.changedCardsBuffer.includes(newItem))
+  {
+    this.changedCardsBuffer.push(newItem);
+  }
+}
+
+WsHandler.prototype.resetGame = function()
+{
   var sendData = {
     type: "reset"
   }
-  sendToWs(sendData)
+  this.sendToWs(sendData)
 }
-},{"../fps_limiter":8,"diff-match-patch":9,"pako":12,"simple-peer":31}],8:[function(require,module,exports){
-function FpsLimiter(fps, func, args) {
+
+WsHandler.prototype.typeName = function(name)
+{
+  sendData = {
+    type: "name",
+    name: name
+  }
+  this.sendToWs(sendData);
+}
+
+module.exports = {WsHandler: WsHandler}
+},{"../fps_limiter":12,"diff-match-patch":13,"events":4,"pako":16}],12:[function(require,module,exports){
+var EventEmitter = require('events').EventEmitter;
+
+function FpsLimiter(fps) {
   this.isIntervalSet = false;
   this.ms = Math.round(1000 / fps);
-  this.func = func;
-  this.args = args;
+  EventEmitter.call(this);
 }
+
+FpsLimiter.prototype = Object.create(EventEmitter.prototype);
 
 FpsLimiter.prototype.update = function()
 {
@@ -3552,7 +3744,8 @@ FpsLimiter.prototype.update = function()
     return;
   }
   this.isIntervalSet = true;
-  this.func(this.args);
+  //this.func(this.args);
+  this.emit("update");
   setTimeout(function(){
     this.isIntervalSet = false;
   }.bind(this), this.ms);
@@ -3560,7 +3753,7 @@ FpsLimiter.prototype.update = function()
 }
 
 module.exports = {FpsLimiter: FpsLimiter}
-},{}],9:[function(require,module,exports){
+},{"events":4}],13:[function(require,module,exports){
 /**
  * Diff Match and Patch
  * Copyright 2018 The diff-match-patch Authors.
@@ -5751,7 +5944,7 @@ module.exports['diff_match_patch'] = diff_match_patch;
 module.exports['DIFF_DELETE'] = DIFF_DELETE;
 module.exports['DIFF_INSERT'] = DIFF_INSERT;
 module.exports['DIFF_EQUAL'] = DIFF_EQUAL;
-},{}],10:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 // originally pulled out of simple-peer
 
 module.exports = function getBrowserRTC () {
@@ -5768,7 +5961,7 @@ module.exports = function getBrowserRTC () {
   return wrtc
 }
 
-},{}],11:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -5793,7 +5986,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],12:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 // Top level file is just a mixin of submodules & constants
 'use strict';
 
@@ -5809,7 +6002,7 @@ assign(pako, deflate, inflate, constants);
 
 module.exports = pako;
 
-},{"./lib/deflate":13,"./lib/inflate":14,"./lib/utils/common":15,"./lib/zlib/constants":18}],13:[function(require,module,exports){
+},{"./lib/deflate":17,"./lib/inflate":18,"./lib/utils/common":19,"./lib/zlib/constants":22}],17:[function(require,module,exports){
 'use strict';
 
 
@@ -6211,7 +6404,7 @@ exports.deflate = deflate;
 exports.deflateRaw = deflateRaw;
 exports.gzip = gzip;
 
-},{"./utils/common":15,"./utils/strings":16,"./zlib/deflate":20,"./zlib/messages":25,"./zlib/zstream":27}],14:[function(require,module,exports){
+},{"./utils/common":19,"./utils/strings":20,"./zlib/deflate":24,"./zlib/messages":29,"./zlib/zstream":31}],18:[function(require,module,exports){
 'use strict';
 
 
@@ -6636,7 +6829,7 @@ exports.inflate = inflate;
 exports.inflateRaw = inflateRaw;
 exports.ungzip  = inflate;
 
-},{"./utils/common":15,"./utils/strings":16,"./zlib/constants":18,"./zlib/gzheader":21,"./zlib/inflate":23,"./zlib/messages":25,"./zlib/zstream":27}],15:[function(require,module,exports){
+},{"./utils/common":19,"./utils/strings":20,"./zlib/constants":22,"./zlib/gzheader":25,"./zlib/inflate":27,"./zlib/messages":29,"./zlib/zstream":31}],19:[function(require,module,exports){
 'use strict';
 
 
@@ -6743,7 +6936,7 @@ exports.setTyped = function (on) {
 
 exports.setTyped(TYPED_OK);
 
-},{}],16:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 // String encode/decode helpers
 'use strict';
 
@@ -6932,7 +7125,7 @@ exports.utf8border = function (buf, max) {
   return (pos + _utf8len[buf[pos]] > max) ? pos : max;
 };
 
-},{"./common":15}],17:[function(require,module,exports){
+},{"./common":19}],21:[function(require,module,exports){
 'use strict';
 
 // Note: adler32 takes 12% for level 0 and 2% for level 6.
@@ -6985,7 +7178,7 @@ function adler32(adler, buf, len, pos) {
 
 module.exports = adler32;
 
-},{}],18:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -7055,7 +7248,7 @@ module.exports = {
   //Z_NULL:                 null // Use -1 or null inline, depending on var type
 };
 
-},{}],19:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 'use strict';
 
 // Note: we can't get significant speed boost here.
@@ -7116,7 +7309,7 @@ function crc32(crc, buf, len, pos) {
 
 module.exports = crc32;
 
-},{}],20:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -8992,7 +9185,7 @@ exports.deflatePrime = deflatePrime;
 exports.deflateTune = deflateTune;
 */
 
-},{"../utils/common":15,"./adler32":17,"./crc32":19,"./messages":25,"./trees":26}],21:[function(require,module,exports){
+},{"../utils/common":19,"./adler32":21,"./crc32":23,"./messages":29,"./trees":30}],25:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -9052,7 +9245,7 @@ function GZheader() {
 
 module.exports = GZheader;
 
-},{}],22:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -9399,7 +9592,7 @@ module.exports = function inflate_fast(strm, start) {
   return;
 };
 
-},{}],23:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -10957,7 +11150,7 @@ exports.inflateSyncPoint = inflateSyncPoint;
 exports.inflateUndermine = inflateUndermine;
 */
 
-},{"../utils/common":15,"./adler32":17,"./crc32":19,"./inffast":22,"./inftrees":24}],24:[function(require,module,exports){
+},{"../utils/common":19,"./adler32":21,"./crc32":23,"./inffast":26,"./inftrees":28}],28:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -11302,7 +11495,7 @@ module.exports = function inflate_table(type, lens, lens_index, codes, table, ta
   return 0;
 };
 
-},{"../utils/common":15}],25:[function(require,module,exports){
+},{"../utils/common":19}],29:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -11336,7 +11529,7 @@ module.exports = {
   '-6':   'incompatible version' /* Z_VERSION_ERROR (-6) */
 };
 
-},{}],26:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -12560,7 +12753,7 @@ exports._tr_flush_block  = _tr_flush_block;
 exports._tr_tally = _tr_tally;
 exports._tr_align = _tr_align;
 
-},{"../utils/common":15}],27:[function(require,module,exports){
+},{"../utils/common":19}],31:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -12609,7 +12802,7 @@ function ZStream() {
 
 module.exports = ZStream;
 
-},{}],28:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 let promise
 
 module.exports = typeof queueMicrotask === 'function'
@@ -12619,7 +12812,7 @@ module.exports = typeof queueMicrotask === 'function'
     .then(cb)
     .catch(err => setTimeout(() => { throw err }, 0))
 
-},{}],29:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 (function (process,global){
 'use strict'
 
@@ -12673,7 +12866,7 @@ function randomBytes (size, cb) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":6,"safe-buffer":30}],30:[function(require,module,exports){
+},{"_process":6,"safe-buffer":34}],34:[function(require,module,exports){
 /* eslint-disable node/no-deprecated-api */
 var buffer = require('buffer')
 var Buffer = buffer.Buffer
@@ -12737,7 +12930,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
   return buffer.SlowBuffer(size)
 }
 
-},{"buffer":3}],31:[function(require,module,exports){
+},{"buffer":3}],35:[function(require,module,exports){
 (function (Buffer){
 var debug = require('debug')('simple-peer')
 var getBrowserRTC = require('get-browser-rtc')
@@ -13744,7 +13937,7 @@ Peer.channelConfig = {}
 module.exports = Peer
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":3,"debug":32,"get-browser-rtc":10,"queue-microtask":28,"randombytes":29,"readable-stream":49}],32:[function(require,module,exports){
+},{"buffer":3,"debug":36,"get-browser-rtc":14,"queue-microtask":32,"randombytes":33,"readable-stream":53}],36:[function(require,module,exports){
 (function (process){
 /* eslint-env browser */
 
@@ -14012,7 +14205,7 @@ formatters.j = function (v) {
 };
 
 }).call(this,require('_process'))
-},{"./common":33,"_process":6}],33:[function(require,module,exports){
+},{"./common":37,"_process":6}],37:[function(require,module,exports){
 
 /**
  * This is the common logic for both the Node.js and web browser
@@ -14280,7 +14473,7 @@ function setup(env) {
 
 module.exports = setup;
 
-},{"ms":34}],34:[function(require,module,exports){
+},{"ms":38}],38:[function(require,module,exports){
 /**
  * Helpers.
  */
@@ -14444,7 +14637,7 @@ function plural(ms, msAbs, n, name) {
   return Math.round(ms / n) + ' ' + name + (isPlural ? 's' : '');
 }
 
-},{}],35:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 'use strict';
 
 function _inheritsLoose(subClass, superClass) { subClass.prototype = Object.create(superClass.prototype); subClass.prototype.constructor = subClass; subClass.__proto__ = superClass; }
@@ -14573,7 +14766,7 @@ createErrorType('ERR_UNKNOWN_ENCODING', function (arg) {
 createErrorType('ERR_STREAM_UNSHIFT_AFTER_END_EVENT', 'stream.unshift() after end event');
 module.exports.codes = codes;
 
-},{}],36:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -14715,7 +14908,7 @@ Object.defineProperty(Duplex.prototype, 'destroyed', {
   }
 });
 }).call(this,require('_process'))
-},{"./_stream_readable":38,"./_stream_writable":40,"_process":6,"inherits":11}],37:[function(require,module,exports){
+},{"./_stream_readable":42,"./_stream_writable":44,"_process":6,"inherits":15}],41:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -14755,7 +14948,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":39,"inherits":11}],38:[function(require,module,exports){
+},{"./_stream_transform":43,"inherits":15}],42:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -15882,7 +16075,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../errors":35,"./_stream_duplex":36,"./internal/streams/async_iterator":41,"./internal/streams/buffer_list":42,"./internal/streams/destroy":43,"./internal/streams/from":45,"./internal/streams/state":47,"./internal/streams/stream":48,"_process":6,"buffer":3,"events":4,"inherits":11,"string_decoder/":50,"util":2}],39:[function(require,module,exports){
+},{"../errors":39,"./_stream_duplex":40,"./internal/streams/async_iterator":45,"./internal/streams/buffer_list":46,"./internal/streams/destroy":47,"./internal/streams/from":49,"./internal/streams/state":51,"./internal/streams/stream":52,"_process":6,"buffer":3,"events":4,"inherits":15,"string_decoder/":54,"util":2}],43:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -16084,7 +16277,7 @@ function done(stream, er, data) {
   if (stream._transformState.transforming) throw new ERR_TRANSFORM_ALREADY_TRANSFORMING();
   return stream.push(null);
 }
-},{"../errors":35,"./_stream_duplex":36,"inherits":11}],40:[function(require,module,exports){
+},{"../errors":39,"./_stream_duplex":40,"inherits":15}],44:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -16784,7 +16977,7 @@ Writable.prototype._destroy = function (err, cb) {
   cb(err);
 };
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../errors":35,"./_stream_duplex":36,"./internal/streams/destroy":43,"./internal/streams/state":47,"./internal/streams/stream":48,"_process":6,"buffer":3,"inherits":11,"util-deprecate":51}],41:[function(require,module,exports){
+},{"../errors":39,"./_stream_duplex":40,"./internal/streams/destroy":47,"./internal/streams/state":51,"./internal/streams/stream":52,"_process":6,"buffer":3,"inherits":15,"util-deprecate":55}],45:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -16994,7 +17187,7 @@ var createReadableStreamAsyncIterator = function createReadableStreamAsyncIterat
 
 module.exports = createReadableStreamAsyncIterator;
 }).call(this,require('_process'))
-},{"./end-of-stream":44,"_process":6}],42:[function(require,module,exports){
+},{"./end-of-stream":48,"_process":6}],46:[function(require,module,exports){
 'use strict';
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
@@ -17205,7 +17398,7 @@ function () {
 
   return BufferList;
 }();
-},{"buffer":3,"util":2}],43:[function(require,module,exports){
+},{"buffer":3,"util":2}],47:[function(require,module,exports){
 (function (process){
 'use strict'; // undocumented cb() API, needed for core, not for public API
 
@@ -17313,7 +17506,7 @@ module.exports = {
   errorOrDestroy: errorOrDestroy
 };
 }).call(this,require('_process'))
-},{"_process":6}],44:[function(require,module,exports){
+},{"_process":6}],48:[function(require,module,exports){
 // Ported from https://github.com/mafintosh/end-of-stream with
 // permission from the author, Mathias Buus (@mafintosh).
 'use strict';
@@ -17418,12 +17611,12 @@ function eos(stream, opts, callback) {
 }
 
 module.exports = eos;
-},{"../../../errors":35}],45:[function(require,module,exports){
+},{"../../../errors":39}],49:[function(require,module,exports){
 module.exports = function () {
   throw new Error('Readable.from is not available in the browser')
 };
 
-},{}],46:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 // Ported from https://github.com/mafintosh/pump with
 // permission from the author, Mathias Buus (@mafintosh).
 'use strict';
@@ -17521,7 +17714,7 @@ function pipeline() {
 }
 
 module.exports = pipeline;
-},{"../../../errors":35,"./end-of-stream":44}],47:[function(require,module,exports){
+},{"../../../errors":39,"./end-of-stream":48}],51:[function(require,module,exports){
 'use strict';
 
 var ERR_INVALID_OPT_VALUE = require('../../../errors').codes.ERR_INVALID_OPT_VALUE;
@@ -17549,10 +17742,10 @@ function getHighWaterMark(state, options, duplexKey, isDuplex) {
 module.exports = {
   getHighWaterMark: getHighWaterMark
 };
-},{"../../../errors":35}],48:[function(require,module,exports){
+},{"../../../errors":39}],52:[function(require,module,exports){
 module.exports = require('events').EventEmitter;
 
-},{"events":4}],49:[function(require,module,exports){
+},{"events":4}],53:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = exports;
 exports.Readable = exports;
@@ -17563,7 +17756,7 @@ exports.PassThrough = require('./lib/_stream_passthrough.js');
 exports.finished = require('./lib/internal/streams/end-of-stream.js');
 exports.pipeline = require('./lib/internal/streams/pipeline.js');
 
-},{"./lib/_stream_duplex.js":36,"./lib/_stream_passthrough.js":37,"./lib/_stream_readable.js":38,"./lib/_stream_transform.js":39,"./lib/_stream_writable.js":40,"./lib/internal/streams/end-of-stream.js":44,"./lib/internal/streams/pipeline.js":46}],50:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":40,"./lib/_stream_passthrough.js":41,"./lib/_stream_readable.js":42,"./lib/_stream_transform.js":43,"./lib/_stream_writable.js":44,"./lib/internal/streams/end-of-stream.js":48,"./lib/internal/streams/pipeline.js":50}],54:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -17860,7 +18053,7 @@ function simpleWrite(buf) {
 function simpleEnd(buf) {
   return buf && buf.length ? this.write(buf) : '';
 }
-},{"safe-buffer":30}],51:[function(require,module,exports){
+},{"safe-buffer":34}],55:[function(require,module,exports){
 (function (global){
 
 /**
