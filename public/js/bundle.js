@@ -2858,12 +2858,17 @@ function InitWebSocket()
       doorbell.play();
     });
 
+    clientController.on("leftPeer", (playerId) => {
+      $("#webcam" + playerId).html("");
+    });
+
     clientController.on("stream", (playerId, stream) => {
       addWebcam(stream, playerId, false, false);
     });
 
     clientController.on("wsClosed", () => {
-      setTimeout(function(){InitWebSocket();}, 2000);
+
+      //setTimeout(function(){InitWebSocket();}, 2000);
     });
   }
   else
@@ -3371,6 +3376,10 @@ ClientController.prototype.initialize = function(ws, myStream)
     this.webcamHandler.initWebcamPeer(playerId);
     this.emit("newPeer", playerId);
   });
+  this.wsHandler.eventEmitter.on("leftPeer", (playerId) => {
+    this.webcamHandler.leftPeer(playerId);
+    this.emit("leftPeer", playerId);
+  });
   this.wsHandler.eventEmitter.on("peerConnect", (fromPlayerId, stp) => {
     this.webcamHandler.peerConnected(fromPlayerId, stp);
   });
@@ -3378,6 +3387,12 @@ ClientController.prototype.initialize = function(ws, myStream)
     this.webcamHandler.peerAccepted(fromPlayerId, stp);
   });
   this.wsHandler.eventEmitter.on("wsClosed", () => {
+    delete this.wsHandler;
+    for (peer in this.webcamHandler.peers)
+    {
+      this.webcamHandler.peers[peer].destroy();
+    }
+    delete this.webcamHandler;
     this.emit("wsClosed");
   });
 
@@ -3519,8 +3534,14 @@ MouseHandler.prototype.sendMouseMove = function()
 
 module.exports = {MouseHandler: MouseHandler}
 },{"../fps_limiter":12}],10:[function(require,module,exports){
+(function (process){
 let SimplePeer = require('simple-peer');
 let EventEmitter = require('events').EventEmitter;
+
+if(process.env.NODE_ENV === 'test')
+{
+  var wrtc = require('wrtc');
+}
 
 function WebcamHandler(wsHandler, myStream)
 {
@@ -3534,13 +3555,17 @@ WebcamHandler.prototype = Object.create(EventEmitter.prototype);
 
 WebcamHandler.prototype.initWebcamPeer = function(playerId)
 {
-  console.log("initiating peer for player " + playerId)
-  
-  this.peers[playerId] = new SimplePeer({
+  //console.log("initiating peer for player " + playerId)
+  var peerOptions = {
     initiator: true,
     trickle: false,
     stream: this.myStream
-  });
+  }
+  if(process.env.NODE_ENV === 'test')
+  {
+    peerOptions.wrtc = wrtc;
+  }
+  this.peers[playerId] = new SimplePeer(peerOptions);
 
   this.peers[playerId].on('signal', (data) => {
     var sendData = {
@@ -3558,11 +3583,16 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId)
 
 WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
 {
-  this.peers[fromPlayerId] = new SimplePeer({
+  var peerOptions = {
     initiator: false,
     trickle: false,
     stream: this.myStream
-  });
+  }
+  if(process.env.NODE_ENV === 'test')
+  {
+    peerOptions.wrtc = wrtc;
+  }
+  this.peers[fromPlayerId] = new SimplePeer(peerOptions);
 
   this.peers[fromPlayerId].on('stream', stream => {
     this.emit("stream", fromPlayerId, stream)
@@ -3586,8 +3616,21 @@ WebcamHandler.prototype.peerAccepted = function(fromPlayerId, stp)
   this.peers[fromPlayerId].signal(stp);
 }
 
+WebcamHandler.prototype.leftPeer = function(playerId)
+{
+  try {
+    this.peers[playerId].destroy();
+  }
+  catch (error)
+  {
+    //console.log(error)
+  }
+  delete this.peers[playerId]
+}
+
 module.exports = {WebcamHandler: WebcamHandler}
-},{"events":4,"simple-peer":35}],11:[function(require,module,exports){
+}).call(this,require('_process'))
+},{"_process":6,"events":4,"simple-peer":35,"wrtc":56}],11:[function(require,module,exports){
 let pako = require('pako');
 let diff_match_patch = require('diff-match-patch');
 let FpsLimiter = require('../fps_limiter').FpsLimiter;
@@ -3647,8 +3690,7 @@ function WsHandler(ws)
     }
     else if (json.type == "leftPeer")
     {
-      peers[json.playerId].destroy();
-      $("#webcam" + json.playerId).html("");
+      this.eventEmitter.emit("leftPeer", json.playerId)
     }
     else if (json.type == "peerConnect")
     {
@@ -18124,4 +18166,12 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],56:[function(require,module,exports){
+'use strict';
+
+exports.MediaStream = window.MediaStream;
+exports.RTCIceCandidate = window.RTCIceCandidate;
+exports.RTCPeerConnection = window.RTCPeerConnection;
+exports.RTCSessionDescription = window.RTCSessionDescription;
+
 },{}]},{},[7]);

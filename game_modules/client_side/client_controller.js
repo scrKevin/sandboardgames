@@ -36,6 +36,12 @@ ClientController.prototype.initialize = function(ws, myStream)
     this.webcamHandler.peerAccepted(fromPlayerId, stp);
   });
   this.wsHandler.eventEmitter.on("wsClosed", () => {
+    delete this.wsHandler;
+    for (peer in this.webcamHandler.peers)
+    {
+      this.webcamHandler.peers[peer].destroy();
+    }
+    delete this.webcamHandler;
     this.emit("wsClosed");
   });
 

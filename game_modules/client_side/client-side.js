@@ -132,7 +132,8 @@ function InitWebSocket()
     });
 
     clientController.on("wsClosed", () => {
-      setTimeout(function(){InitWebSocket();}, 2000);
+
+      //setTimeout(function(){InitWebSocket();}, 2000);
     });
   }
   else
