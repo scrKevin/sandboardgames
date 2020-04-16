@@ -12,7 +12,7 @@ chai.use(chaiHttp);
 var app = require('../index');
 var gameRooms = require('../index').appVariables.gameRooms;
 
-describe('Test reqests on server', function() {
+describe('Integration Test', function() {
   this.timeout(15000);
   it('should get index', (done) =>{
     chai.request(app)
@@ -66,7 +66,12 @@ describe('Test reqests on server', function() {
         function closeWs(clientController, wsUser){
           return new Promise(function(resolve, reject){
             clientController.on("wsClosed", () => {
-              resolve();
+              
+              setTimeout(function(){
+                resolve();
+              }, 200);
+
+              
             })
             wsUser.close();
           })
@@ -85,7 +90,7 @@ describe('Test reqests on server', function() {
         for(var i = 0; i < 10; i++)
         {
           await closeWs(testUsers[i].cc, testUsers[i].wsUser);
-          console.log("closed")
+          //console.log("closed")
         }
         expect(gameRooms[0].getNrOfPlayers()).to.equal(0);
         resolve()
@@ -102,7 +107,7 @@ describe('Test reqests on server', function() {
   });
 
   it ('users should receive each others streams', function() {
-    console.log("started")
+    //console.log("started")
     function testReceivingStreams(){
       return new Promise(function(resolve, reject){
         function checkResolve(){
@@ -149,9 +154,11 @@ describe('Test reqests on server', function() {
       var possibleUsers = [0, 1, 2]
       for (user in resolveObj)
       {
+        //console.log(resolveObj[user])
         var shouldHaveReceived = possibleUsers.filter(function(userNr){
           return userNr != resolveObj[user].ownPlayerId
         });
+        //console.log(shouldHaveReceived)
         for(received of resolveObj[user].received)
         {
           if(!shouldHaveReceived.includes(received.playerId))
@@ -161,9 +168,9 @@ describe('Test reqests on server', function() {
             assert.fail("user " + resolveObj[user].ownPlayerId + " received a stream it should not have received.")
           }
         }
+        var nInReceived = 0;
         for (userNr of shouldHaveReceived)
         {
-          var nInReceived = 0;
           for (received of resolveObj[user].received)
           {
             if (received.playerId == userNr)
@@ -172,8 +179,8 @@ describe('Test reqests on server', function() {
             }
             expect(received.stream).not.to.be.null;
           }
-          expect(nInReceived).to.equal(1);
         }
+        expect(nInReceived).to.equal(2);
       }
     }, function (err){
       assert.fail();
@@ -181,6 +188,26 @@ describe('Test reqests on server', function() {
       assert.fail(assertErr)
     });
     
+  });
+
+  it("should process mouse move", function(done){
+    var clientControllerForUser0 = new ClientController();
+    var wsUser0 = new WebSocket('ws://localhost:8080/' + gameRooms[0].hash + '/lobby')
+    clientControllerForUser0.initialize(wsUser0, common.getMediaStream());
+    clientControllerForUser0.on("playerId", (playerId) => {
+      clientControllerForUser0.mouseMove(200, 250);
+      setTimeout(function(){
+        for(game of gameRooms[0].games)
+        {
+          if(game.wsLocation == 'lobby')
+          {
+            expect(game.gameHandler.game.gameObj.players[0].pos.x).to.equal(200);
+            expect(game.gameHandler.game.gameObj.players[0].pos.y).to.equal(250);
+            done();
+          }
+        }
+      }, 500);
+    });
   });
 
 });

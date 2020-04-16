@@ -295,27 +295,27 @@ WS_distributor.prototype.broadcast = function(){
   this.broadcastLimiter.update();
 }
 
-function broadcastGameObj(thisObj){
-  var currentGameObj = JSON.stringify(thisObj.gameObj)
-  var diffs = thisObj.dmp.diff_main(thisObj.lastSentGameObj, currentGameObj);
-  thisObj.dmp.diff_cleanupEfficiency(diffs);
-  var patches = thisObj.dmp.patch_make(thisObj.lastSentGameObj, diffs);
-  thisObj.lastSentGameObj = currentGameObj;
-  var patchToSend = thisObj.dmp.patch_toText(patches)
-  var sendData = {
-    type: "patches",
-    changedCards: thisObj.changedCardsBuffer,
-    patches: patchToSend
-  }
-  var strToSend = JSON.stringify(sendData);
-  thisObj.changedCardsBuffer = [];
-  var binaryString = pako.deflate(strToSend, { to: 'string' });
-  thisObj.wss.clients.forEach(function each(client) {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(binaryString);
-    }
-  });
-}
+// function broadcastGameObj(thisObj){
+//   var currentGameObj = JSON.stringify(thisObj.gameObj)
+//   var diffs = thisObj.dmp.diff_main(thisObj.lastSentGameObj, currentGameObj);
+//   thisObj.dmp.diff_cleanupEfficiency(diffs);
+//   var patches = thisObj.dmp.patch_make(thisObj.lastSentGameObj, diffs);
+//   thisObj.lastSentGameObj = currentGameObj;
+//   var patchToSend = thisObj.dmp.patch_toText(patches)
+//   var sendData = {
+//     type: "patches",
+//     changedCards: thisObj.changedCardsBuffer,
+//     patches: patchToSend
+//   }
+//   var strToSend = JSON.stringify(sendData);
+//   thisObj.changedCardsBuffer = [];
+//   var binaryString = pako.deflate(strToSend, { to: 'string' });
+//   thisObj.wss.clients.forEach(function each(client) {
+//     if (client.readyState === WebSocket.OPEN) {
+//       client.send(binaryString);
+//     }
+//   });
+// }
 
 
 module.exports = {Game: WS_distributor}

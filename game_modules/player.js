@@ -9,7 +9,6 @@ function Player(){
 }
 
 Player.prototype.setId = function(playerNumbers){
-  //console.log(playerNumbers)
   var nextAvailableId = -1
   for (var i = 0; i < playerNumbers.length; i++)
   {
