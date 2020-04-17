@@ -8,6 +8,8 @@ function ClientController()
 {
   this.init = false;
   EventEmitter.call(this);
+  this.wsHandler = null
+  this.webcamHandler = null;
 }
 
 ClientController.prototype = Object.create(EventEmitter.prototype);
@@ -36,22 +38,25 @@ ClientController.prototype.initialize = function(ws, myStream)
     this.webcamHandler.peerAccepted(fromPlayerId, stp);
   });
   this.wsHandler.eventEmitter.on("wsClosed", () => {
-    delete this.wsHandler;
-    for (peer in this.webcamHandler.peers)
+    this.wsHandler.eventEmitter.removeAllListeners();
+    if (this.webcamHandler)
     {
-      this.webcamHandler.peers[peer].destroy();
+      for (peer in this.webcamHandler.peers)
+      {
+        this.webcamHandler.peers[peer].destroy();
+      }
     }
-    delete this.webcamHandler;
+    this.webcamHandler.removeAllListeners();
     this.emit("wsClosed");
   });
 
+  this.mouseHandler = new MouseHandler(this.wsHandler);
+  
   this.webcamHandler = new WebcamHandler(this.wsHandler, myStream);
   this.webcamHandler.on("stream", (playerId, stream) => {
     this.emit("stream", playerId, stream);
   });
 
-  this.mouseHandler = new MouseHandler(this.wsHandler);
-  
   this.init = true;
 }
 

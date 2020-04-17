@@ -2770,6 +2770,8 @@ var latestMouseX = -1;
 var latestMouseY = -1;
 var dragCardId = null;
 
+var blockCardChange = [];
+
 function addWebcam(stream, playerId, mirrored, muted)
 {
   var video = document.createElement('video');
@@ -2867,14 +2869,14 @@ function InitWebSocket()
     });
 
     clientController.on("wsClosed", () => {
-
-      //setTimeout(function(){InitWebSocket();}, 2000);
+      clientController.removeAllListeners();
+      setTimeout(function(){InitWebSocket();}, 2000);
     });
   }
   else
   {
      // The browser doesn't support WebSocket
-     //alert("WebSocket NOT supported by your Browser!");
+     alert("WebSocket NOT supported by your Browser!");
   }
 }
 
@@ -2965,6 +2967,7 @@ $( document ).ready(function() {
   $('#enterGameBtn').on('click', enterGame);
   $('#resetGameBtn').on('click', resetGame);
   $(".shuffleButton").on('click', shuffleDeck);
+  $(".inspectDeckButton").on('click', inspectDeck);
   $('#name').keyup(function(){
     checkEnterIsAllowed();
     clientController.typeName($('#name').val())
@@ -2973,10 +2976,11 @@ $( document ).ready(function() {
   $(".card").on("mousedown", function(event){
     dragCardId = event.currentTarget.id;
     clientController.clickOnCard(event.currentTarget.id);
+    blockCardChange = [];
   });
 
   $(".card").on("touchstart", function(event){
-    mouseclicked = true;
+    //mouseclicked = true;
     var currentY = event.originalEvent.touches[0].pageY;
     var currentX = event.originalEvent.touches[0].pageX;
     latestMouseY = currentY * (1 / scale);
@@ -2984,8 +2988,9 @@ $( document ).ready(function() {
     dragCardId = event.currentTarget.id;
     clientController.touchCard(dragCardId, Math.round(latestMouseX), Math.round(latestMouseY))
     event.preventDefault();
-    
+    blockCardChange = [];
   });
+  
    $(".card").bind("mouseup touchend", function(e){
     e.preventDefault();
     var currentY = e.originalEvent.touches ?  e.originalEvent.touches[0].pageY : e.pageY;
@@ -3143,43 +3148,45 @@ function updateCards(gameObj, changedCardsBuffer)
       updateCss("#" + card.id, "top", card.y + "px");
     }
 
-    
-    if(card.hasOwnProperty("show") && card.isInAnOpenbox)
+    if(!blockCardChange.includes(card.id))
     {
-      if (card.show == "backface")
+      if(card.hasOwnProperty("show") && card.isInAnOpenbox)
       {
-        updateCardFace(card, card.backface);
-      }
-      else if (card.show == "frontface")
-      {
-        updateCardFace(card, card.frontface);
-      }
-    }
-    else
-    {
-      var cardInMyBox = cardIsInMyOwnBox(card);
-
-      if (card.hasOwnProperty("show") && (!card.attachedToDeck || cardInMyBox))
-      {
-        if (cardInMyBox)
+        if (card.show == "backface")
+        {
+          updateCardFace(card, card.backface);
+        }
+        else if (card.show == "frontface")
         {
           updateCardFace(card, card.frontface);
         }
-        else
+      }
+      else
+      {
+        var cardInMyBox = cardIsInMyOwnBox(card);
+
+        if (card.hasOwnProperty("show") && (!card.attachedToDeck || cardInMyBox))
         {
-          if(cardIsInInspectorBox(card))
+          if (cardInMyBox)
           {
-            updateCardFace(card, card.altFrontface);
+            updateCardFace(card, card.frontface);
           }
           else
           {
-            if (card.show == "backface")
+            if(cardIsInInspectorBox(card))
             {
-              updateCardFace(card, card.backface);
+              updateCardFace(card, card.altFrontface);
             }
-            else if (card.show == "frontface")
+            else
             {
-              updateCardFace(card, card.frontface);
+              if (card.show == "backface")
+              {
+                updateCardFace(card, card.backface);
+              }
+              else if (card.show == "frontface")
+              {
+                updateCardFace(card, card.frontface);
+              }
             }
           }
         }
@@ -3331,6 +3338,20 @@ function shuffleDeck(e){
   clientController.shuffleDeck(deckId);
 }
 
+function inspectDeck(e){
+  var deckId = e.target.parentElement.id;
+  var tmpGameObj = JSON.parse(clientController.wsHandler.lastGameObj);
+  var foundDeck = tmpGameObj.decks.find(function(deck){
+    return deck.id === deckId;
+  });
+  blockCardChange = [];
+  for (card of foundDeck.attachedCards)
+  {
+    updateCardFace(card, card.frontface)
+    blockCardChange.push(card.id);
+  }
+}
+
 function checkEnterIsAllowed()
 {
   if($('#name').val().length !=0 && state.color != "#FFFFFF")
@@ -3359,6 +3380,8 @@ function ClientController()
 {
   this.init = false;
   EventEmitter.call(this);
+  this.wsHandler = null
+  this.webcamHandler = null;
 }
 
 ClientController.prototype = Object.create(EventEmitter.prototype);
@@ -3387,22 +3410,25 @@ ClientController.prototype.initialize = function(ws, myStream)
     this.webcamHandler.peerAccepted(fromPlayerId, stp);
   });
   this.wsHandler.eventEmitter.on("wsClosed", () => {
-    delete this.wsHandler;
-    for (peer in this.webcamHandler.peers)
+    this.wsHandler.eventEmitter.removeAllListeners();
+    if (this.webcamHandler)
     {
-      this.webcamHandler.peers[peer].destroy();
+      for (peer in this.webcamHandler.peers)
+      {
+        this.webcamHandler.peers[peer].destroy();
+      }
     }
-    delete this.webcamHandler;
+    this.webcamHandler.removeAllListeners();
     this.emit("wsClosed");
   });
 
+  this.mouseHandler = new MouseHandler(this.wsHandler);
+  
   this.webcamHandler = new WebcamHandler(this.wsHandler, myStream);
   this.webcamHandler.on("stream", (playerId, stream) => {
     this.emit("stream", playerId, stream);
   });
 
-  this.mouseHandler = new MouseHandler(this.wsHandler);
-  
   this.init = true;
 }
 
