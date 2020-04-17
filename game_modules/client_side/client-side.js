@@ -599,7 +599,8 @@ function selectColor(e){
 
 function shuffleDeck(e){
   var deckId = e.target.parentElement.id;
-  clientController.shuffleDeck(deckId);
+  var xStackMinimum = (e.target.value === '') ? 30 : Number(e.target.value);
+  clientController.shuffleDeck(deckId, xStackMinimum);
 }
 
 function inspectDeck(e){

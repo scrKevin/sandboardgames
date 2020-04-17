@@ -35,20 +35,22 @@ Deck.prototype.shuffle = function(a){
   return a;
 }
 
-Deck.prototype.shuffleDeck = function()
+Deck.prototype.shuffleDeck = function(xStackMinimum)
 {
+
   var numberArray = []
   for (var i = 0; i < this.attachedCards.length; i++)
   {
     numberArray.push(i);
   }
   this.shuffle(numberArray);
-  var incrementForStackEffect = 30 / this.attachedCards.length;
+  var incrementXForStackEffect = xStackMinimum / this.attachedCards.length;
+  var incrementYForStackEffect = 30 / this.attachedCards.length;
   for(var i = 0; i < this.attachedCards.length; i++)
   {
     this.attachedCards[i].setZ(numberArray[i]);
-    this.attachedCards[i].setX(this.x + 5 + Math.round(numberArray[i] * incrementForStackEffect));
-    this.attachedCards[i].setY(this.y + 80 - Math.round(numberArray[i] * incrementForStackEffect));
+    this.attachedCards[i].setX(this.x + 5 + Math.round(numberArray[i] * incrementXForStackEffect));
+    this.attachedCards[i].setY(this.y + 80 - Math.round(numberArray[i] * incrementYForStackEffect));
   }
 }
 

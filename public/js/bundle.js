@@ -3163,10 +3163,9 @@ function updateCards(gameObj, changedCardsBuffer)
       }
       else
       {
-        var cardInMyBox = cardIsInMyOwnBox(card);
-
-        if (card.hasOwnProperty("show") && (!card.attachedToDeck || cardInMyBox))
+        if (card.hasOwnProperty("show"))
         {
+          var cardInMyBox = cardIsInMyOwnBox(card);
           if (cardInMyBox)
           {
             updateCardFace(card, card.frontface);
@@ -3335,7 +3334,8 @@ function selectColor(e){
 
 function shuffleDeck(e){
   var deckId = e.target.parentElement.id;
-  clientController.shuffleDeck(deckId);
+  var xStackMinimum = (e.target.value === '') ? 30 : Number(e.target.value);
+  clientController.shuffleDeck(deckId, xStackMinimum);
 }
 
 function inspectDeck(e){
@@ -3457,9 +3457,9 @@ ClientController.prototype.releaseCard = function(x, y)
   this.init && this.mouseHandler.releaseCard(x, y);
 }
 
-ClientController.prototype.shuffleDeck = function(deckId)
+ClientController.prototype.shuffleDeck = function(deckId, xStackMinimum)
 {
-  this.init && this.wsHandler.shuffleDeck(deckId);
+  this.init && this.wsHandler.shuffleDeck(deckId, xStackMinimum);
 }
 
 ClientController.prototype.selectColor = function(color)
@@ -3742,10 +3742,11 @@ WsHandler.prototype.requestPlayerId = function()
   this.sendToWs(sendData);
 }
 
-WsHandler.prototype.shuffleDeck = function(deckId)
+WsHandler.prototype.shuffleDeck = function(deckId, xStackMinimum)
 {
   var sendData = {
     type: "shuffleDeck",
+    xStackMinimum: xStackMinimum,
     deckId: deckId
   }
   this.sendToWs(sendData);

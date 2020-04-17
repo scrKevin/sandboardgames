@@ -85,9 +85,9 @@ ClientController.prototype.releaseCard = function(x, y)
   this.init && this.mouseHandler.releaseCard(x, y);
 }
 
-ClientController.prototype.shuffleDeck = function(deckId)
+ClientController.prototype.shuffleDeck = function(deckId, xStackMinimum)
 {
-  this.init && this.wsHandler.shuffleDeck(deckId);
+  this.init && this.wsHandler.shuffleDeck(deckId, xStackMinimum);
 }
 
 ClientController.prototype.selectColor = function(color)

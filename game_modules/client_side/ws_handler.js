@@ -83,10 +83,11 @@ WsHandler.prototype.requestPlayerId = function()
   this.sendToWs(sendData);
 }
 
-WsHandler.prototype.shuffleDeck = function(deckId)
+WsHandler.prototype.shuffleDeck = function(deckId, xStackMinimum)
 {
   var sendData = {
     type: "shuffleDeck",
+    xStackMinimum: xStackMinimum,
     deckId: deckId
   }
   this.sendToWs(sendData);

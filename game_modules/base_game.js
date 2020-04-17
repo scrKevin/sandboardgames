@@ -151,7 +151,7 @@ function WS_distributor(wss, resetGameFunction)
         {
           if (deck.id == json.deckId)
           {
-            deck.shuffleDeck();
+            deck.shuffleDeck(json.xStackMinimum);
             for (card of deck.attachedCards)
             {
               this.addToChangedCardsBuffer(card.id)
