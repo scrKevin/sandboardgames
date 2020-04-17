@@ -38,6 +38,9 @@ Working example @ https://bitwiseworkshop.nl/
 `cd /home/pi/sandboardgames`). Run `npm start`. Invite your friends and enjoy
 some games.
 
+For detailed instructions on how to setup a server-environment from scratch, see
+[docs/EC2.md](./docs/EC2.md).
+
 ### Development:
 
 To automatically update the `bundle.js` file (client side javascript):
