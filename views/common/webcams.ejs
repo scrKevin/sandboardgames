@@ -1,8 +1,8 @@
-<% for (var i =0; i < 4;  i++ ) { %>
+<% for (var i =0; i < fixedPlayers;  i++ ) { %>
   <div class='webcam' id='webcam<%= i %>' style="position: absolute; z-index:2; top: <%= webcamPos[i].top %>px; left:  <%= webcamPos[i].left %>px;"></div> 
 <% } %>
 
-<% for (var i = 4; i <20;  i++ ) { %>
+<% for (var i = fixedPlayers; i <20;  i++ ) { %>
   <div class="webcambox" id='webcambox<%= i %>'>
     <div class='webcamContainer'>
       <div id="webcam<%= i %>"></div>

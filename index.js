@@ -11,12 +11,14 @@ let GameRoom = require("./game_modules/game_room").GameRoom;
 const StartpositionsSH = require("./game_modules/sh/startpositions")
 const StartpositionsSY = require("./game_modules/sy/startpositions")
 const StartpositionsRMK = require("./game_modules/rmk/startpositions")
+const StartpositionsCTD = require("./game_modules/ctd/startpositions")
 
 let SY_Game = require("./game_modules/sy/sy_game").SY_Game;
 let SH_Game = require("./game_modules/sh/sh_game").SH_Game;
 let Lobby_Game = require("./game_modules/lobby/lobby_game").Lobby_Game;
 let CAH_Game = require("./game_modules/cah/cah_game").CAH_Game;
 let RMK_Game = require("./game_modules/rmk/rmk_game").RMK_Game;
+let CTD_Game = require("./game_modules/ctd/ctd_game").CTD_Game;
 
 function ImplementedGame(name, wsLocation, GameClass, routerLocation, viewsLocation, objectToPassToView)
 {
@@ -29,11 +31,12 @@ function ImplementedGame(name, wsLocation, GameClass, routerLocation, viewsLocat
 }
 
 const availableGames = {
-  'lobby': new ImplementedGame('Lobby', 'lobby', Lobby_Game, "lobby", 'lobby', {}),
-  'sy': new ImplementedGame('Scotland Yard', 'sy', SY_Game, "sy", 'sy', {webcamPos: StartpositionsSY.webcamPos}),
-  'sh': new ImplementedGame('Secret Hitler', 'sh', SH_Game, "sh", 'sh', {playerboxStartPos: StartpositionsSH.playerBoxes, webcamPos: StartpositionsSH.webcamPos}),
-  'cah': new ImplementedGame('Cards against Humanity', 'cah', CAH_Game.class, 'cah', 'cah', {nBlackCards: CAH_Game.nBlackCards, nWhiteCards: CAH_Game.nWhiteCards}),
-  'rmk': new ImplementedGame("Rummikub", 'rmk', RMK_Game, 'rmk', 'rmk', {playerboxStartPos: StartpositionsRMK.playerBoxes, webcamPos: StartpositionsRMK.webcamPos})
+  'lobby': new ImplementedGame('Lobby', 'lobby', Lobby_Game, "lobby", 'lobby', {fixedPlayers: 0}),
+  'sy': new ImplementedGame('Scotland Yard', 'sy', SY_Game, "sy", 'sy', {webcamPos: StartpositionsSY.webcamPos, fixedPlayers: 6}),
+  'sh': new ImplementedGame('Secret Hitler', 'sh', SH_Game, "sh", 'sh', {playerboxStartPos: StartpositionsSH.playerBoxes, webcamPos: StartpositionsSH.webcamPos, fixedPlayers: 10}),
+  'cah': new ImplementedGame('Cards against Humanity', 'cah', CAH_Game.class, 'cah', 'cah', {nBlackCards: CAH_Game.nBlackCards, nWhiteCards: CAH_Game.nWhiteCards, fixedPlayers: 0}),
+  'rmk': new ImplementedGame("Rummikub", 'rmk', RMK_Game, 'rmk', 'rmk', {playerboxStartPos: StartpositionsRMK.playerBoxes, webcamPos: StartpositionsRMK.webcamPos, fixedPlayers: 4}),
+  'ctd': new ImplementedGame("Citadels", 'ctd', CTD_Game, 'ctd', 'ctd', {playerboxStartPos: StartpositionsCTD.playerBoxes, webcamPos: StartpositionsCTD.webcamPos, fixedPlayers: 7})
 }
 
 

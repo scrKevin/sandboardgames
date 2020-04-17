@@ -2770,6 +2770,8 @@ var latestMouseX = -1;
 var latestMouseY = -1;
 var dragCardId = null;
 
+var blockCardChange = [];
+
 function addWebcam(stream, playerId, mirrored, muted)
 {
   var video = document.createElement('video');
@@ -2858,18 +2860,23 @@ function InitWebSocket()
       doorbell.play();
     });
 
+    clientController.on("leftPeer", (playerId) => {
+      $("#webcam" + playerId).html("");
+    });
+
     clientController.on("stream", (playerId, stream) => {
       addWebcam(stream, playerId, false, false);
     });
 
     clientController.on("wsClosed", () => {
+      clientController.removeAllListeners();
       setTimeout(function(){InitWebSocket();}, 2000);
     });
   }
   else
   {
      // The browser doesn't support WebSocket
-     //alert("WebSocket NOT supported by your Browser!");
+     alert("WebSocket NOT supported by your Browser!");
   }
 }
 
@@ -2960,6 +2967,7 @@ $( document ).ready(function() {
   $('#enterGameBtn').on('click', enterGame);
   $('#resetGameBtn').on('click', resetGame);
   $(".shuffleButton").on('click', shuffleDeck);
+  $(".inspectDeckButton").on('click', inspectDeck);
   $('#name').keyup(function(){
     checkEnterIsAllowed();
     clientController.typeName($('#name').val())
@@ -2968,10 +2976,11 @@ $( document ).ready(function() {
   $(".card").on("mousedown", function(event){
     dragCardId = event.currentTarget.id;
     clientController.clickOnCard(event.currentTarget.id);
+    blockCardChange = [];
   });
 
   $(".card").on("touchstart", function(event){
-    mouseclicked = true;
+    //mouseclicked = true;
     var currentY = event.originalEvent.touches[0].pageY;
     var currentX = event.originalEvent.touches[0].pageX;
     latestMouseY = currentY * (1 / scale);
@@ -2979,8 +2988,9 @@ $( document ).ready(function() {
     dragCardId = event.currentTarget.id;
     clientController.touchCard(dragCardId, Math.round(latestMouseX), Math.round(latestMouseY))
     event.preventDefault();
-    
+    blockCardChange = [];
   });
+  
    $(".card").bind("mouseup touchend", function(e){
     e.preventDefault();
     var currentY = e.originalEvent.touches ?  e.originalEvent.touches[0].pageY : e.pageY;
@@ -3138,43 +3148,45 @@ function updateCards(gameObj, changedCardsBuffer)
       updateCss("#" + card.id, "top", card.y + "px");
     }
 
-    
-    if(card.hasOwnProperty("show") && card.isInAnOpenbox)
+    if(!blockCardChange.includes(card.id))
     {
-      if (card.show == "backface")
+      if(card.hasOwnProperty("show") && card.isInAnOpenbox)
       {
-        updateCardFace(card, card.backface);
-      }
-      else if (card.show == "frontface")
-      {
-        updateCardFace(card, card.frontface);
-      }
-    }
-    else
-    {
-      var cardInMyBox = cardIsInMyOwnBox(card);
-
-      if (card.hasOwnProperty("show") && (!card.attachedToDeck || cardInMyBox))
-      {
-        if (cardInMyBox)
+        if (card.show == "backface")
+        {
+          updateCardFace(card, card.backface);
+        }
+        else if (card.show == "frontface")
         {
           updateCardFace(card, card.frontface);
         }
-        else
+      }
+      else
+      {
+        var cardInMyBox = cardIsInMyOwnBox(card);
+
+        if (card.hasOwnProperty("show") && (!card.attachedToDeck || cardInMyBox))
         {
-          if(cardIsInInspectorBox(card))
+          if (cardInMyBox)
           {
-            updateCardFace(card, card.altFrontface);
+            updateCardFace(card, card.frontface);
           }
           else
           {
-            if (card.show == "backface")
+            if(cardIsInInspectorBox(card))
             {
-              updateCardFace(card, card.backface);
+              updateCardFace(card, card.altFrontface);
             }
-            else if (card.show == "frontface")
+            else
             {
-              updateCardFace(card, card.frontface);
+              if (card.show == "backface")
+              {
+                updateCardFace(card, card.backface);
+              }
+              else if (card.show == "frontface")
+              {
+                updateCardFace(card, card.frontface);
+              }
             }
           }
         }
@@ -3326,6 +3338,20 @@ function shuffleDeck(e){
   clientController.shuffleDeck(deckId);
 }
 
+function inspectDeck(e){
+  var deckId = e.target.parentElement.id;
+  var tmpGameObj = JSON.parse(clientController.wsHandler.lastGameObj);
+  var foundDeck = tmpGameObj.decks.find(function(deck){
+    return deck.id === deckId;
+  });
+  blockCardChange = [];
+  for (card of foundDeck.attachedCards)
+  {
+    updateCardFace(card, card.frontface)
+    blockCardChange.push(card.id);
+  }
+}
+
 function checkEnterIsAllowed()
 {
   if($('#name').val().length !=0 && state.color != "#FFFFFF")
@@ -3354,6 +3380,8 @@ function ClientController()
 {
   this.init = false;
   EventEmitter.call(this);
+  this.wsHandler = null
+  this.webcamHandler = null;
 }
 
 ClientController.prototype = Object.create(EventEmitter.prototype);
@@ -3371,6 +3399,10 @@ ClientController.prototype.initialize = function(ws, myStream)
     this.webcamHandler.initWebcamPeer(playerId);
     this.emit("newPeer", playerId);
   });
+  this.wsHandler.eventEmitter.on("leftPeer", (playerId) => {
+    this.webcamHandler.leftPeer(playerId);
+    this.emit("leftPeer", playerId);
+  });
   this.wsHandler.eventEmitter.on("peerConnect", (fromPlayerId, stp) => {
     this.webcamHandler.peerConnected(fromPlayerId, stp);
   });
@@ -3378,16 +3410,25 @@ ClientController.prototype.initialize = function(ws, myStream)
     this.webcamHandler.peerAccepted(fromPlayerId, stp);
   });
   this.wsHandler.eventEmitter.on("wsClosed", () => {
+    this.wsHandler.eventEmitter.removeAllListeners();
+    if (this.webcamHandler)
+    {
+      for (peer in this.webcamHandler.peers)
+      {
+        this.webcamHandler.peers[peer].destroy();
+      }
+    }
+    this.webcamHandler.removeAllListeners();
     this.emit("wsClosed");
   });
 
+  this.mouseHandler = new MouseHandler(this.wsHandler);
+  
   this.webcamHandler = new WebcamHandler(this.wsHandler, myStream);
   this.webcamHandler.on("stream", (playerId, stream) => {
     this.emit("stream", playerId, stream);
   });
 
-  this.mouseHandler = new MouseHandler(this.wsHandler);
-  
   this.init = true;
 }
 
@@ -3519,8 +3560,14 @@ MouseHandler.prototype.sendMouseMove = function()
 
 module.exports = {MouseHandler: MouseHandler}
 },{"../fps_limiter":12}],10:[function(require,module,exports){
+(function (process){
 let SimplePeer = require('simple-peer');
 let EventEmitter = require('events').EventEmitter;
+
+if(process.env.NODE_ENV === 'test')
+{
+  var wrtc = require('wrtc');
+}
 
 function WebcamHandler(wsHandler, myStream)
 {
@@ -3534,13 +3581,17 @@ WebcamHandler.prototype = Object.create(EventEmitter.prototype);
 
 WebcamHandler.prototype.initWebcamPeer = function(playerId)
 {
-  console.log("initiating peer for player " + playerId)
-  
-  this.peers[playerId] = new SimplePeer({
+  //console.log("initiating peer for player " + playerId)
+  var peerOptions = {
     initiator: true,
     trickle: false,
     stream: this.myStream
-  });
+  }
+  if(process.env.NODE_ENV === 'test')
+  {
+    peerOptions.wrtc = wrtc;
+  }
+  this.peers[playerId] = new SimplePeer(peerOptions);
 
   this.peers[playerId].on('signal', (data) => {
     var sendData = {
@@ -3558,11 +3609,16 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId)
 
 WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
 {
-  this.peers[fromPlayerId] = new SimplePeer({
+  var peerOptions = {
     initiator: false,
     trickle: false,
     stream: this.myStream
-  });
+  }
+  if(process.env.NODE_ENV === 'test')
+  {
+    peerOptions.wrtc = wrtc;
+  }
+  this.peers[fromPlayerId] = new SimplePeer(peerOptions);
 
   this.peers[fromPlayerId].on('stream', stream => {
     this.emit("stream", fromPlayerId, stream)
@@ -3586,8 +3642,21 @@ WebcamHandler.prototype.peerAccepted = function(fromPlayerId, stp)
   this.peers[fromPlayerId].signal(stp);
 }
 
+WebcamHandler.prototype.leftPeer = function(playerId)
+{
+  try {
+    this.peers[playerId].destroy();
+  }
+  catch (error)
+  {
+    //console.log(error)
+  }
+  delete this.peers[playerId]
+}
+
 module.exports = {WebcamHandler: WebcamHandler}
-},{"events":4,"simple-peer":35}],11:[function(require,module,exports){
+}).call(this,require('_process'))
+},{"_process":6,"events":4,"simple-peer":35,"wrtc":56}],11:[function(require,module,exports){
 let pako = require('pako');
 let diff_match_patch = require('diff-match-patch');
 let FpsLimiter = require('../fps_limiter').FpsLimiter;
@@ -3647,8 +3716,7 @@ function WsHandler(ws)
     }
     else if (json.type == "leftPeer")
     {
-      peers[json.playerId].destroy();
-      $("#webcam" + json.playerId).html("");
+      this.eventEmitter.emit("leftPeer", json.playerId)
     }
     else if (json.type == "peerConnect")
     {
@@ -18124,4 +18192,12 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],56:[function(require,module,exports){
+'use strict';
+
+exports.MediaStream = window.MediaStream;
+exports.RTCIceCandidate = window.RTCIceCandidate;
+exports.RTCPeerConnection = window.RTCPeerConnection;
+exports.RTCSessionDescription = window.RTCSessionDescription;
+
 },{}]},{},[7]);

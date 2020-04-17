@@ -3,18 +3,18 @@
 		<%- include ("../partials/head") %>
 	</head>
 	<body>
-		<%- include ('../partials/welcomeModal'); -%>
-		<%- include ('../partials/resetModal'); -%>
+		<%- include ('../../common/welcomeModal'); -%>
+		<%- include ('../../common/resetModal'); -%>
 		<div class="scaleplane">
 			<%- include ('../partials/tracks'); -%>
 			<%- include ('../partials/playerboxes', {playerboxStartPos: playerboxStartPos}) -%>
-			<%- include ('../partials/webcams', {webcamPos: webcamPos}) -%>
+			<%- include ('../../common/webcams', {webcamPos: webcamPos, fixedPlayers:fixedPlayers}) -%>
 			<%- include ('../partials/decks') -%>
 			<%- include ('../partials/electiontracker') -%>
 			<%- include ('../partials/ballots') -%>
 			<%- include ('../partials/policies') -%>
 			<%- include ('../partials/rolecards') -%>
-			<%- include ("../partials/cursors") -%>
+			<%- include ("../../common/cursors") -%>
 		</div>
 	</body>
 </html>
