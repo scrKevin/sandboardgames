@@ -428,10 +428,9 @@ function updateCards(gameObj, changedCardsBuffer)
       }
       else
       {
-        var cardInMyBox = cardIsInMyOwnBox(card);
-
-        if (card.hasOwnProperty("show") && (!card.attachedToDeck || cardInMyBox))
+        if (card.hasOwnProperty("show"))
         {
+          var cardInMyBox = cardIsInMyOwnBox(card);
           if (cardInMyBox)
           {
             updateCardFace(card, card.frontface);
