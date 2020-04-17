@@ -2,3 +2,6 @@
   <div class="playerbox" id="player<%= i %>box" style="top: <%= playerboxStartPos[i].top - 3 %>px; left: <%= playerboxStartPos[i].left %>px"></div>
   <div class="playerName" style="top: <%= playerboxStartPos[i].top %>px; left: <%= playerboxStartPos[i].left %>px"><span class="playerNameText" id="player<%= i %>NameText"></span></div>
 <% } %>
+<% for (var i = 0; i < 7;  i++ ) { %>
+  <div class="playerbox" style="top: <%= playerboxStartPos[i].top - 3 + 300 %>px; left: <%= playerboxStartPos[i].left %>px"></div>
+<% } %>
