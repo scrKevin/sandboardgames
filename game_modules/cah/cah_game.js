@@ -91,8 +91,8 @@ CAH_Game.prototype.resetGame = function(game)
   {
     var newCard = new Card('b' + i, blackDeckX + 5, blackDeckY + 80);
     newCard.faceType = 'text';
-    newCard.backface = {color: "#FFFFFF", backgroundcolor: "#000000", text: " ", secondaryText: " "};
-    newCard.frontface = {color: "#FFFFFF", backgroundcolor: "#000000", text: blackCard.text, secondaryText: String(blackCard.pick)};
+    newCard.backface = {color: "#FFFFFF", backgroundcolor: "#000000", text: " "};
+    newCard.frontface = {color: "#FFFFFF", backgroundcolor: "#000000", text: blackCard.text};
     newCard.show = 'backface';
     blackDeck.attachedCards.push(newCard);
     game.gameObj.cards.push(newCard);

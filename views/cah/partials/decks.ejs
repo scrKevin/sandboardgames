@@ -2,11 +2,11 @@
 <div class='card deck' id='blackDeck'><button type="button" class="btn btn-primary btn-lg shuffleButton" style="width: 110px;">Shuffle</button></div>
 
 <% for (var i = 0; i < nWhiteCards; i++) { -%>
-  <div class='card playcard' id='w<%= i %>'><span></span></div>
+  <div class='card playcard' id='w<%= i %>'><span id='w<%= i %>_text'></span></div>
 <% } -%>
 
 <% for (var i = 0; i < nBlackCards; i++) { -%>
-  <div class='card playcard' id='b<%= i %>'><span></span></div>
+  <div class='card playcard' id='b<%= i %>'><span id='b<%= i %>_text'></span></div>
 <% } -%>
 
 <div class='openbox' id='openbox0'></div>
