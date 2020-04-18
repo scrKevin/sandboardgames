@@ -29,21 +29,21 @@ CTD_Game.prototype.resetGame = function(game)
   charactersDeck = new Deck('charactersDeck0', charactersDeckX, charactersDeckY, 500, 144);
 
   var charCardData = [
-    {color: "#000000", backgroundcolor: "#b1b1b1", text: "<span class='cN'>1</span>Assassin"},
-    {color: "#000000", backgroundcolor: "#b1b1b1", text: "<span class='cN'>2</span>Thief"},
-    {color: "#000000", backgroundcolor: "#b1b1b1", text: "<span class='cN'>3</span>Magician"},
-    {color: "#000000", backgroundcolor: "#fffa65", text: "<span class='cN'>4</span>King"},
-    {color: "#000000", backgroundcolor: "#80dcff", text: "<span class='cN'>5</span>Bishop"},
-    {color: "#000000", backgroundcolor: "#8cff7e", text: "<span class='cN'>6</span>Merchant"},
-    {color: "#000000", backgroundcolor: "#b1b1b1", text: "<span class='cN'>7</span>Architect"},
-    {color: "#000000", backgroundcolor: "#ff4d4d", text: "<span class='cN'>8</span>Warlord"},
+    {color: "#000000", backgroundcolor: "#b1b1b1", text: "Assassin", secondarytext: "1"},
+    {color: "#000000", backgroundcolor: "#b1b1b1", text: "Thief", secondarytext: "2"},
+    {color: "#000000", backgroundcolor: "#b1b1b1", text: "Magician", secondarytext: "3"},
+    {color: "#000000", backgroundcolor: "#fffa65", text: "King", secondarytext: "4"},
+    {color: "#000000", backgroundcolor: "#80dcff", text: "Bishop", secondarytext: "5"},
+    {color: "#000000", backgroundcolor: "#8cff7e", text: "Merchant", secondarytext: "6"},
+    {color: "#000000", backgroundcolor: "#b1b1b1", text: "Architect", secondarytext: "7"},
+    {color: "#000000", backgroundcolor: "#ff4d4d", text: "Warlord", secondarytext: "8"},
   ]
 
   for (var i = 1; i <= 8; i++)
   {
     c1Card = new Card('c' + i, charactersDeckX + 5, charactersDeckY + 50);
     c1Card.faceType = 'text';
-    c1Card.backface = {color: "#000000", backgroundcolor: "#f79860", text: "Character"};
+    c1Card.backface = {color: "#000000", backgroundcolor: "#f79860", text: "Character", secondarytext: "-"};
     c1Card.frontface = charCardData[i - 1]
     c1Card.show = "backface";
     charactersDeck.attachedCards.push(c1Card);
@@ -192,13 +192,8 @@ CTD_Game.prototype.resetGame = function(game)
       {
         var dCard = new Card('d' + n, districtsDeckX + 5, districtsDeckY + 50);
         dCard.faceType = 'text';
-        dCard.backface = {color: "#000000", backgroundcolor: "#d0eeff", text: "District"};
-        var infoText = "";
-        if(district.hasOwnProperty("info"))
-        {
-          infoText = "<img src='/img/ctd/info.svg'/>"
-        }
-        dCard.frontface = {color: districtsData[i].color, backgroundcolor: districtsData[i].backgroundcolor, text: "<span class='cost'>" + district.cost + "</span>" + district.text + infoText}
+        dCard.backface = {color: "#000000", backgroundcolor: "#d0eeff", text: "District", secondarytext: "?"};
+        dCard.frontface = {color: districtsData[i].color, backgroundcolor: districtsData[i].backgroundcolor, text: district.text, secondarytext: district.cost}
         dCard.show = "backface";
         districtsDeck.attachedCards.push(dCard);
         game.gameObj.cards.push(dCard);

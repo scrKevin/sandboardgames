@@ -3048,9 +3048,9 @@ function updateCardFace(card, value)
   }
   else if(card.faceType === 'text')
   {
-    if ($("#" + card.id + " span").html() !== value.text)
+    if ($("#" + card.id + "_text").html() !== value.text)
     {
-      $("#" + card.id + " span").html(value.text);
+      $("#" + card.id + "_text").html(value.text);
       $("#" + card.id).css("color", value.color);
       $("#" + card.id).css("border", "4px solid " + value.color);
       $("#" + card.id).css("background-color", value.backgroundcolor);
