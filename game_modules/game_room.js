@@ -77,7 +77,7 @@ GameRoom.prototype.close = function()
   for (game of this.games)
   {
     game.wsServer.close(function(){
-      console.log('closed ws for gameroom ' + this.name);
+      //console.log('closed ws for gameroom ' + this.name);
     })
   }
 }

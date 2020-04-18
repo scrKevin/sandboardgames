@@ -1,3 +1,5 @@
+require('./game_modules/consoleTimestamp')();
+
 const express = require('express');
 const path = require("path");
 const https = require('https');
@@ -126,12 +128,13 @@ app.post("/api/create", (req, res) => {
   {
     newGameRoom = new GameRoom(req.body.nameCreate, req.body.passCreate, availableGames);
     gameRooms.push(newGameRoom);
+    console.log("Created GameRoom '" + req.body.nameCreate + "'");
     res.redirect("/" + newGameRoom.hash + "/lobby");
   }
   else
   {
     //gameroom name already exists
-    console.log("Room: '" + req.body.nameCreate + "' already exists.");
+    console.log("GameRoom: '" + req.body.nameCreate + "' already exists.");
     res.redirect("/");
   }
 });

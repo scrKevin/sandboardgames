@@ -3,6 +3,12 @@
 		<%- include ("../partials/head") %>
 	</head>
 	<body>
+    <div class="checkDevicesBox">
+      Check your webcam:<br>
+      <div class='webcam' id='webcam0'></div>
+      Check your microphone:<br>
+      <canvas id="meter" width="320" height="50"></canvas>
+    </div>
 		<%- include ("../partials/joinModal") %>
 		<%- include ("../partials/createModal") %>
 		<button class='btn btn-primary' id="joinBtn">Join</button> or <button class='btn btn-success' id="createBtn">Create</button> 
