@@ -3212,9 +3212,16 @@ function updateCursors (gameObj)
     updateCss("#cursor" + playerIndex, "background-color", player.color);
     updateCss("#player" + player.id + "box", "background-color", player.color);
     updateHtml("#player" + player.id + "NameText", player.name)
-    updateCss("#cursor" + playerIndex, "left", (player.pos.x - 22) + "px");
-    updateCss("#cursor" + playerIndex, "top", (player.pos.y - 22) + "px");
-    updateCss("#cursor" + playerIndex, "display", "block");
+    if(player.id != myPlayerId)
+    {
+      updateCss("#cursor" + playerIndex, "left", (player.pos.x - 22) + "px");
+      updateCss("#cursor" + playerIndex, "top", (player.pos.y - 22) + "px");
+      updateCss("#cursor" + playerIndex, "display", "block");
+    }
+    else
+    {
+      updateCss("#cursor" + playerIndex, "display", "none");
+    }
     playerIndex++;
   }
   for (var i = playerIndex; i < 20; i++){
