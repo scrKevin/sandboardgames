@@ -22,6 +22,7 @@ function Deck(id, x, y, width, height){
   this.width = width;
   this.height = height;
   this.immovable = false;
+  this.clickedBy = -1;
 }
 
 Deck.prototype.shuffle = function(a){
@@ -90,6 +91,19 @@ Deck.prototype.addToDeck = function(card){
 Deck.prototype.setImmovable = function()
 {
   this.immovable = true;
+}
+
+Deck.prototype.isMyDeck = function(playerId, mouseClicked)
+{
+    if ((this.clickedBy == playerId || this.clickedBy == -1) && mouseClicked)
+  {
+    this.clickedBy = playerId
+    return true;
+  }
+  else
+  {
+    return false;
+  }
 }
 
 module.exports = {Deck: Deck}

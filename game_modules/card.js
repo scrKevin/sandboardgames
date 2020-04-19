@@ -7,6 +7,7 @@ function Card(id, x, y){
   this.faceType = 'image';
   this.attachedToDeck = false;
   this.isInAnOpenbox = false;
+  this.clickedBy = -1;
 }
 
 Card.prototype.setLastTouchedBy = function(playerId)
@@ -27,6 +28,19 @@ Card.prototype.setX = function(x)
 Card.prototype.setY = function(y)
 {
 	this.y = y
+}
+
+Card.prototype.isMyCard = function(playerId, mouseClicked)
+{
+  if ((this.clickedBy == playerId || this.clickedBy == -1) && mouseClicked)
+  {
+    this.clickedBy = playerId
+    return true;
+  }
+  else
+  {
+    return false;
+  }
 }
 
 module.exports = {Card: Card}
