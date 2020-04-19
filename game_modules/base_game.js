@@ -85,18 +85,25 @@ function WS_distributor(wss, resetGameFunction)
             });
             if (!deck.immovable)
             {
-              deck.x -= moved.deltaX;
-              deck.y -= moved.deltaY;
-              for (card of deck.attachedCards)
+              if (deck.isMyDeck(id, json.mouseclicked) && json.mouseclicked)
               {
-                card.x -= moved.deltaX;
-                card.y -= moved.deltaY;
-                this.addToChangedCardsBuffer(card.id);
+                deck.x -= moved.deltaX;
+                deck.y -= moved.deltaY;
+                for (card of deck.attachedCards)
+                {
+                  card.x -= moved.deltaX;
+                  card.y -= moved.deltaY;
+                  this.addToChangedCardsBuffer(card.id);
+                }
+                for (openbox of deck.attachedOpenboxes)
+                {
+                  openbox.x -= moved.deltaX;
+                  openbox.y -= moved.deltaY;
+                }
               }
-              for (openbox of deck.attachedOpenboxes)
+              if(!json.mouseclicked && deck.clickedBy == id)
               {
-                openbox.x -= moved.deltaX;
-                openbox.y -= moved.deltaY;
+                deck.clickedBy = -1;
               }
             }
           }
@@ -106,18 +113,25 @@ function WS_distributor(wss, resetGameFunction)
               return card.id === json.card;
             });
             card.setLastTouchedBy(id);
-            card.x -= moved.deltaX;
-            card.y -= moved.deltaY;
-            for (deck of this.gameObj.decks)
+            if(card.isMyCard(id, json.mouseclicked) && json.mouseclicked)
             {
-              if(deck.isInDeck(json.pos.x, json.pos.y))
+              card.x -= moved.deltaX;
+              card.y -= moved.deltaY;
+              for (deck of this.gameObj.decks)
               {
-                deck.addToDeck(card);
+                if(deck.isInDeck(json.pos.x, json.pos.y))
+                {
+                  deck.addToDeck(card);
+                }
+                else
+                {
+                  deck.removeFromDeck(card);
+                }
               }
-              else
-              {
-                deck.removeFromDeck(card);
-              }
+            }
+            if (!json.mouseclicked && card.clickedBy == id)
+            {
+              card.clickedBy = -1;
             }
             if (card.hasOwnProperty("show"))
             {
