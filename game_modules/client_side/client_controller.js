@@ -1,8 +1,9 @@
 let WsHandler = require("./ws_handler").WsHandler;
 let WebcamHandler = require("./webcam_handler").WebcamHandler;
 let MouseHandler = require("./mouse_handler").MouseHandler;
-let EventEmitter = require('events').EventEmitter;
+let CanvasHandler = require("./canvas_handler").CanvasHandler;
 
+let EventEmitter = require('events').EventEmitter;
 
 function ClientController()
 {
@@ -10,6 +11,7 @@ function ClientController()
   EventEmitter.call(this);
   this.wsHandler = null
   this.webcamHandler = null;
+  this.canvasHandler = new CanvasHandler();
 }
 
 ClientController.prototype = Object.create(EventEmitter.prototype);
@@ -47,6 +49,7 @@ ClientController.prototype.initialize = function(ws, myStream)
       }
     }
     this.webcamHandler.removeAllListeners();
+    this.canvasHandler.wsHandler = null;
     this.emit("wsClosed");
   });
 
@@ -56,6 +59,8 @@ ClientController.prototype.initialize = function(ws, myStream)
   this.webcamHandler.on("stream", (playerId, stream) => {
     this.emit("stream", playerId, stream);
   });
+
+  this.canvasHandler.initWsHandler(this.wsHandler)
 
   this.init = true;
 }
@@ -103,6 +108,11 @@ ClientController.prototype.resetGame = function()
 ClientController.prototype.typeName = function(name)
 {
   this.init && this.wsHandler.typeName(name);
+}
+
+ClientController.prototype.typeVarText = function(text)
+{
+  this.init && this.wsHandler.typeVarText(text);
 }
 
 

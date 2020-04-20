@@ -1,0 +1,18 @@
+<html>
+  <head>
+    <%- include ("../partials/head") %>
+  </head>
+  <body>
+    <%- include ('../../common/welcomeModal'); -%>
+    <%- include ('../../common/resetModal'); -%>
+    
+    <div class="scaleplane">
+      <%- include ("../partials/canvas") %>
+      <%- include ("../partials/varTextInput") %>
+      <%- include ("../partials/playerboxes") %>
+      <%- include ('../../common/webcams', {webcamPos: webcamPos, fixedPlayers:fixedPlayers}) -%>
+      <%- include ("../partials/decks") %>
+      <%- include ("../../common/cursors") -%>
+    </div>
+  </body>
+</html>

@@ -5,7 +5,9 @@ function Player(){
   this.pos = {
     x: 0,
     y: 0
-  }
+  };
+  this.drawArray = [];
+  this.newCoords = [];
 }
 
 Player.prototype.setId = function(playerNumbers){
@@ -40,6 +42,20 @@ Player.prototype.updateColor = function(color){
 
 Player.prototype.updateName = function(name){
   this.name = name;
+}
+
+Player.prototype.addDrawCoordinates = function(newCoords)
+{
+  for(coord of newCoords)
+  {
+    this.drawArray.push(coord);
+    this.newCoords.push(coord);
+  }
+}
+
+Player.prototype.resetBroadcastedDrawArray = function()
+{
+  this.newCoords = [];
 }
 
 module.exports = {Player: Player}

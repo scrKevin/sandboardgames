@@ -12,10 +12,10 @@ function WsHandler(ws)
   this.dmp = new diff_match_patch();
   this.changedCardsBuffer = [];
   this.eventEmitter = new EventEmitter();
-  this.updateGameLimiter = new FpsLimiter(20);
-  this.updateGameLimiter.on("update", () => {
-    this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, false);
-  });
+  // this.updateGameLimiter = new FpsLimiter(20);
+  // this.updateGameLimiter.on("update", () => {
+  //   this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, false);
+  // });
 
   this.ws.onopen = function () {
     this.requestPlayerId()
@@ -33,7 +33,9 @@ function WsHandler(ws)
         {
           this.addToChangedCardsBuffer(changedCard);
         }
-        this.updateGameLimiter.update();
+        //this.updateGameLimiter.update();
+        this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, false);
+        //this.eventEmitter.emit("updateCanvas", JSON.parse(this.lastGameObj));
       }
       catch (err)
       {
@@ -66,6 +68,11 @@ function WsHandler(ws)
     else if (json.type == "peerAccepted")
     {
       this.eventEmitter.emit("peerAccepted", json.fromPlayerId, json.stp)
+    }
+    else if (json.type == "reset")
+    {
+      this.eventEmitter.emit("reset");
+      this.eventEmitter.emit('updateGame', JSON.parse(this.lastGameObj), [], true)
     }
   }.bind(this);
   ws.onclose = function()
@@ -131,6 +138,15 @@ WsHandler.prototype.typeName = function(name)
   sendData = {
     type: "name",
     name: name
+  }
+  this.sendToWs(sendData);
+}
+
+WsHandler.prototype.typeVarText = function(text)
+{
+  sendData = {
+    type: "varText",
+    text: text
   }
   this.sendToWs(sendData);
 }

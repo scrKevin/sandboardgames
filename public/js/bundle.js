@@ -2733,6 +2733,189 @@ process.chdir = function (dir) {
 process.umask = function() { return 0; };
 
 },{}],7:[function(require,module,exports){
+let FpsLimiter = require('../fps_limiter').FpsLimiter;
+
+function CanvasHandler() {
+  this.canvas = null;
+  this.ctx = null;
+  this.w = 0;
+  this.h = 0;
+  this.scale = 1;
+
+  this.currX = 0;
+  this.currY = 0;
+  this.prevX = 0;
+  this.prevY = 0;
+
+  this.flag = false;
+  this.dot_flag = false;
+
+  this.wsHandler = null;
+
+  this.lastDrawCoordinates = [];
+
+  this.canvasFpsLimiter = new FpsLimiter(20);
+  this.canvasFpsLimiter.on("update", () => {
+    this.sendDrawCoordinates()
+  });
+  this.initialized = false;
+  this.myPlayerId = -1;
+  this.myColor = "#000000";
+}
+
+CanvasHandler.prototype.init = function(canvas)
+{
+  this.canvas = canvas;
+  this.ctx = canvas.getContext("2d");
+  this.w = canvas.width;
+  this.h = canvas.height;
+
+  this.canvas.addEventListener("mousemove", (e) => {
+    this.processMouse('move', e)
+  }, false);
+  this.canvas.addEventListener("mousedown", (e) => {
+    this.processMouse('down', e)
+  }, false);
+  this.canvas.addEventListener("mouseup", (e) => {
+    this.processMouse('up', e)
+  }, false);
+  this.canvas.addEventListener("mouseout", (e) => {
+    this.processMouse('out', e)
+  }, false);
+}
+
+CanvasHandler.prototype.updateScale = function(scale)
+{
+  this.scale = scale;
+}
+
+CanvasHandler.prototype.processMouse = function(res, e)
+{
+  if (res == 'down') {
+    this.prevX = this.currX;
+    this.prevY = this.currY;
+    this.currX = Math.round(e.clientX * (1 / this.scale)) - this.canvas.offsetLeft;
+    this.currY = Math.round(e.clientY * (1 / this.scale)) - this.canvas.offsetTop;
+
+    this.flag = true;
+    this.dot_flag = true;
+    if (this.dot_flag) {
+      this.ctx.beginPath();
+      this.ctx.fillStyle = "#000000";
+      this.ctx.fillRect(this.currX, this.currY, 2, 2);
+      this.ctx.closePath();
+      this.dot_flag = false;
+    }
+  }
+  if (res == 'up' || res == "out") {
+    this.flag = false;
+    this.canvasFpsLimiter.update();
+  }
+  if (res == 'move') {
+    if (this.flag) {
+      this.prevX = this.currX;
+      this.prevY = this.currY;
+      this.currX = Math.round(e.clientX * (1 / this.scale)) - this.canvas.offsetLeft;
+      this.currY = Math.round(e.clientY * (1 / this.scale)) - this.canvas.offsetTop;
+      this.draw();
+    }
+  }
+}
+
+CanvasHandler.prototype.draw = function()
+{
+  this.lastDrawCoordinates.push({x0: this.prevX, y0: this.prevY, x1: this.currX, y1: this.currY});
+  this.canvasFpsLimiter.update();
+  this.ctx.beginPath();
+  this.ctx.moveTo(this.prevX, this.prevY);
+  this.ctx.lineTo(this.currX, this.currY);
+  this.ctx.strokeStyle = this.myColor;
+  this.ctx.lineWidth = 2;
+  this.ctx.stroke();
+  this.ctx.closePath();
+}
+
+CanvasHandler.prototype.initWsHandler = function(wsHandler)
+{
+  this.wsHandler = wsHandler;
+  this.wsHandler.eventEmitter.on("playerId", (playerId) => {
+    this.myPlayerId = playerId;
+  });
+  this.wsHandler.eventEmitter.on("updateGame", (gameObj, changedCards, wsIsInitialized) => {
+    if(this.initialized)
+    {
+      for (player of gameObj.players)
+      {
+        if(player.id == this.myPlayerId)
+        {
+          this.myColor = player.color;
+        }
+        else
+        {
+          if (player.newCoords.length > 0)
+          {
+            this.drawOtherPlayer(player.newCoords, player.color);
+          }
+        }
+      }
+    }
+    else
+    {
+      for (player of gameObj.players)
+      {
+        if(player.id == this.myPlayerId)
+        {
+          this.myColor = player.color;
+        }
+        else
+        {
+          if (player.drawArray.length > 0)
+          {
+            this.drawOtherPlayer(player.drawArray, player.color);
+          }
+        }
+      }
+      this.initialized = true;
+    }
+  });
+
+  this.wsHandler.eventEmitter.on("reset", () => {
+    this.erase();
+  });
+}
+
+CanvasHandler.prototype.drawOtherPlayer = function(coords, color)
+{
+  for (line of coords)
+  {
+    this.ctx.beginPath();
+    this.ctx.moveTo(line.x0, line.y0);
+    this.ctx.lineTo(line.x1, line.y1);
+    this.ctx.strokeStyle = color;
+    this.ctx.lineWidth = 2;
+    this.ctx.stroke();
+    this.ctx.closePath();
+  }
+}
+
+CanvasHandler.prototype.erase = function() {
+  this.ctx.clearRect(0, 0, this.w, this.h);
+}
+
+CanvasHandler.prototype.sendDrawCoordinates = function(){
+  if (this.wsHandler != null && this.lastDrawCoordinates.length > 0)
+  {
+    var sendData = {
+      type: "draw",
+      coords: this.lastDrawCoordinates
+    }
+    this.lastDrawCoordinates = [];
+    this.wsHandler.sendToWs(sendData);
+  }
+}
+
+module.exports = {CanvasHandler: CanvasHandler}
+},{"../fps_limiter":13}],8:[function(require,module,exports){
 let ClientController = require("./client_controller").ClientController;
 
 var clientController = new ClientController()
@@ -2938,6 +3121,7 @@ function adaptScale()
     scale = width / 1920;
     $(".scaleplane").css("transform", "scale(" + scale + ")")
   }
+  clientController.canvasHandler.updateScale(scale);
 }
 
 $( window ).resize(function() {
@@ -2999,6 +3183,19 @@ $( document ).ready(function() {
     clientController.releaseCard(currentX * (1 / scale), currentY * (1 / scale));
     dragCardId = null;
   });
+
+  if ($("#drawCanvas").length) // initiate canvas if draw canvas exists
+  {
+    canvas = document.getElementById('drawCanvas');
+    clientController.canvasHandler.init(canvas);
+  }
+
+  if($("#varTextInput").length)
+  {
+    $('#varTextInput').keyup(function(){
+      clientController.typeVarText($('#varTextInput').val())
+    })
+  }
 
   navigator.mediaDevices.getUserMedia({video: {
                           width: {
@@ -3225,7 +3422,7 @@ function updateCursors (gameObj)
     playerIndex++;
   }
   for (var i = playerIndex; i < 20; i++){
-    updateCss("#cursor" + i, "left", "20000px");
+    updateCss("#cursor" + i, "left", "0px");
     updateCss("#cursor" + i, "top", "0px");
     updateCss("#cursor" + playerIndex, "display", "none");
   }
@@ -3376,12 +3573,13 @@ function resetGame()
 {
   clientController.resetGame();
 }
-},{"./client_controller":8}],8:[function(require,module,exports){
+},{"./client_controller":9}],9:[function(require,module,exports){
 let WsHandler = require("./ws_handler").WsHandler;
 let WebcamHandler = require("./webcam_handler").WebcamHandler;
 let MouseHandler = require("./mouse_handler").MouseHandler;
-let EventEmitter = require('events').EventEmitter;
+let CanvasHandler = require("./canvas_handler").CanvasHandler;
 
+let EventEmitter = require('events').EventEmitter;
 
 function ClientController()
 {
@@ -3389,6 +3587,7 @@ function ClientController()
   EventEmitter.call(this);
   this.wsHandler = null
   this.webcamHandler = null;
+  this.canvasHandler = new CanvasHandler();
 }
 
 ClientController.prototype = Object.create(EventEmitter.prototype);
@@ -3426,6 +3625,7 @@ ClientController.prototype.initialize = function(ws, myStream)
       }
     }
     this.webcamHandler.removeAllListeners();
+    this.canvasHandler.wsHandler = null;
     this.emit("wsClosed");
   });
 
@@ -3435,6 +3635,8 @@ ClientController.prototype.initialize = function(ws, myStream)
   this.webcamHandler.on("stream", (playerId, stream) => {
     this.emit("stream", playerId, stream);
   });
+
+  this.canvasHandler.initWsHandler(this.wsHandler)
 
   this.init = true;
 }
@@ -3484,9 +3686,14 @@ ClientController.prototype.typeName = function(name)
   this.init && this.wsHandler.typeName(name);
 }
 
+ClientController.prototype.typeVarText = function(text)
+{
+  this.init && this.wsHandler.typeVarText(text);
+}
+
 
 module.exports = {ClientController: ClientController}
-},{"./mouse_handler":9,"./webcam_handler":10,"./ws_handler":11,"events":4}],9:[function(require,module,exports){
+},{"./canvas_handler":7,"./mouse_handler":10,"./webcam_handler":11,"./ws_handler":12,"events":4}],10:[function(require,module,exports){
 let FpsLimiter = require('../fps_limiter').FpsLimiter;
 
 function MouseHandler(wsHandler)
@@ -3566,7 +3773,7 @@ MouseHandler.prototype.sendMouseMove = function()
 }
 
 module.exports = {MouseHandler: MouseHandler}
-},{"../fps_limiter":12}],10:[function(require,module,exports){
+},{"../fps_limiter":13}],11:[function(require,module,exports){
 (function (process){
 let SimplePeer = require('simple-peer');
 let EventEmitter = require('events').EventEmitter;
@@ -3663,7 +3870,7 @@ WebcamHandler.prototype.leftPeer = function(playerId)
 
 module.exports = {WebcamHandler: WebcamHandler}
 }).call(this,require('_process'))
-},{"_process":6,"events":4,"simple-peer":35,"wrtc":56}],11:[function(require,module,exports){
+},{"_process":6,"events":4,"simple-peer":36,"wrtc":57}],12:[function(require,module,exports){
 let pako = require('pako');
 let diff_match_patch = require('diff-match-patch');
 let FpsLimiter = require('../fps_limiter').FpsLimiter;
@@ -3678,10 +3885,10 @@ function WsHandler(ws)
   this.dmp = new diff_match_patch();
   this.changedCardsBuffer = [];
   this.eventEmitter = new EventEmitter();
-  this.updateGameLimiter = new FpsLimiter(20);
-  this.updateGameLimiter.on("update", () => {
-    this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, false);
-  });
+  // this.updateGameLimiter = new FpsLimiter(20);
+  // this.updateGameLimiter.on("update", () => {
+  //   this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, false);
+  // });
 
   this.ws.onopen = function () {
     this.requestPlayerId()
@@ -3699,7 +3906,9 @@ function WsHandler(ws)
         {
           this.addToChangedCardsBuffer(changedCard);
         }
-        this.updateGameLimiter.update();
+        //this.updateGameLimiter.update();
+        this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, false);
+        //this.eventEmitter.emit("updateCanvas", JSON.parse(this.lastGameObj));
       }
       catch (err)
       {
@@ -3732,6 +3941,11 @@ function WsHandler(ws)
     else if (json.type == "peerAccepted")
     {
       this.eventEmitter.emit("peerAccepted", json.fromPlayerId, json.stp)
+    }
+    else if (json.type == "reset")
+    {
+      this.eventEmitter.emit("reset");
+      this.eventEmitter.emit('updateGame', JSON.parse(this.lastGameObj), [], true)
     }
   }.bind(this);
   ws.onclose = function()
@@ -3801,8 +4015,17 @@ WsHandler.prototype.typeName = function(name)
   this.sendToWs(sendData);
 }
 
+WsHandler.prototype.typeVarText = function(text)
+{
+  sendData = {
+    type: "varText",
+    text: text
+  }
+  this.sendToWs(sendData);
+}
+
 module.exports = {WsHandler: WsHandler}
-},{"../fps_limiter":12,"diff-match-patch":13,"events":4,"pako":16}],12:[function(require,module,exports){
+},{"../fps_limiter":13,"diff-match-patch":14,"events":4,"pako":17}],13:[function(require,module,exports){
 var EventEmitter = require('events').EventEmitter;
 
 function FpsLimiter(fps) {
@@ -3829,7 +4052,7 @@ FpsLimiter.prototype.update = function()
 }
 
 module.exports = {FpsLimiter: FpsLimiter}
-},{"events":4}],13:[function(require,module,exports){
+},{"events":4}],14:[function(require,module,exports){
 /**
  * Diff Match and Patch
  * Copyright 2018 The diff-match-patch Authors.
@@ -6020,7 +6243,7 @@ module.exports['diff_match_patch'] = diff_match_patch;
 module.exports['DIFF_DELETE'] = DIFF_DELETE;
 module.exports['DIFF_INSERT'] = DIFF_INSERT;
 module.exports['DIFF_EQUAL'] = DIFF_EQUAL;
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 // originally pulled out of simple-peer
 
 module.exports = function getBrowserRTC () {
@@ -6037,7 +6260,7 @@ module.exports = function getBrowserRTC () {
   return wrtc
 }
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -6062,7 +6285,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 // Top level file is just a mixin of submodules & constants
 'use strict';
 
@@ -6078,7 +6301,7 @@ assign(pako, deflate, inflate, constants);
 
 module.exports = pako;
 
-},{"./lib/deflate":17,"./lib/inflate":18,"./lib/utils/common":19,"./lib/zlib/constants":22}],17:[function(require,module,exports){
+},{"./lib/deflate":18,"./lib/inflate":19,"./lib/utils/common":20,"./lib/zlib/constants":23}],18:[function(require,module,exports){
 'use strict';
 
 
@@ -6480,7 +6703,7 @@ exports.deflate = deflate;
 exports.deflateRaw = deflateRaw;
 exports.gzip = gzip;
 
-},{"./utils/common":19,"./utils/strings":20,"./zlib/deflate":24,"./zlib/messages":29,"./zlib/zstream":31}],18:[function(require,module,exports){
+},{"./utils/common":20,"./utils/strings":21,"./zlib/deflate":25,"./zlib/messages":30,"./zlib/zstream":32}],19:[function(require,module,exports){
 'use strict';
 
 
@@ -6905,7 +7128,7 @@ exports.inflate = inflate;
 exports.inflateRaw = inflateRaw;
 exports.ungzip  = inflate;
 
-},{"./utils/common":19,"./utils/strings":20,"./zlib/constants":22,"./zlib/gzheader":25,"./zlib/inflate":27,"./zlib/messages":29,"./zlib/zstream":31}],19:[function(require,module,exports){
+},{"./utils/common":20,"./utils/strings":21,"./zlib/constants":23,"./zlib/gzheader":26,"./zlib/inflate":28,"./zlib/messages":30,"./zlib/zstream":32}],20:[function(require,module,exports){
 'use strict';
 
 
@@ -7012,7 +7235,7 @@ exports.setTyped = function (on) {
 
 exports.setTyped(TYPED_OK);
 
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 // String encode/decode helpers
 'use strict';
 
@@ -7201,7 +7424,7 @@ exports.utf8border = function (buf, max) {
   return (pos + _utf8len[buf[pos]] > max) ? pos : max;
 };
 
-},{"./common":19}],21:[function(require,module,exports){
+},{"./common":20}],22:[function(require,module,exports){
 'use strict';
 
 // Note: adler32 takes 12% for level 0 and 2% for level 6.
@@ -7254,7 +7477,7 @@ function adler32(adler, buf, len, pos) {
 
 module.exports = adler32;
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -7324,7 +7547,7 @@ module.exports = {
   //Z_NULL:                 null // Use -1 or null inline, depending on var type
 };
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 'use strict';
 
 // Note: we can't get significant speed boost here.
@@ -7385,7 +7608,7 @@ function crc32(crc, buf, len, pos) {
 
 module.exports = crc32;
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -9261,7 +9484,7 @@ exports.deflatePrime = deflatePrime;
 exports.deflateTune = deflateTune;
 */
 
-},{"../utils/common":19,"./adler32":21,"./crc32":23,"./messages":29,"./trees":30}],25:[function(require,module,exports){
+},{"../utils/common":20,"./adler32":22,"./crc32":24,"./messages":30,"./trees":31}],26:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -9321,7 +9544,7 @@ function GZheader() {
 
 module.exports = GZheader;
 
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -9668,7 +9891,7 @@ module.exports = function inflate_fast(strm, start) {
   return;
 };
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -11226,7 +11449,7 @@ exports.inflateSyncPoint = inflateSyncPoint;
 exports.inflateUndermine = inflateUndermine;
 */
 
-},{"../utils/common":19,"./adler32":21,"./crc32":23,"./inffast":26,"./inftrees":28}],28:[function(require,module,exports){
+},{"../utils/common":20,"./adler32":22,"./crc32":24,"./inffast":27,"./inftrees":29}],29:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -11571,7 +11794,7 @@ module.exports = function inflate_table(type, lens, lens_index, codes, table, ta
   return 0;
 };
 
-},{"../utils/common":19}],29:[function(require,module,exports){
+},{"../utils/common":20}],30:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -11605,7 +11828,7 @@ module.exports = {
   '-6':   'incompatible version' /* Z_VERSION_ERROR (-6) */
 };
 
-},{}],30:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -12829,7 +13052,7 @@ exports._tr_flush_block  = _tr_flush_block;
 exports._tr_tally = _tr_tally;
 exports._tr_align = _tr_align;
 
-},{"../utils/common":19}],31:[function(require,module,exports){
+},{"../utils/common":20}],32:[function(require,module,exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -12878,7 +13101,7 @@ function ZStream() {
 
 module.exports = ZStream;
 
-},{}],32:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 let promise
 
 module.exports = typeof queueMicrotask === 'function'
@@ -12888,7 +13111,7 @@ module.exports = typeof queueMicrotask === 'function'
     .then(cb)
     .catch(err => setTimeout(() => { throw err }, 0))
 
-},{}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 (function (process,global){
 'use strict'
 
@@ -12942,7 +13165,7 @@ function randomBytes (size, cb) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":6,"safe-buffer":34}],34:[function(require,module,exports){
+},{"_process":6,"safe-buffer":35}],35:[function(require,module,exports){
 /* eslint-disable node/no-deprecated-api */
 var buffer = require('buffer')
 var Buffer = buffer.Buffer
@@ -13006,7 +13229,7 @@ SafeBuffer.allocUnsafeSlow = function (size) {
   return buffer.SlowBuffer(size)
 }
 
-},{"buffer":3}],35:[function(require,module,exports){
+},{"buffer":3}],36:[function(require,module,exports){
 (function (Buffer){
 var debug = require('debug')('simple-peer')
 var getBrowserRTC = require('get-browser-rtc')
@@ -14013,7 +14236,7 @@ Peer.channelConfig = {}
 module.exports = Peer
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":3,"debug":36,"get-browser-rtc":14,"queue-microtask":32,"randombytes":33,"readable-stream":53}],36:[function(require,module,exports){
+},{"buffer":3,"debug":37,"get-browser-rtc":15,"queue-microtask":33,"randombytes":34,"readable-stream":54}],37:[function(require,module,exports){
 (function (process){
 /* eslint-env browser */
 
@@ -14281,7 +14504,7 @@ formatters.j = function (v) {
 };
 
 }).call(this,require('_process'))
-},{"./common":37,"_process":6}],37:[function(require,module,exports){
+},{"./common":38,"_process":6}],38:[function(require,module,exports){
 
 /**
  * This is the common logic for both the Node.js and web browser
@@ -14549,7 +14772,7 @@ function setup(env) {
 
 module.exports = setup;
 
-},{"ms":38}],38:[function(require,module,exports){
+},{"ms":39}],39:[function(require,module,exports){
 /**
  * Helpers.
  */
@@ -14713,7 +14936,7 @@ function plural(ms, msAbs, n, name) {
   return Math.round(ms / n) + ' ' + name + (isPlural ? 's' : '');
 }
 
-},{}],39:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 'use strict';
 
 function _inheritsLoose(subClass, superClass) { subClass.prototype = Object.create(superClass.prototype); subClass.prototype.constructor = subClass; subClass.__proto__ = superClass; }
@@ -14842,7 +15065,7 @@ createErrorType('ERR_UNKNOWN_ENCODING', function (arg) {
 createErrorType('ERR_STREAM_UNSHIFT_AFTER_END_EVENT', 'stream.unshift() after end event');
 module.exports.codes = codes;
 
-},{}],40:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -14984,7 +15207,7 @@ Object.defineProperty(Duplex.prototype, 'destroyed', {
   }
 });
 }).call(this,require('_process'))
-},{"./_stream_readable":42,"./_stream_writable":44,"_process":6,"inherits":15}],41:[function(require,module,exports){
+},{"./_stream_readable":43,"./_stream_writable":45,"_process":6,"inherits":16}],42:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -15024,7 +15247,7 @@ function PassThrough(options) {
 PassThrough.prototype._transform = function (chunk, encoding, cb) {
   cb(null, chunk);
 };
-},{"./_stream_transform":43,"inherits":15}],42:[function(require,module,exports){
+},{"./_stream_transform":44,"inherits":16}],43:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -16151,7 +16374,7 @@ function indexOf(xs, x) {
   return -1;
 }
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../errors":39,"./_stream_duplex":40,"./internal/streams/async_iterator":45,"./internal/streams/buffer_list":46,"./internal/streams/destroy":47,"./internal/streams/from":49,"./internal/streams/state":51,"./internal/streams/stream":52,"_process":6,"buffer":3,"events":4,"inherits":15,"string_decoder/":54,"util":2}],43:[function(require,module,exports){
+},{"../errors":40,"./_stream_duplex":41,"./internal/streams/async_iterator":46,"./internal/streams/buffer_list":47,"./internal/streams/destroy":48,"./internal/streams/from":50,"./internal/streams/state":52,"./internal/streams/stream":53,"_process":6,"buffer":3,"events":4,"inherits":16,"string_decoder/":55,"util":2}],44:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -16353,7 +16576,7 @@ function done(stream, er, data) {
   if (stream._transformState.transforming) throw new ERR_TRANSFORM_ALREADY_TRANSFORMING();
   return stream.push(null);
 }
-},{"../errors":39,"./_stream_duplex":40,"inherits":15}],44:[function(require,module,exports){
+},{"../errors":40,"./_stream_duplex":41,"inherits":16}],45:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -17053,7 +17276,7 @@ Writable.prototype._destroy = function (err, cb) {
   cb(err);
 };
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../errors":39,"./_stream_duplex":40,"./internal/streams/destroy":47,"./internal/streams/state":51,"./internal/streams/stream":52,"_process":6,"buffer":3,"inherits":15,"util-deprecate":55}],45:[function(require,module,exports){
+},{"../errors":40,"./_stream_duplex":41,"./internal/streams/destroy":48,"./internal/streams/state":52,"./internal/streams/stream":53,"_process":6,"buffer":3,"inherits":16,"util-deprecate":56}],46:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -17263,7 +17486,7 @@ var createReadableStreamAsyncIterator = function createReadableStreamAsyncIterat
 
 module.exports = createReadableStreamAsyncIterator;
 }).call(this,require('_process'))
-},{"./end-of-stream":48,"_process":6}],46:[function(require,module,exports){
+},{"./end-of-stream":49,"_process":6}],47:[function(require,module,exports){
 'use strict';
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
@@ -17474,7 +17697,7 @@ function () {
 
   return BufferList;
 }();
-},{"buffer":3,"util":2}],47:[function(require,module,exports){
+},{"buffer":3,"util":2}],48:[function(require,module,exports){
 (function (process){
 'use strict'; // undocumented cb() API, needed for core, not for public API
 
@@ -17582,7 +17805,7 @@ module.exports = {
   errorOrDestroy: errorOrDestroy
 };
 }).call(this,require('_process'))
-},{"_process":6}],48:[function(require,module,exports){
+},{"_process":6}],49:[function(require,module,exports){
 // Ported from https://github.com/mafintosh/end-of-stream with
 // permission from the author, Mathias Buus (@mafintosh).
 'use strict';
@@ -17687,12 +17910,12 @@ function eos(stream, opts, callback) {
 }
 
 module.exports = eos;
-},{"../../../errors":39}],49:[function(require,module,exports){
+},{"../../../errors":40}],50:[function(require,module,exports){
 module.exports = function () {
   throw new Error('Readable.from is not available in the browser')
 };
 
-},{}],50:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 // Ported from https://github.com/mafintosh/pump with
 // permission from the author, Mathias Buus (@mafintosh).
 'use strict';
@@ -17790,7 +18013,7 @@ function pipeline() {
 }
 
 module.exports = pipeline;
-},{"../../../errors":39,"./end-of-stream":48}],51:[function(require,module,exports){
+},{"../../../errors":40,"./end-of-stream":49}],52:[function(require,module,exports){
 'use strict';
 
 var ERR_INVALID_OPT_VALUE = require('../../../errors').codes.ERR_INVALID_OPT_VALUE;
@@ -17818,10 +18041,10 @@ function getHighWaterMark(state, options, duplexKey, isDuplex) {
 module.exports = {
   getHighWaterMark: getHighWaterMark
 };
-},{"../../../errors":39}],52:[function(require,module,exports){
+},{"../../../errors":40}],53:[function(require,module,exports){
 module.exports = require('events').EventEmitter;
 
-},{"events":4}],53:[function(require,module,exports){
+},{"events":4}],54:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Stream = exports;
 exports.Readable = exports;
@@ -17832,7 +18055,7 @@ exports.PassThrough = require('./lib/_stream_passthrough.js');
 exports.finished = require('./lib/internal/streams/end-of-stream.js');
 exports.pipeline = require('./lib/internal/streams/pipeline.js');
 
-},{"./lib/_stream_duplex.js":40,"./lib/_stream_passthrough.js":41,"./lib/_stream_readable.js":42,"./lib/_stream_transform.js":43,"./lib/_stream_writable.js":44,"./lib/internal/streams/end-of-stream.js":48,"./lib/internal/streams/pipeline.js":50}],54:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":41,"./lib/_stream_passthrough.js":42,"./lib/_stream_readable.js":43,"./lib/_stream_transform.js":44,"./lib/_stream_writable.js":45,"./lib/internal/streams/end-of-stream.js":49,"./lib/internal/streams/pipeline.js":51}],55:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -18129,7 +18352,7 @@ function simpleWrite(buf) {
 function simpleEnd(buf) {
   return buf && buf.length ? this.write(buf) : '';
 }
-},{"safe-buffer":34}],55:[function(require,module,exports){
+},{"safe-buffer":35}],56:[function(require,module,exports){
 (function (global){
 
 /**
@@ -18200,7 +18423,7 @@ function config (name) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],56:[function(require,module,exports){
+},{}],57:[function(require,module,exports){
 'use strict';
 
 exports.MediaStream = window.MediaStream;
@@ -18208,4 +18431,4 @@ exports.RTCIceCandidate = window.RTCIceCandidate;
 exports.RTCPeerConnection = window.RTCPeerConnection;
 exports.RTCSessionDescription = window.RTCSessionDescription;
 
-},{}]},{},[7]);
+},{}]},{},[8]);
