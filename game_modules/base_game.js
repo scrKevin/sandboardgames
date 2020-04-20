@@ -23,6 +23,11 @@ function WS_distributor(wss, resetGameFunction)
     }
     var strToSend = JSON.stringify(sendData);
     this.changedCardsBuffer = [];
+    for(player of this.gameObj.players)
+    {
+      player.resetBroadcastedDrawArray();
+    }
+
     var binaryString = pako.deflate(strToSend, { to: 'string' });
     this.wss.clients.forEach(function each(client) {
       if (client.readyState === WebSocket.OPEN) {
@@ -71,6 +76,21 @@ function WS_distributor(wss, resetGameFunction)
       {
         player.updateName(json.name)
         this.broadcast();
+      }
+      else if(json.type == "varText")
+      {
+        for (card of this.gameObj.cards)
+        {
+          if (card.hasOwnProperty("varText"))
+          {
+            if (card.varText)
+            {
+              card.frontface.text = json.text;
+              this.addToChangedCardsBuffer(card.id);
+              this.broadcast();
+            }
+          }
+        }
       }
       else if (json.type == "mouse")
       {
@@ -229,6 +249,11 @@ function WS_distributor(wss, resetGameFunction)
       else if (json.type == "reset")
       {
         this.resetGame(this);
+        this.broadcastReset();
+      }
+      else if (json.type == "draw")
+      {
+        player.addDrawCoordinates(json.coords);
       }
       
     });
@@ -305,31 +330,24 @@ WS_distributor.prototype.broadcastNewPeer = function (playerId, newWs){
   });
 }
 
+WS_distributor.prototype.broadcastReset = function ()
+{
+  //console.log("broadcasting left player " + playerId)
+  var sendData = {
+    type: "reset"
+  }
+  var strToSend = JSON.stringify(sendData);
+  var binaryString = pako.deflate(strToSend, { to: 'string' });
+  this.wss.clients.forEach(function each(client) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(binaryString);
+    }
+  });
+}
+
 WS_distributor.prototype.broadcast = function(){
   this.broadcastLimiter.update();
 }
-
-// function broadcastGameObj(thisObj){
-//   var currentGameObj = JSON.stringify(thisObj.gameObj)
-//   var diffs = thisObj.dmp.diff_main(thisObj.lastSentGameObj, currentGameObj);
-//   thisObj.dmp.diff_cleanupEfficiency(diffs);
-//   var patches = thisObj.dmp.patch_make(thisObj.lastSentGameObj, diffs);
-//   thisObj.lastSentGameObj = currentGameObj;
-//   var patchToSend = thisObj.dmp.patch_toText(patches)
-//   var sendData = {
-//     type: "patches",
-//     changedCards: thisObj.changedCardsBuffer,
-//     patches: patchToSend
-//   }
-//   var strToSend = JSON.stringify(sendData);
-//   thisObj.changedCardsBuffer = [];
-//   var binaryString = pako.deflate(strToSend, { to: 'string' });
-//   thisObj.wss.clients.forEach(function each(client) {
-//     if (client.readyState === WebSocket.OPEN) {
-//       client.send(binaryString);
-//     }
-//   });
-// }
 
 
 module.exports = {Game: WS_distributor}

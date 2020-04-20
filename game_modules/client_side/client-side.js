@@ -203,6 +203,7 @@ function adaptScale()
     scale = width / 1920;
     $(".scaleplane").css("transform", "scale(" + scale + ")")
   }
+  clientController.canvasHandler.updateScale(scale);
 }
 
 $( window ).resize(function() {
@@ -264,6 +265,19 @@ $( document ).ready(function() {
     clientController.releaseCard(currentX * (1 / scale), currentY * (1 / scale));
     dragCardId = null;
   });
+
+  if ($("#drawCanvas").length) // initiate canvas if draw canvas exists
+  {
+    canvas = document.getElementById('drawCanvas');
+    clientController.canvasHandler.init(canvas);
+  }
+
+  if($("#varTextInput").length)
+  {
+    $('#varTextInput').keyup(function(){
+      clientController.typeVarText($('#varTextInput').val())
+    })
+  }
 
   navigator.mediaDevices.getUserMedia({video: {
                           width: {
@@ -490,7 +504,7 @@ function updateCursors (gameObj)
     playerIndex++;
   }
   for (var i = playerIndex; i < 20; i++){
-    updateCss("#cursor" + i, "left", "20000px");
+    updateCss("#cursor" + i, "left", "0px");
     updateCss("#cursor" + i, "top", "0px");
     updateCss("#cursor" + playerIndex, "display", "none");
   }
