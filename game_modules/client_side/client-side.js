@@ -381,7 +381,7 @@ function initCards(gameObj){
     updateCss("#" + gameObj.cards[i].id, "top", gameObj.cards[i].y + "px");
     if (gameObj.cards[i].hasOwnProperty("show"))
     {
-      if (cardIsInMyOwnBox(gameObj.cards[i]))
+      if (cardIsInMyOwnBox(gameObj.cards[i]) || gameObj.cards[i].visibleFor == myPlayerId)
       {
         updateCardFace(gameObj.cards[i], gameObj.cards[i].frontface);
       }
@@ -445,7 +445,7 @@ function updateCards(gameObj, changedCardsBuffer)
         if (card.hasOwnProperty("show"))
         {
           var cardInMyBox = cardIsInMyOwnBox(card);
-          if (cardInMyBox)
+          if (cardInMyBox || card.visibleFor == myPlayerId)
           {
             updateCardFace(card, card.frontface);
           }

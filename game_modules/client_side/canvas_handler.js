@@ -164,7 +164,10 @@ CanvasHandler.prototype.drawOtherPlayer = function(coords, color)
 }
 
 CanvasHandler.prototype.erase = function() {
-  this.ctx.clearRect(0, 0, this.w, this.h);
+  if (this.canvas != null)
+  {
+    this.ctx.clearRect(0, 0, this.w, this.h);
+  }
 }
 
 CanvasHandler.prototype.sendDrawCoordinates = function(){

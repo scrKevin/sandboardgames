@@ -1,15 +1,11 @@
-var webcamBoxWidth = 250;
-var webcamBoxHeight = 300;
+var webcamBoxWidth = 420;
+var webcamBoxHeight = 315;
 
-var wsLocation = "fkar";
+var wsLocation = "strg";
 
-var maxPlayers = 10;
+var maxPlayers = 2;
 
 var maxSpectators = 20;
-
-$(document).on("cardTextChanged", function(e, cardId){
-  textFit($('#' + cardId)[0], {multiLine: true, maxFontSize: 32})
-})
 
 function toggleVisible(selector, shouldBeVisible)
 {
