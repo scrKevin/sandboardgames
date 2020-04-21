@@ -8,6 +8,7 @@ function Card(id, x, y){
   this.attachedToDeck = false;
   this.isInAnOpenbox = false;
   this.clickedBy = -1;
+  this.visibleFor = -1;
 }
 
 Card.prototype.setLastTouchedBy = function(playerId)

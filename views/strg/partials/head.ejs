@@ -1,0 +1,222 @@
+<!-- views/partials/head.ejs -->
+<meta charset="UTF-8">
+<!-- <meta name="viewport" content="width=device-width,user-scalable=no"> -->
+<title>Stratego Sandboard</title>
+
+<!-- Bootstrap CSS -->
+<link href="/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js" integrity="sha256-pasqAKBDmFT4eHoN2ndd6lN370kFiGUFyTiUHWhU7k8=" crossorigin="anonymous"></script>
+<script src='/js/bootstrap.min.js'></script>
+<script src="/js/strg/strg.js"></script>
+<script src="/js/bundle.js"></script>
+
+<style>
+
+body
+{
+  background-color: #424242;
+  background-image: url("/img/strg/back-pattern.png");
+}
+
+.playerPlane
+{
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  opacity: 0.5;
+}
+
+.scaleplane
+{
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  transform-origin: 0 0;
+}
+
+.cursor
+{
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  border: 1px solid black;
+  z-index: 1000;
+  display: none;
+}
+
+.playerbox
+{
+  position: absolute;
+  z-index: 1;
+}
+
+.webcambox
+{
+  position: relative;
+  padding: 8px;
+  border-radius: 6px;
+  background-color: #cccccc;
+  border: 1px solid black;
+  -webkit-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+  -moz-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+  box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+}
+
+.webcamContainer
+{
+  transform-origin: 50% 0
+}
+
+.webcamContainer video
+{
+  height: 240px;
+}
+
+.webcam
+{
+  height: 240px;
+}
+
+.card
+{
+  position: absolute;
+  z-index: 2;
+}
+
+.deck
+{
+  background-color: grey;
+  width: 134px;
+  height: 172px;
+}
+
+.playcard
+{
+  transform-origin: 0 0;
+  transform: scale(0.65);
+}
+
+.tile
+{
+  width: 88px;
+  height: 85px;
+  background-color: #ffffff;
+  padding: 5px;
+  font-size: 48px;
+  font-family: "Arial", sans;
+  font-weight: bold;
+  text-align: center;
+  border-radius: 20px;
+}
+
+.moveBtn
+{
+  z-index: 2000;
+  padding: 8px;
+  border: 1px solid black;
+  border-radius: 6px;
+  background-color: white;
+  top: -5px;
+  -webkit-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+  -moz-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+  box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+}
+
+.gamecard
+{
+  position: absolute;
+  padding-left: 32px;
+}
+
+.openbox
+{
+  position: fixed;
+  /*border: 1px solid #77ff77;*/
+}
+
+.playerbox
+{
+  position: absolute;
+  border: 3px solid white;
+  opacity: 0.25;
+}
+
+#player0box
+{
+  width: 420px;
+  height: 1080px;
+/*  background-color: #FF0000;*/
+}
+
+#player1box
+{
+  width: 420px;
+  height: 1080px;
+  /*background-color: #0000FF;*/
+}
+
+.grid
+{
+  position: absolute;
+  top: 0px;
+  left: 420px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 1080px;
+}
+
+.grid td
+{
+  width: 108px;
+  height: 108px;
+  border: 1px solid black;
+}
+
+.piece
+{
+  width: 90px;
+  height: 90px;
+  border-radius: 9px;
+}
+
+.pieceImg img
+{
+  position: absolute;
+  height: 60px;
+  right: 0px;
+  bottom: 5px;
+}
+
+.pieceText
+{
+  position: absolute;
+  padding: 6px;
+  font-weight: bold;
+  font-size: 18px;
+  background-color: #000000;
+  border-radius: 9px;
+}
+
+#cheatsheet
+{
+  width: 1000px;
+  background-color: #CCCCCC;
+  padding: 10px;
+}
+
+.textInfo
+{
+  font-style: italic;
+}
+
+.textRank
+{
+  font-weight: bold;
+}
+
+</style>
