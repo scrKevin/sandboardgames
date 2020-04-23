@@ -1,0 +1,27 @@
+<%
+  var twoXword = [[2, 2], [2, 14], [3, 3], [3, 13], [4, 4], [4, 12], [5, 5], [5, 11], [8, 8], [14, 2], [14, 14], [13, 3], [13, 13], [12, 4], [12, 12], [11, 5], [11, 11]]
+  var threeXword = [[1, 1], [1, 8], [1, 15], [8, 1], [8, 15], [15, 1], [15, 8], [15, 15]];
+
+  function exists(arr, y, x) {
+    return arr.some(row => row[0] == y && row[1] == x);
+  }
+%>
+<table class="board">
+<% for (var y = 1; y <= 15; y++) { -%>
+  <tr>
+  <% for (var x = 1; x <= 15; x++) {
+    var className = 'normal';
+    if(exists(threeXword, y, x))
+    {
+      className = "red"
+    }
+    else if(exists(twoXword, y, x))
+    {
+      className = "pink"
+    }
+    -%>
+    <td class="<%= className %>"></td>
+  <% } -%>
+  </tr>
+<% } -%>
+</table>
