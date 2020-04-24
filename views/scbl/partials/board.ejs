@@ -1,0 +1,44 @@
+<%
+  var twoXword = [[2, 2], [2, 14], [3, 3], [3, 13], [4, 4], [4, 12], [5, 5], [5, 11], [8, 8], [14, 2], [14, 14], [13, 3], [13, 13], [12, 4], [12, 12], [11, 5], [11, 11]]
+  var threeXword = [[1, 1], [1, 8], [1, 15], [8, 1], [8, 15], [15, 1], [15, 8], [15, 15]];
+
+  var twoXletter = [[1, 4], [1, 12], [3, 7], [3, 9], [4, 1], [4, 8], [4, 15], [7, 3], [7, 7], [7, 9], [7, 13], [8, 4], [8, 12], [9, 3], [9, 7], [9, 9], [9, 13], [12, 1], [12, 8], [12, 15], [13, 7], [13, 9], [15, 4], [15, 12]];
+
+  var threeXletter = [[2, 6], [2, 10], [6, 2], [6, 6], [6, 10], [6, 14], [10, 2], [10, 6], [10, 10], [10, 14], [14, 6], [14, 10]]
+
+  function exists(arr, y, x) {
+    return arr.some(row => row[0] == y && row[1] == x);
+  }
+%>
+<table class="board">
+<% for (var y = 1; y <= 15; y++) { -%>
+  <tr>
+  <% for (var x = 1; x <= 15; x++) {
+    var className = 'normal';
+    var tdHtml = "";
+    if(exists(threeXword, y, x))
+    {
+      className = "threeXword";
+      tdHtml = "3x Word";
+    }
+    else if(exists(twoXword, y, x))
+    {
+      className = "twoXword";
+      tdHtml = "2x Word";
+    }
+    else if(exists(twoXletter, y, x))
+    {
+      className = "twoXletter";
+      tdHtml = "2x Letter";
+    }
+    else if(exists(threeXletter, y, x))
+    {
+      className = "threeXletter";
+      tdHtml = "3x Letter";
+    }
+    -%>
+    <td class="<%= className %>"><%= tdHtml;%></td>
+  <% } -%>
+  </tr>
+<% } -%>
+</table>

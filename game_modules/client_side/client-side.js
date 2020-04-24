@@ -146,13 +146,11 @@ function InitWebSocket()
 }
 
 
-$(document).bind('touchmove mousemove', function (e) {
+$(document).bind('mousemove', function (e) {
   e.preventDefault();
-  var currentY = e.originalEvent.touches ?  e.originalEvent.touches[0].pageY : e.pageY;
-  var currentX = e.originalEvent.touches ?  e.originalEvent.touches[0].pageX : e.pageX;
 
-  var currentXScaled = Math.round(currentX * (1 / scale));
-  var currentYScaled = Math.round(currentY * (1 / scale));
+  var currentXScaled = Math.round(e.pageX * (1 / scale));
+  var currentYScaled = Math.round(e.pageY * (1 / scale));
 
   if (latestMouseX != -1)
   {
@@ -164,6 +162,10 @@ $(document).bind('touchmove mousemove', function (e) {
     {
       updateCss("#" + dragCardId, "left", (($("#" + dragCardId).position().left * (1 / scale)) - deltaX) + "px");
       updateCss("#" + dragCardId, "top", (($("#" + dragCardId).position().top * (1 / scale)) - deltaY) + "px");
+      if (!$("#" + dragCardId).hasClass('deck'))
+      {
+        updateCss("#" + dragCardId, "z-index", '1000');
+      }
     }
   }
 
@@ -179,7 +181,7 @@ $( document ).on( "mouseup", function( e ) {
 });
 
 $(document).on ("keydown", function (event) {
-    if (event.ctrlKey  && event.key === "q") { 
+    if (event.ctrlKey && event.key === "q") { 
         $('#resetModal').modal();
     }
 });
@@ -247,22 +249,24 @@ $( document ).ready(function() {
 
   $(".card").on("touchstart", function(event){
     //mouseclicked = true;
+    event.preventDefault();
     var currentY = event.originalEvent.touches[0].pageY;
     var currentX = event.originalEvent.touches[0].pageX;
     latestMouseY = currentY * (1 / scale);
     latestMouseX = currentX * (1 / scale);
     dragCardId = event.currentTarget.id;
-    clientController.touchCard(dragCardId, Math.round(latestMouseX), Math.round(latestMouseY))
-    event.preventDefault();
+    //clientController.touchCard(dragCardId, Math.round(latestMouseX), Math.round(latestMouseY))
+    
     blockCardChange = [];
+    //console.log(event)
+    $(event.currentTarget).css("border", "4px solid green");
   });
   
-   $(".card").bind("mouseup touchend", function(e){
+   $(".card").bind("mouseup", function(e){
     e.preventDefault();
-    var currentY = e.originalEvent.touches ?  e.originalEvent.touches[0].pageY : e.pageY;
-    var currentX = e.originalEvent.touches ?  e.originalEvent.touches[0].pageX : e.pageX;
 
-    clientController.releaseCard(currentX * (1 / scale), currentY * (1 / scale));
+    clientController.releaseCard(e.pageX * (1 / scale), e.pageY * (1 / scale));
+    updateCss("#" + dragCardId, "z-index", '50');
     dragCardId = null;
   });
 

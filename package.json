@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "NODE_ENV=development nodemon ./index.js",
+    "dev": "NODE_ENV=development PORT=443 nodemon ./index.js",
     "start": "NODE_ENV=production node ./index.js",
     "test": "NODE_ENV=test mocha"
   },

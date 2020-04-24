@@ -1,7 +1,7 @@
 <!-- views/partials/head.ejs -->
 <meta charset="UTF-8">
 <!-- <meta name="viewport" content="width=device-width,user-scalable=no"> -->
-<title>Stratego Sandboard</title>
+<title>Scrabble Sandboard</title>
 
 <!-- Bootstrap CSS -->
 <link href="/css/bootstrap.min.css" rel="stylesheet" type="text/css">
@@ -9,23 +9,15 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js" integrity="sha256-pasqAKBDmFT4eHoN2ndd6lN370kFiGUFyTiUHWhU7k8=" crossorigin="anonymous"></script>
 <script src='/js/bootstrap.min.js'></script>
-<script src="/js/strg/strg.js"></script>
+<script src="/js/scbl/scbl.js"></script>
 <script src="/js/bundle.js"></script>
 
 <style>
 
 body
 {
-  background-color: #424242;
-  background-image: url("/img/strg/back-pattern.png");
-}
-
-.playerPlane
-{
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  opacity: 0.5;
+  background-color: #020808;
+  background-image: url("/img/rmk/3px-tile.png");
 }
 
 .scaleplane
@@ -148,76 +140,72 @@ body
 
 #player0box
 {
-  width: 420px;
-  height: 1080px;
-/*  background-color: #FF0000;*/
+  width: 1590px;
+  height: 240px;
 }
 
 #player1box
 {
-  width: 420px;
-  height: 1080px;
-  /*background-color: #0000FF;*/
+  width: 1590px;
+  height: 240px;
 }
 
-.grid
+#player2box
 {
-  position: absolute;
-  top: 0px;
-  left: 420px;
-  border-collapse: collapse;
-  table-layout: fixed;
-  width: 1080px;
+  width: 320px;
+  height: 830px;
 }
 
-.grid td
+#player3box
 {
-  width: 108px;
-  height: 108px;
-  border: 1px solid black;
+  width: 320px;
+  height: 830px;
 }
 
-.piece
+.points
 {
-  width: 90px;
-  height: 90px;
-  border-radius: 9px;
+  font-size: 20px;
 }
 
-.pieceImg img
+.board
 {
-  position: absolute;
-  height: 60px;
-  right: 0px;
-  bottom: 5px;
-  filter: invert(1);
+  /*border-collapse: collapse;*/
+  position: relative;
+  top: 120px;
+  left: 540px;
 }
 
-.pieceText
+.board td
 {
-  position: absolute;
-  padding: 6px;
-  font-weight: bold;
-  font-size: 18px;
-  background-color: #000000;
-  border-radius: 9px;
+  border: 2px solid #00000000;
+  border-radius: 11px;
+  width: 56px;
+  height: 56px;
 }
 
-#cheatsheet
+.normal
 {
-  width: 1000px;
-  background-color: #CCCCCC;
-  padding: 10px;
+  background-color: #00FF00;
 }
 
-.textInfo
+.threeXword
 {
-  font-style: italic;
+  background-color: #FF0000;
 }
 
-.textRank
+.twoXword
 {
-  font-weight: bold;
+  background-color: pink;
+}
+
+.twoXletter
+{
+  background-color: lightblue;
+}
+
+.threeXletter
+{
+  background-color: blue;
 }
 
 </style>
