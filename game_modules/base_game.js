@@ -108,17 +108,23 @@ function WS_distributor(wss, resetGameFunction)
               if (deck.isMyDeck(id, json.mouseclicked) && json.mouseclicked)
               {
                 deck.x -= moved.deltaX;
+                if (deck.x < 0) { deck.x = 0;}
                 deck.y -= moved.deltaY;
+                if (deck.y < 0) { deck.y = 0;}
                 for (card of deck.attachedCards)
                 {
                   card.x -= moved.deltaX;
+                  if (card.x < 0) { card.x = 0;}
                   card.y -= moved.deltaY;
+                  if (card.y < 0) { card.y = 0;}
                   this.addToChangedCardsBuffer(card.id);
                 }
                 for (openbox of deck.attachedOpenboxes)
                 {
                   openbox.x -= moved.deltaX;
+                  if (openbox.x < 0) { openbox.x = 0;}
                   openbox.y -= moved.deltaY;
+                  if (openbox.y < 0) { openbox.y = 0;}
                 }
               }
               if(!json.mouseclicked && deck.clickedBy == id)
@@ -136,7 +142,9 @@ function WS_distributor(wss, resetGameFunction)
             if(card.isMyCard(id, json.mouseclicked) && json.mouseclicked)
             {
               card.x -= moved.deltaX;
+              if (card.x < 0) { card.x = 0;}
               card.y -= moved.deltaY;
+              if (card.y < 0) { card.y = 0;}
               for (deck of this.gameObj.decks)
               {
                 if(deck.isInDeck(json.pos.x, json.pos.y))
