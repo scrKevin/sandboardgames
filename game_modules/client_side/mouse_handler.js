@@ -76,4 +76,15 @@ MouseHandler.prototype.sendMouseMove = function()
   this.wsHandler.sendToWs(sendData);
 }
 
+MouseHandler.prototype.touchTouchbox = function(x, y)
+{
+  var sendData = {
+    type: "touchbox",
+    pos: {x: x, y: y},
+    card: this.dragCardId
+  }
+  this.wsHandler.sendToWs(sendData);
+  this.dragCardId = null;
+}
+
 module.exports = {MouseHandler: MouseHandler}

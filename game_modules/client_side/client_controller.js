@@ -85,6 +85,11 @@ ClientController.prototype.touchCard = function(id, x, y)
   this.init && this.mouseHandler.touchCard(id, x, y);
 }
 
+ClientController.prototype.touchTouchbox = function(x, y)
+{
+  this.init && this.mouseHandler.touchTouchbox(x, y);
+}
+
 ClientController.prototype.releaseCard = function(x, y)
 {
   this.init && this.mouseHandler.releaseCard(x, y);

@@ -19,25 +19,25 @@
     if(exists(threeXword, y, x))
     {
       className = "threeXword";
-      tdHtml = "3x Word";
+      tdHtml = "3x<br>Word";
     }
     else if(exists(twoXword, y, x))
     {
       className = "twoXword";
-      tdHtml = "2x Word";
+      tdHtml = "2x<br>Word";
     }
     else if(exists(twoXletter, y, x))
     {
       className = "twoXletter";
-      tdHtml = "2x Letter";
+      tdHtml = "2x<br>Letter";
     }
     else if(exists(threeXletter, y, x))
     {
       className = "threeXletter";
-      tdHtml = "3x Letter";
+      tdHtml = "3x<br>Letter";
     }
     -%>
-    <td class="<%= className %>"><%= tdHtml;%></td>
+    <td class="<%= className %>"><%- tdHtml;%></td>
   <% } -%>
   </tr>
 <% } -%>
