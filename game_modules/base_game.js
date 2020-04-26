@@ -187,6 +187,47 @@ function WS_distributor(wss, resetGameFunction)
         }
         this.broadcast();
       }
+      else if (json.type == "touchbox")
+      {
+        if (!this.isDeck(json.card))
+        {
+          console.log(json.card);
+          
+          var card = this.gameObj.cards.find(function(card){
+            return card.id === json.card;
+          });
+          if (typeof(card) !== 'undefined')
+          {
+            this.addToChangedCardsBuffer(json.card);
+            card.setLastTouchedBy(id);
+            card.x = json.pos.x;
+            card.y = json.pos.y;
+            if (card.hasOwnProperty("show"))
+            {
+              var isInAnOpenbox = false;
+              for (openbox of this.gameObj.openboxes)
+              {
+                if (openbox.isInOpenBox(json.pos.x, json.pos.y))
+                {
+                  isInAnOpenbox = true;
+                  break;
+                }
+              }
+              if (isInAnOpenbox && !json.mouseclicked)
+              {
+                card.show = 'frontface';
+                card.isInAnOpenbox = true;
+              }
+              else
+              {
+                card.show = 'backface';
+                card.isInAnOpenbox = false;
+              }
+            }
+            this.broadcast();
+          }
+        }
+      }
       else if (json.type == "shuffleDeck")
       {
         for (deck of this.gameObj.decks)

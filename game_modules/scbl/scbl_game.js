@@ -14,9 +14,9 @@ SCBL_Game.prototype.resetGame = function(game)
   game.gameObj.decks = [];
   game.gameObj.openboxes = [];
 
-  var tileDeckX = 960 - (134 / 2);
+  var tileDeckX = 352;
   var tileDeckY = 540 - (172 / 2);
-  var tileDeck = new Deck('tileDeck', tileDeckX, tileDeckY, 134, 172);
+  var tileDeck = new Deck('tileDeck', tileDeckX, tileDeckY, 117, 165);
   tileDeck.setImmovable();
 
   var scblNlObj = {
@@ -66,7 +66,8 @@ SCBL_Game.prototype.resetGame = function(game)
     }
   }
   //console.log(n)
-  game.gameObj.decks.push(tileDeck)
+  game.gameObj.decks.push(tileDeck);
+  game.gameObj.openboxes.push(new Openbox('openbox0', 818, 0, 1080, 1080))
 }
 
 module.exports = {SCBL_Game: SCBL_Game}
