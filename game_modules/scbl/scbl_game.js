@@ -68,6 +68,18 @@ SCBL_Game.prototype.resetGame = function(game)
   //console.log(n)
   game.gameObj.decks.push(tileDeck);
   game.gameObj.openboxes.push(new Openbox('openbox0', 818, 0, 1080, 1080))
+
+  for (var i = 4; i < 20; i++)
+  {
+    var startPosX = 1920;
+    var startPosY = 20 + (35 * i);
+    var moveBtnDeck = new Deck('webcamMoveBtn' + i, startPosX, startPosY, 32, 32)
+    var webcamBox = new Card('webcambox' + i, startPosX, startPosY)
+    webcamBox.attachedToDeck = true;
+    game.gameObj.cards.push(webcamBox)
+    moveBtnDeck.attachedCards.push(webcamBox)
+    game.gameObj.decks.push(moveBtnDeck)
+  }
 }
 
 module.exports = {SCBL_Game: SCBL_Game}
