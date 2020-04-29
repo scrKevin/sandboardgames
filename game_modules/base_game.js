@@ -1,5 +1,6 @@
 const WebSocket = require('ws');
 let Player = require('./player').Player
+let Client = require('./client').Client
 let diff_match_patch = require('diff-match-patch')
 var pako = require('pako');
 
@@ -63,12 +64,11 @@ function WS_distributor(wss, resetGameFunction)
     var player = new Player();
 
     var id = player.setId(this.playerNumbers);
-    var client = {playerId: id, ws: ws};
+    var client = new Client(id, ws);
+    //var client = {playerId: id, ws: ws};
 
     this.clients.push(client);
     this.gameObj.players.push(player);
-
-    //console.log(this.gameObj)
 
     ws.on('message', (message) => {
       var json = JSON.parse(pako.inflate(message, { to: 'string' }));
@@ -187,11 +187,16 @@ function WS_distributor(wss, resetGameFunction)
         }
         this.broadcast();
       }
+      else if (json.type == "touchcard")
+      {
+        player.updatePos(json.pos);
+        this.broadcast();
+      }
       else if (json.type == "touchbox")
       {
         if (!this.isDeck(json.card))
         {
-          console.log(json.card);
+          //console.log(json.card);
           
           var card = this.gameObj.cards.find(function(card){
             return card.id === json.card;
@@ -200,8 +205,21 @@ function WS_distributor(wss, resetGameFunction)
           {
             this.addToChangedCardsBuffer(json.card);
             card.setLastTouchedBy(id);
-            card.x = json.pos.x;
-            card.y = json.pos.y;
+            player.updatePos(json.pos);
+            // card.x = json.pos.x;
+            // card.y = json.pos.y;
+            this.startAnimationCard(card, json.pos.x, json.pos.y);
+            for (deck of this.gameObj.decks)
+              {
+                if(deck.isInDeck(json.pos.x, json.pos.y))
+                {
+                  deck.addToDeck(card);
+                }
+                else
+                {
+                  deck.removeFromDeck(card);
+                }
+              }
             if (card.hasOwnProperty("show"))
             {
               var isInAnOpenbox = false;
@@ -224,6 +242,7 @@ function WS_distributor(wss, resetGameFunction)
                 card.isInAnOpenbox = false;
               }
             }
+            card.clickedBy = -1;
             this.broadcast();
           }
         }
@@ -254,6 +273,7 @@ function WS_distributor(wss, resetGameFunction)
         {
           if (clientI.playerId == json.playerId)
           {
+            client.peerStatus[clientI.playerId] = "initiatorReady";
             var sendData = {
               type: "peerConnect",
               fromPlayerId: id,
@@ -272,6 +292,7 @@ function WS_distributor(wss, resetGameFunction)
         {
           if (clientI.playerId == json.fromPlayerId)
           {
+            client.peerStatus[clientI.playerId] = "peerAccepted";
             var sendData = {
               type: "peerAccepted",
               fromPlayerId: id,
@@ -281,6 +302,32 @@ function WS_distributor(wss, resetGameFunction)
             var binaryString = pako.deflate(strToSend, { to: 'string' });
             clientI.ws.send(binaryString)
             break;
+          }
+        }
+      }
+      else if (json.type == "streamReceived")
+      {
+        client.peerStatus[json.fromPlayerId] = "streamReceived";
+      }
+      else if (json.type == "connectionFailure")
+      {
+        client.peerStatus[json.fromPlayerId] = "connectionFailure";
+        for(clientI of this.clients)
+        {
+          if(clientI.playerId == json.fromPlayerId)
+          {
+            if (clientI.peerStatus[id] == "connectionFailure")
+            {
+              // both peers have lost connection with each other but the connection with this server is ok.
+              // retry connection
+              var sendData = {
+                type: "newPeer",
+                playerId: json.fromPlayerId
+              }
+              var strToSend = JSON.stringify(sendData);
+              var binaryString = pako.deflate(strToSend, { to: 'string' });
+              ws.send(binaryString);
+            }
           }
         }
       }
@@ -351,6 +398,13 @@ WS_distributor.prototype.isDeck = function (id)
 WS_distributor.prototype.broadcastLeftPeer = function (playerId)
 {
   //console.log("broadcasting left player " + playerId)
+  for (clientI of this.clients)
+  {
+    if (clientI.playerId != playerId)
+    {
+      delete clientI.peerStatus[playerId];
+    }
+  }
   var sendData = {
     type: "leftPeer",
     playerId: playerId
@@ -366,6 +420,13 @@ WS_distributor.prototype.broadcastLeftPeer = function (playerId)
 
 WS_distributor.prototype.broadcastNewPeer = function (playerId, newWs){
   //console.log("broadcasting new peer " + playerId)
+  for (clientI of this.clients)
+  {
+    if (clientI.playerId != playerId)
+    {
+      clientI.peerStatus[playerId] = "newPeerSent";
+    }
+  }
   var sendData = {
     type: "newPeer",
     playerId: playerId
@@ -396,6 +457,33 @@ WS_distributor.prototype.broadcastReset = function ()
 
 WS_distributor.prototype.broadcast = function(){
   this.broadcastLimiter.update();
+}
+
+WS_distributor.prototype.startAnimationCard = async function(card, targetX, targetY){
+  var steps = (300 / (1000 / 20));
+
+  var stepX = (targetX - card.x) / steps;
+  var stepY = (targetY - card.y) / steps;
+
+  for(var i = 0; i < steps -1; i++)
+  {
+    card.x += stepX;
+    card.y += stepY;
+    this.broadcastLimiter.update();
+    await delayAsync(300 / steps);
+  }
+  card.x = targetX;
+  card.y = targetY;
+  this.broadcastLimiter.update();
+}
+
+function delayAsync(ms)
+{
+  return new Promise(function(resolve, reject) {
+    setTimeout(function(){
+      resolve();
+    }, ms);
+  });
 }
 
 

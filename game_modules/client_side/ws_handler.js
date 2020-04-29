@@ -12,13 +12,9 @@ function WsHandler(ws)
   this.dmp = new diff_match_patch();
   this.changedCardsBuffer = [];
   this.eventEmitter = new EventEmitter();
-  // this.updateGameLimiter = new FpsLimiter(20);
-  // this.updateGameLimiter.on("update", () => {
-  //   this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, false);
-  // });
 
   this.ws.onopen = function () {
-    this.requestPlayerId()
+    this.requestPlayerId();
   }.bind(this);
 
   this.ws.onmessage = function (evt) 
@@ -33,9 +29,7 @@ function WsHandler(ws)
         {
           this.addToChangedCardsBuffer(changedCard);
         }
-        //this.updateGameLimiter.update();
         this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, false);
-        //this.eventEmitter.emit("updateCanvas", JSON.parse(this.lastGameObj));
       }
       catch (err)
       {
@@ -75,9 +69,8 @@ function WsHandler(ws)
       this.eventEmitter.emit('updateGame', JSON.parse(this.lastGameObj), [], true)
     }
   }.bind(this);
-  ws.onclose = function()
+  this.ws.onclose = function()
   { 
-    
     this.eventEmitter.emit("wsClosed")
   }.bind(this);
 }

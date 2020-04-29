@@ -41,9 +41,8 @@ MouseHandler.prototype.touchCard = function(id, x, y)
 {
   this.dragCardId = id;
   var sendData = {
-    type: "mouse",
-    mouseclicked: mouseclicked,
-    pos: {x: latestMouseX, y: latestMouseY},
+    type: "touchcard",
+    pos: {x: x, y: y},
     card: id
   }
   this.wsHandler.sendToWs(sendData);
@@ -73,6 +72,7 @@ MouseHandler.prototype.sendMouseMove = function()
     pos: {x: this.latestMouseX, y: this.latestMouseY},
     card: this.dragCardId
   }
+  //console.log(this.dragCardId)
   this.wsHandler.sendToWs(sendData);
 }
 

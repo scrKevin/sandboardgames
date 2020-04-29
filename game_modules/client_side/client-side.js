@@ -128,6 +128,9 @@ function InitWebSocket()
 
     clientController.on("leftPeer", (playerId) => {
       $("#webcam" + playerId).html("");
+      updateCss("#cursor" + playerId, "display", "none");
+      updateCss("#player" + playerId + "box", "background-color", "#FFFFFF00");
+      updateHtml("#player" + playerId + "NameText", "")
     });
 
     clientController.on("stream", (playerId, stream) => {
@@ -163,10 +166,6 @@ $(document).bind('mousemove', function (e) {
     {
       updateCss("#" + dragCardId, "left", (($("#" + dragCardId).position().left * (1 / scale)) - deltaX) + "px");
       updateCss("#" + dragCardId, "top", (($("#" + dragCardId).position().top * (1 / scale)) - deltaY) + "px");
-      // if (!$("#" + dragCardId).hasClass('deck'))
-      // {
-      //   //updateCss("#" + dragCardId, "z-index", '1000');
-      // }
     }
   }
 
@@ -215,6 +214,8 @@ $( window ).resize(function() {
 });
 
 $( document ).ready(function() {
+  $(".touchbox").css("opacity", "0");
+  $(".touchbox").css("transition", "opacity 200ms ease-in-out");
   var colorSelectionHtml = "";
   var nColorSelection = 0;
   for (color of colors)
@@ -249,29 +250,28 @@ $( document ).ready(function() {
   });
 
   $(".card").on("touchstart", function(event){
-    event.preventDefault();
-    var currentY = event.originalEvent.touches[0].pageY;
-    var currentX = event.originalEvent.touches[0].pageX;
-    latestMouseY = currentY * (1 / scale);
-    latestMouseX = currentX * (1 / scale);
-    //dragCardId = event.currentTarget.id;
-    //clientController.touchCard(dragCardId, Math.round(latestMouseX), Math.round(latestMouseY))
-    
+    event.preventDefault();    
     blockCardChange = [];
-    //console.log(event)
-    $(event.currentTarget).css("border", "4px solid green");
-    clientController.clickOnCard(event.currentTarget.id);
+    var posX = $(event.currentTarget).position().left;
+    var posY = $(event.currentTarget).position().top;
+    $(".touchindicator").css("left", posX * (1 / scale));
+    $(".touchindicator").css("top", posY * (1 / scale));
+    $(".touchindicator").css("display", "block");
+    $(".touchbox").css("opacity", "0.35");
+    clientController.touchCard(event.currentTarget.id, posX * (1 / scale), posY * (1 / scale));
     lastTouchedCardId = event.currentTarget.id;
   });
 
   $(".touchbox").on("touchstart", function(event){
     event.preventDefault();
+    $(".touchbox").css("opacity", "0");
     var posX = $(event.currentTarget).position().left;
     var posY = $(event.currentTarget).position().top;
+    $(".touchindicator").css("display", "none");
     clientController.touchTouchbox(posX * (1 / scale), posY * (1 / scale));
-    $("#" + lastTouchedCardId).css("border", "4px solid black");
+    //$("#" + lastTouchedCardId).css("border", "4px solid black");
     lastTouchedCardId = null;
-    console.log("touchbox", posX * (1 / scale), posY * (1 / scale))
+    //console.log("touchbox", posX * (1 / scale), posY * (1 / scale))
   })
   
   $(".card").bind("mouseup", function(e){

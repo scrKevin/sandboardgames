@@ -3049,6 +3049,9 @@ function InitWebSocket()
 
     clientController.on("leftPeer", (playerId) => {
       $("#webcam" + playerId).html("");
+      updateCss("#cursor" + playerId, "display", "none");
+      updateCss("#player" + playerId + "box", "background-color", "#FFFFFF00");
+      updateHtml("#player" + playerId + "NameText", "")
     });
 
     clientController.on("stream", (playerId, stream) => {
@@ -3084,10 +3087,6 @@ $(document).bind('mousemove', function (e) {
     {
       updateCss("#" + dragCardId, "left", (($("#" + dragCardId).position().left * (1 / scale)) - deltaX) + "px");
       updateCss("#" + dragCardId, "top", (($("#" + dragCardId).position().top * (1 / scale)) - deltaY) + "px");
-      // if (!$("#" + dragCardId).hasClass('deck'))
-      // {
-      //   //updateCss("#" + dragCardId, "z-index", '1000');
-      // }
     }
   }
 
@@ -3136,6 +3135,8 @@ $( window ).resize(function() {
 });
 
 $( document ).ready(function() {
+  $(".touchbox").css("opacity", "0");
+  $(".touchbox").css("transition", "opacity 200ms ease-in-out");
   var colorSelectionHtml = "";
   var nColorSelection = 0;
   for (color of colors)
@@ -3170,29 +3171,28 @@ $( document ).ready(function() {
   });
 
   $(".card").on("touchstart", function(event){
-    event.preventDefault();
-    var currentY = event.originalEvent.touches[0].pageY;
-    var currentX = event.originalEvent.touches[0].pageX;
-    latestMouseY = currentY * (1 / scale);
-    latestMouseX = currentX * (1 / scale);
-    //dragCardId = event.currentTarget.id;
-    //clientController.touchCard(dragCardId, Math.round(latestMouseX), Math.round(latestMouseY))
-    
+    event.preventDefault();    
     blockCardChange = [];
-    //console.log(event)
-    $(event.currentTarget).css("border", "4px solid green");
-    clientController.clickOnCard(event.currentTarget.id);
+    var posX = $(event.currentTarget).position().left;
+    var posY = $(event.currentTarget).position().top;
+    $(".touchindicator").css("left", posX * (1 / scale));
+    $(".touchindicator").css("top", posY * (1 / scale));
+    $(".touchindicator").css("display", "block");
+    $(".touchbox").css("opacity", "0.35");
+    clientController.touchCard(event.currentTarget.id, posX * (1 / scale), posY * (1 / scale));
     lastTouchedCardId = event.currentTarget.id;
   });
 
   $(".touchbox").on("touchstart", function(event){
     event.preventDefault();
+    $(".touchbox").css("opacity", "0");
     var posX = $(event.currentTarget).position().left;
     var posY = $(event.currentTarget).position().top;
+    $(".touchindicator").css("display", "none");
     clientController.touchTouchbox(posX * (1 / scale), posY * (1 / scale));
-    $("#" + lastTouchedCardId).css("border", "4px solid black");
+    //$("#" + lastTouchedCardId).css("border", "4px solid black");
     lastTouchedCardId = null;
-    console.log("touchbox", posX * (1 / scale), posY * (1 / scale))
+    //console.log("touchbox", posX * (1 / scale), posY * (1 / scale))
   })
   
   $(".card").bind("mouseup", function(e){
@@ -3761,9 +3761,8 @@ MouseHandler.prototype.touchCard = function(id, x, y)
 {
   this.dragCardId = id;
   var sendData = {
-    type: "mouse",
-    mouseclicked: mouseclicked,
-    pos: {x: latestMouseX, y: latestMouseY},
+    type: "touchcard",
+    pos: {x: x, y: y},
     card: id
   }
   this.wsHandler.sendToWs(sendData);
@@ -3793,6 +3792,7 @@ MouseHandler.prototype.sendMouseMove = function()
     pos: {x: this.latestMouseX, y: this.latestMouseY},
     card: this.dragCardId
   }
+  //console.log(this.dragCardId)
   this.wsHandler.sendToWs(sendData);
 }
 
@@ -3848,12 +3848,39 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId)
       playerId: playerId,
       stp: data
     }
-    this.wsHandler.sendToWs(sendData)
+    this.wsHandler.sendToWs(sendData);
   });
 
   this.peers[playerId].on('stream', stream => {
     this.emit("stream", playerId, stream);
+    var sendData = {
+      type: "streamReceived",
+      fromPlayerId: playerId
+    }
+    this.wsHandler.sendToWs(sendData);
   });
+
+  this.peers[playerId].on('error', err => {
+    console.log("error in initWebcamPeer")
+    console.log(err.code);
+    if (err.code == "ERR_CONNECTION_FAILURE")
+    {
+      try {
+        this.peers[playerId].destroy();
+      }
+      catch (error)
+      {
+        console.log(error)
+      }
+      delete this.peers[playerId]
+      var sendData = {
+        type: "connectionFailure",
+        fromPlayerId: playerId
+      }
+      this.wsHandler.sendToWs(sendData);
+    }
+
+  })
 }
 
 WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
@@ -3882,6 +3909,26 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
     }
     this.wsHandler.sendToWs(sendData);
   });
+
+  this.peers[fromPlayerId].on('error', err => {
+    console.log("error in peerConnected")
+    if (err.code == "ERR_CONNECTION_FAILURE")
+    {
+      try {
+        this.peers[fromPlayerId].destroy();
+      }
+      catch (error)
+      {
+        console.log(error)
+      }
+      delete this.peers[fromPlayerId]
+      var sendData = {
+        type: "connectionFailure",
+        fromPlayerId: fromPlayerId
+      }
+      this.wsHandler.sendToWs(sendData);
+    }
+  })
 
   this.peers[fromPlayerId].signal(stp);
 }
@@ -3920,13 +3967,9 @@ function WsHandler(ws)
   this.dmp = new diff_match_patch();
   this.changedCardsBuffer = [];
   this.eventEmitter = new EventEmitter();
-  // this.updateGameLimiter = new FpsLimiter(20);
-  // this.updateGameLimiter.on("update", () => {
-  //   this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, false);
-  // });
 
   this.ws.onopen = function () {
-    this.requestPlayerId()
+    this.requestPlayerId();
   }.bind(this);
 
   this.ws.onmessage = function (evt) 
@@ -3941,9 +3984,7 @@ function WsHandler(ws)
         {
           this.addToChangedCardsBuffer(changedCard);
         }
-        //this.updateGameLimiter.update();
         this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, false);
-        //this.eventEmitter.emit("updateCanvas", JSON.parse(this.lastGameObj));
       }
       catch (err)
       {
@@ -3983,9 +4024,8 @@ function WsHandler(ws)
       this.eventEmitter.emit('updateGame', JSON.parse(this.lastGameObj), [], true)
     }
   }.bind(this);
-  ws.onclose = function()
+  this.ws.onclose = function()
   { 
-    
     this.eventEmitter.emit("wsClosed")
   }.bind(this);
 }
@@ -4066,6 +4106,7 @@ var EventEmitter = require('events').EventEmitter;
 function FpsLimiter(fps) {
   this.isIntervalSet = false;
   this.ms = Math.round(1000 / fps);
+  this.calledInTimeout = false;
   EventEmitter.call(this);
 }
 
@@ -4075,13 +4116,18 @@ FpsLimiter.prototype.update = function()
 {
   if (this.isIntervalSet)
   {
+    this.calledInTimeout = true;
     return;
   }
   this.isIntervalSet = true;
-  //this.func(this.args);
+  this.calledInTimeout = false;
   this.emit("update");
   setTimeout(function(){
     this.isIntervalSet = false;
+    if (this.calledInTimeout)
+    {
+      this.update();
+    }
   }.bind(this), this.ms);
   return;
 }

@@ -36,12 +36,39 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId)
       playerId: playerId,
       stp: data
     }
-    this.wsHandler.sendToWs(sendData)
+    this.wsHandler.sendToWs(sendData);
   });
 
   this.peers[playerId].on('stream', stream => {
     this.emit("stream", playerId, stream);
+    var sendData = {
+      type: "streamReceived",
+      fromPlayerId: playerId
+    }
+    this.wsHandler.sendToWs(sendData);
   });
+
+  this.peers[playerId].on('error', err => {
+    console.log("error in initWebcamPeer")
+    console.log(err.code);
+    if (err.code == "ERR_CONNECTION_FAILURE")
+    {
+      try {
+        this.peers[playerId].destroy();
+      }
+      catch (error)
+      {
+        console.log(error)
+      }
+      delete this.peers[playerId]
+      var sendData = {
+        type: "connectionFailure",
+        fromPlayerId: playerId
+      }
+      this.wsHandler.sendToWs(sendData);
+    }
+
+  })
 }
 
 WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
@@ -70,6 +97,26 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
     }
     this.wsHandler.sendToWs(sendData);
   });
+
+  this.peers[fromPlayerId].on('error', err => {
+    console.log("error in peerConnected")
+    if (err.code == "ERR_CONNECTION_FAILURE")
+    {
+      try {
+        this.peers[fromPlayerId].destroy();
+      }
+      catch (error)
+      {
+        console.log(error)
+      }
+      delete this.peers[fromPlayerId]
+      var sendData = {
+        type: "connectionFailure",
+        fromPlayerId: fromPlayerId
+      }
+      this.wsHandler.sendToWs(sendData);
+    }
+  })
 
   this.peers[fromPlayerId].signal(stp);
 }

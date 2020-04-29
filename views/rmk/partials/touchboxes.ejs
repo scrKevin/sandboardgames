@@ -1,0 +1,32 @@
+<% for (var y = 0; y < 2; y++) { -%>
+  <% for (var x = 0; x < 14; x++) { -%>
+    <div class='touchbox' id="touchbox_1_<%= y%>_<%= x%>" style="position: absolute; left: <%= 332 + (x * 90) + 2%>px; top: <%= (y * 87) + 2 %>px; display: block;"></div>
+  <% } -%>
+<% } -%>
+
+<% for (var y = 0; y < 2; y++) { -%>
+  <% for (var x = 0; x < 14; x++) { -%>
+    <div class='touchbox' id="touchbox_2_<%= y%>_<%= x%>" style="position: absolute; left: <%= 332 + (x * 90) + 2%>px; top: <%= 906 + (y * 87) + 2 %>px; display: block;"></div>
+  <% } -%>
+<% } -%>
+
+<% for (var y = 0; y < 6; y++) { -%>
+  <% for (var x = 0; x < 3; x++) { -%>
+    <div class='touchbox' id="touchbox_3_<%= y%>_<%= x%>" style="position: absolute; left: <%= 0 + (x * 90) + 2%>px; top: <%= 252 + (y * 87) + 2 %>px; display: block;"></div>
+  <% } -%>
+<% } -%>
+
+<% for (var y = 0; y < 6; y++) { -%>
+  <% for (var x = 0; x < 3; x++) { -%>
+    <div class='touchbox' id="touchbox_4_<%= y%>_<%= x%>" style="position: absolute; left: <%= 1650 + (x * 90) + 2%>px; top: <%= 252 + (y * 87) + 2 %>px; display: block;"></div>
+  <% } -%>
+<% } -%>
+
+<% for (var y = 0; y < 7; y++) { -%>
+  <% for (var x = 0; x < 14; x++) { -%>
+    <% if ((x == 6 || x == 7) && (y == 2 || y == 3 || y == 4)) { -%>
+    <% } else { -%>
+        <div class='touchbox' id="touchbox_5_<%= y%>_<%= x%>" style="position: absolute; left: <%= 332 + (x * 90) + 2%>px; top: <%= 252 + (y * 87) + 2 %>px; display: block;"></div>
+    <% } -%>
+  <% } -%>
+<% } -%>
