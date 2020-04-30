@@ -11,6 +11,11 @@
       <%- include ('../../common/webcams', {webcamPos: webcamPos, fixedPlayers:fixedPlayers}); -%>
       <%- include ('../partials/openbox') %>
       <%- include ('../partials/touchboxes') %>
+      <%  var scoreboxValues = [10, 1];
+          for (var i = 0; i < fixedPlayers; i++) { 
+            var id = i; -%>
+            <%- include('../../common/scorebox', {scoreboxId: id, scoreboxValues: scoreboxValues}); %>
+      <%  } -%>
       <%- include ('../partials/decks') %>
       <%- include ('../../common/cursors'); -%>
     </div>

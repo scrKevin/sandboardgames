@@ -120,5 +120,10 @@ ClientController.prototype.typeVarText = function(text)
   this.init && this.wsHandler.typeVarText(text);
 }
 
+ClientController.prototype.editScorebox = function(id, add)
+{
+  this.init && this.wsHandler.editScorebox(id, add);
+}
+
 
 module.exports = {ClientController: ClientController}

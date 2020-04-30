@@ -30,6 +30,8 @@ var colors = [
 var ws = null;
 
 var doorbell = new Audio('/wav/doorbell.wav');
+var scoreMinSound = new Audio('/wav/score_min.wav');
+var scorePlusSound = new Audio('/wav/score_plus.wav');
 
 var latestMouseX = -1;
 var latestMouseY = -1;
@@ -116,6 +118,7 @@ function InitWebSocket()
 
       updateOpenboxes(gameObj);
       updateCursors(gameObj);
+      updateScoreboxes(gameObj);
       updateColorSelection(gameObj);
 
 
@@ -238,6 +241,9 @@ $( document ).ready(function() {
   $('#resetGameBtn').on('click', resetGame);
   $(".shuffleButton").on('click', shuffleDeck);
   $(".inspectDeckButton").on('click', inspectDeck);
+
+  $(".scoreboxButton").on('click', scoreboxButton);
+
   $('#name').keyup(function(){
     checkEnterIsAllowed();
     clientController.typeName($('#name').val())
@@ -433,7 +439,7 @@ function updateCards(gameObj, changedCardsBuffer)
   var cards = gameObj.cards.filter(function(card){
     return changedCardsBuffer.includes(card.id);
   });
-  changedCardsBuffer = [];
+  //changedCardsBuffer = [];
   for (card of cards)
   {
     if(card.id != dragCardId)
@@ -523,6 +529,14 @@ function updateCursors (gameObj)
     updateCss("#cursor" + i, "left", "0px");
     updateCss("#cursor" + i, "top", "0px");
     updateCss("#cursor" + playerIndex, "display", "none");
+  }
+}
+
+function updateScoreboxes (gameObj)
+{
+  for (scorebox of gameObj.scoreboxes)
+  {
+    updateHtml("#scorebox" + scorebox.id + "_text", scorebox.points);
   }
 }
 
@@ -652,6 +666,21 @@ function inspectDeck(e){
     updateCardFace(card, card.frontface)
     blockCardChange.push(card.id);
   }
+}
+
+function scoreboxButton(e){
+  // console.log(e.currentTarget.parentElement.attributes['value'].value)
+  // console.log(e.currentTarget.value)
+  var addValue = Number(e.currentTarget.value);
+  if(addValue > 0)
+  {
+    scorePlusSound.play();
+  }
+  else
+  {
+    scoreMinSound.play();
+  }
+  clientController.editScorebox(Number(e.currentTarget.parentElement.attributes['value'].value), addValue)
 }
 
 function checkEnterIsAllowed()

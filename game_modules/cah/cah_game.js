@@ -41,6 +41,7 @@ CAH_Game.prototype.resetGame = function(game)
   game.gameObj.cards = [];
   game.gameObj.decks = [];
   game.gameObj.openboxes = [];
+  game.gameObj.scoreboxes = [];
 
   var rows = 4;
   var columns = 6;

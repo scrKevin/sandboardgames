@@ -13,7 +13,7 @@ RMK_Game.prototype.resetGame = function(game)
   game.gameObj.cards = [];
   game.gameObj.decks = [];
   game.gameObj.openboxes = [];
-
+  game.gameObj.scoreboxes = [];
 
   var tileDeckX = 960 - (134 / 2);
   var tileDeckY = 540 - (172 / 2);

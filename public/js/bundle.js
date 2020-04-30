@@ -2951,6 +2951,8 @@ var colors = [
 var ws = null;
 
 var doorbell = new Audio('/wav/doorbell.wav');
+var scoreMinSound = new Audio('/wav/score_min.wav');
+var scorePlusSound = new Audio('/wav/score_plus.wav');
 
 var latestMouseX = -1;
 var latestMouseY = -1;
@@ -3037,6 +3039,7 @@ function InitWebSocket()
 
       updateOpenboxes(gameObj);
       updateCursors(gameObj);
+      updateScoreboxes(gameObj);
       updateColorSelection(gameObj);
 
 
@@ -3159,6 +3162,9 @@ $( document ).ready(function() {
   $('#resetGameBtn').on('click', resetGame);
   $(".shuffleButton").on('click', shuffleDeck);
   $(".inspectDeckButton").on('click', inspectDeck);
+
+  $(".scoreboxButton").on('click', scoreboxButton);
+
   $('#name').keyup(function(){
     checkEnterIsAllowed();
     clientController.typeName($('#name').val())
@@ -3354,7 +3360,7 @@ function updateCards(gameObj, changedCardsBuffer)
   var cards = gameObj.cards.filter(function(card){
     return changedCardsBuffer.includes(card.id);
   });
-  changedCardsBuffer = [];
+  //changedCardsBuffer = [];
   for (card of cards)
   {
     if(card.id != dragCardId)
@@ -3444,6 +3450,14 @@ function updateCursors (gameObj)
     updateCss("#cursor" + i, "left", "0px");
     updateCss("#cursor" + i, "top", "0px");
     updateCss("#cursor" + playerIndex, "display", "none");
+  }
+}
+
+function updateScoreboxes (gameObj)
+{
+  for (scorebox of gameObj.scoreboxes)
+  {
+    updateHtml("#scorebox" + scorebox.id + "_text", scorebox.points);
   }
 }
 
@@ -3573,6 +3587,21 @@ function inspectDeck(e){
     updateCardFace(card, card.frontface)
     blockCardChange.push(card.id);
   }
+}
+
+function scoreboxButton(e){
+  // console.log(e.currentTarget.parentElement.attributes['value'].value)
+  // console.log(e.currentTarget.value)
+  var addValue = Number(e.currentTarget.value);
+  if(addValue > 0)
+  {
+    scorePlusSound.play();
+  }
+  else
+  {
+    scoreMinSound.play();
+  }
+  clientController.editScorebox(Number(e.currentTarget.parentElement.attributes['value'].value), addValue)
 }
 
 function checkEnterIsAllowed()
@@ -3713,6 +3742,11 @@ ClientController.prototype.typeName = function(name)
 ClientController.prototype.typeVarText = function(text)
 {
   this.init && this.wsHandler.typeVarText(text);
+}
+
+ClientController.prototype.editScorebox = function(id, add)
+{
+  this.init && this.wsHandler.editScorebox(id, add);
 }
 
 
@@ -3964,6 +3998,9 @@ function WsHandler(ws)
   this.myPlayerId = -1;
   this.lastGameObj = "";
 
+  this.lastReceivedPatch = new Date();
+  this.lagTimeout = null;
+
   this.dmp = new diff_match_patch();
   this.changedCardsBuffer = [];
   this.eventEmitter = new EventEmitter();
@@ -3977,6 +4014,7 @@ function WsHandler(ws)
     var json = JSON.parse(pako.inflate(evt.data, { to: 'string' }));
     if(json.type == "patches")
     {
+      // console.log(json.ms);
       this.lastGameObj = this.dmp.patch_apply(this.dmp.patch_fromText(json.patches), this.lastGameObj)[0];
       try
       {
@@ -3984,7 +4022,28 @@ function WsHandler(ws)
         {
           this.addToChangedCardsBuffer(changedCard);
         }
-        this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, false);
+        var now = new Date();
+        var ms = now - this.lastReceivedPatch;
+        // console.log(ms);
+        // console.log(" ");
+        this.lastReceivedPatch = now;
+        if (ms >= json.ms * 1.25)
+        {
+          //console.log("Detected lag. Delay this update.")
+          //client is lagging, skip to give it some time to catch up.
+          clearTimeout(this.lagTimeout);
+          this.lagTimeout = setTimeout(() => {
+            //console.log(this.changedCardsBuffer)
+            this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, false);
+            this.changedCardsBuffer = [];
+          }, 125);
+        }
+        else
+        {
+          clearTimeout(this.lagTimeout);
+          this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, false);
+          this.changedCardsBuffer = [];
+        }
       }
       catch (err)
       {
@@ -4095,6 +4154,16 @@ WsHandler.prototype.typeVarText = function(text)
   sendData = {
     type: "varText",
     text: text
+  }
+  this.sendToWs(sendData);
+}
+
+WsHandler.prototype.editScorebox = function(id, add)
+{
+  sendData = {
+    type: "editScorebox",
+    id: id,
+    add: add
   }
   this.sendToWs(sendData);
 }

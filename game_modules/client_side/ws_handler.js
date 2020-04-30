@@ -9,6 +9,9 @@ function WsHandler(ws)
   this.myPlayerId = -1;
   this.lastGameObj = "";
 
+  this.lastReceivedPatch = new Date();
+  this.lagTimeout = null;
+
   this.dmp = new diff_match_patch();
   this.changedCardsBuffer = [];
   this.eventEmitter = new EventEmitter();
@@ -22,6 +25,7 @@ function WsHandler(ws)
     var json = JSON.parse(pako.inflate(evt.data, { to: 'string' }));
     if(json.type == "patches")
     {
+      // console.log(json.ms);
       this.lastGameObj = this.dmp.patch_apply(this.dmp.patch_fromText(json.patches), this.lastGameObj)[0];
       try
       {
@@ -29,7 +33,28 @@ function WsHandler(ws)
         {
           this.addToChangedCardsBuffer(changedCard);
         }
-        this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, false);
+        var now = new Date();
+        var ms = now - this.lastReceivedPatch;
+        // console.log(ms);
+        // console.log(" ");
+        this.lastReceivedPatch = now;
+        if (ms >= json.ms * 1.25)
+        {
+          //console.log("Detected lag. Delay this update.")
+          //client is lagging, skip to give it some time to catch up.
+          clearTimeout(this.lagTimeout);
+          this.lagTimeout = setTimeout(() => {
+            //console.log(this.changedCardsBuffer)
+            this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, false);
+            this.changedCardsBuffer = [];
+          }, 125);
+        }
+        else
+        {
+          clearTimeout(this.lagTimeout);
+          this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, false);
+          this.changedCardsBuffer = [];
+        }
       }
       catch (err)
       {
@@ -140,6 +165,16 @@ WsHandler.prototype.typeVarText = function(text)
   sendData = {
     type: "varText",
     text: text
+  }
+  this.sendToWs(sendData);
+}
+
+WsHandler.prototype.editScorebox = function(id, add)
+{
+  sendData = {
+    type: "editScorebox",
+    id: id,
+    add: add
   }
   this.sendToWs(sendData);
 }

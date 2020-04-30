@@ -17,6 +17,7 @@ Lobby_Game.prototype.resetGame = function(game)
   game.gameObj.cards = [];
   game.gameObj.decks = [];
   game.gameObj.openboxes = [];
+  game.gameObj.scoreboxes = [];
 
   for (var i = 0; i < 5; i++)
   {

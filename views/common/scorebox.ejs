@@ -1,0 +1,9 @@
+<div class="scorebox" id="scorebox<%= scoreboxId %>" style="background-color: #CCCCCC; padding: 5px; position: absolute; z-index: 3" value="<%= scoreboxId %>">
+  <% for (scoreboxValue of scoreboxValues) { -%>
+    <button type="button" class="btn btn-primary scoreboxButton" id="scorebox<%= scoreboxId %>_plus_<%= scoreboxValue %>" value="+<%= scoreboxValue %>">+<%= scoreboxValue %></button>
+  <% } -%>
+  <div class="scoreboxText" id="scorebox<%= scoreboxId%>_text" style="text-align: center; width: 100%">0</div>
+  <% for (scoreboxValue of scoreboxValues) { -%>
+    <button type="button" class="btn btn-primary scoreboxButton" id="scorebox<%= scoreboxId %>_min_<%= scoreboxValue %>" value="-<%= scoreboxValue %>">-<%= scoreboxValue %></button>
+  <% } -%>
+</div>

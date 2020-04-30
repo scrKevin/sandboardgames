@@ -1,6 +1,7 @@
 let Deck = require('../deck').Deck;
 let Card = require('../card').Card;
 let Openbox = require('../openbox').Openbox;
+let Scorebox = require('../scorebox').Scorebox;
 
 let Game = require('../base_game').Game;
 
@@ -13,6 +14,12 @@ SCBL_Game.prototype.resetGame = function(game)
   game.gameObj.cards = [];
   game.gameObj.decks = [];
   game.gameObj.openboxes = [];
+  game.gameObj.scoreboxes = [];
+
+  for (var i = 0; i < 4; i++)
+  {
+    game.gameObj.scoreboxes.push(new Scorebox(i));
+  }
 
   var tileDeckX = 352;
   var tileDeckY = 540 - (172 / 2);

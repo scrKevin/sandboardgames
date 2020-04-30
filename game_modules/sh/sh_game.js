@@ -15,6 +15,8 @@ SH_Game.prototype.resetGame = function(game)
   game.gameObj.cards = [];
   game.gameObj.decks = [];
   game.gameObj.openboxes = [];
+  game.gameObj.scoreboxes = [];
+  
   for (var i = 0; i < 10; i++)
   {
     bNCard = new Card('ballotnein' + i, Startpositions.playerBoxes[i].left + 5, Startpositions.playerBoxes[i].top + 105)

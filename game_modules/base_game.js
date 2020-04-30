@@ -9,6 +9,7 @@ let FpsLimiter = require('./fps_limiter').FpsLimiter;
 
 function WS_distributor(wss, resetGameFunction)
 {
+  this.lastSentTime = new Date();
   this.broadcastLimiter = new FpsLimiter(20);
   this.broadcastLimiter.on("update", () => {
     var currentGameObj = JSON.stringify(this.gameObj)
@@ -16,12 +17,15 @@ function WS_distributor(wss, resetGameFunction)
     this.dmp.diff_cleanupEfficiency(diffs);
     var patches = this.dmp.patch_make(this.lastSentGameObj, diffs);
     this.lastSentGameObj = currentGameObj;
-    var patchToSend = this.dmp.patch_toText(patches)
+    var patchToSend = this.dmp.patch_toText(patches);
+    var now = new Date();
     var sendData = {
       type: "patches",
       changedCards: this.changedCardsBuffer,
-      patches: patchToSend
+      patches: patchToSend,
+      ms: now - this.lastSentTime
     }
+    this.lastSentTime = now;
     var strToSend = JSON.stringify(sendData);
     this.changedCardsBuffer = [];
     for(player of this.gameObj.players)
@@ -107,24 +111,30 @@ function WS_distributor(wss, resetGameFunction)
             {
               if (deck.isMyDeck(id, json.mouseclicked) && json.mouseclicked)
               {
+                var xCorrection = 0;
+                var yCorrection = 0;
                 deck.x -= moved.deltaX;
-                if (deck.x < 0) { deck.x = 0;}
+                if (deck.x < 0)
+                {
+                  xCorrection = 0 - deck.x;
+                  deck.x = 0;
+                }
                 deck.y -= moved.deltaY;
-                if (deck.y < 0) { deck.y = 0;}
+                if (deck.y < 0)
+                {
+                  yCorrection = 0 - deck.y;
+                  deck.y = 0;
+                }
                 for (card of deck.attachedCards)
                 {
-                  card.x -= moved.deltaX;
-                  if (card.x < 0) { card.x = 0;}
-                  card.y -= moved.deltaY;
-                  if (card.y < 0) { card.y = 0;}
+                  card.x -= moved.deltaX - xCorrection;
+                  card.y -= moved.deltaY - yCorrection;
                   this.addToChangedCardsBuffer(card.id);
                 }
                 for (openbox of deck.attachedOpenboxes)
                 {
-                  openbox.x -= moved.deltaX;
-                  if (openbox.x < 0) { openbox.x = 0;}
-                  openbox.y -= moved.deltaY;
-                  if (openbox.y < 0) { openbox.y = 0;}
+                  openbox.x -= moved.deltaX - xCorrection;
+                  openbox.y -= moved.deltaY - yCorrection;
                 }
               }
               if(!json.mouseclicked && deck.clickedBy == id)
@@ -261,6 +271,17 @@ function WS_distributor(wss, resetGameFunction)
             break;
           }
         }
+      }
+      else if (json.type == "editScorebox")
+      {
+        for (scorebox of this.gameObj.scoreboxes)
+        {
+          if(scorebox.id == json.id)
+          {
+            scorebox.points += json.add;
+          }
+        }
+        this.broadcast();
       }
       else if (json.type == "color")
       {
@@ -469,11 +490,13 @@ WS_distributor.prototype.startAnimationCard = async function(card, targetX, targ
   {
     card.x += stepX;
     card.y += stepY;
+    this.addToChangedCardsBuffer(card.id)
     this.broadcastLimiter.update();
     await delayAsync(300 / steps);
   }
   card.x = targetX;
   card.y = targetY;
+  this.addToChangedCardsBuffer(card.id)
   this.broadcastLimiter.update();
 }
 
