@@ -26,6 +26,19 @@ function CanvasHandler() {
   this.initialized = false;
   this.myPlayerId = -1;
   this.myColor = "#000000";
+
+  this.colorMap = {
+    "#FF0000": "#FF0000",
+    "#88ff91": "#559F5B",
+    "#0000FF": "#0000FF",
+    "#FFFF00": "#CFCF30",
+    "#00FFFF": "#40BFBF",
+    "#790079": "#790079",
+    "#FF8800": "#FF8800",
+    "#888888": "#888888",
+    "#0e8200": "#0e8200",
+    "#ffbff7": "#8F878E"
+  }
 }
 
 CanvasHandler.prototype.init = function(canvas)
@@ -94,7 +107,7 @@ CanvasHandler.prototype.draw = function()
   this.ctx.beginPath();
   this.ctx.moveTo(this.prevX, this.prevY);
   this.ctx.lineTo(this.currX, this.currY);
-  this.ctx.strokeStyle = this.myColor;
+  this.ctx.strokeStyle = this.colorMap[this.myColor];
   this.ctx.lineWidth = 2;
   this.ctx.stroke();
   this.ctx.closePath();
@@ -156,7 +169,7 @@ CanvasHandler.prototype.drawOtherPlayer = function(coords, color)
     this.ctx.beginPath();
     this.ctx.moveTo(line.x0, line.y0);
     this.ctx.lineTo(line.x1, line.y1);
-    this.ctx.strokeStyle = color;
+    this.ctx.strokeStyle = this.colorMap[color];
     this.ctx.lineWidth = 2;
     this.ctx.stroke();
     this.ctx.closePath();

@@ -372,6 +372,10 @@ function WS_distributor(wss, resetGameFunction)
       {
         player.addDrawCoordinates(json.coords);
       }
+      else if (json.type == "devToolsState")
+      {
+        this.broadcastDevToolsState(id, json.opened);
+      }
       
     });
     
@@ -466,6 +470,22 @@ WS_distributor.prototype.broadcastReset = function ()
   //console.log("broadcasting left player " + playerId)
   var sendData = {
     type: "reset"
+  }
+  var strToSend = JSON.stringify(sendData);
+  var binaryString = pako.deflate(strToSend, { to: 'string' });
+  this.wss.clients.forEach(function each(client) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(binaryString);
+    }
+  });
+}
+
+WS_distributor.prototype.broadcastDevToolsState = function (playerId, opened)
+{
+  var sendData = {
+    type: "devToolsState",
+    playerId: playerId,
+    opened: opened
   }
   var strToSend = JSON.stringify(sendData);
   var binaryString = pako.deflate(strToSend, { to: 'string' });

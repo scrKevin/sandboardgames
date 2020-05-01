@@ -52,6 +52,9 @@ ClientController.prototype.initialize = function(ws, myStream)
     this.canvasHandler.wsHandler = null;
     this.emit("wsClosed");
   });
+  this.wsHandler.eventEmitter.on("devToolsState", (playerId, opened) => {
+    this.emit("devToolsState", playerId, opened);
+  });
 
   this.mouseHandler = new MouseHandler(this.wsHandler);
   
@@ -123,6 +126,11 @@ ClientController.prototype.typeVarText = function(text)
 ClientController.prototype.editScorebox = function(id, add)
 {
   this.init && this.wsHandler.editScorebox(id, add);
+}
+
+ClientController.prototype.devToolsState = function(opened)
+{
+  this.init && this.wsHandler.devToolsState(opened);
 }
 
 

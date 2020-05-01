@@ -93,6 +93,10 @@ function WsHandler(ws)
       this.eventEmitter.emit("reset");
       this.eventEmitter.emit('updateGame', JSON.parse(this.lastGameObj), [], true)
     }
+    else if (json.type == "devToolsState")
+    {
+      this.eventEmitter.emit("devToolsState", json.playerId, json.opened);
+    }
   }.bind(this);
   this.ws.onclose = function()
   { 
@@ -175,6 +179,15 @@ WsHandler.prototype.editScorebox = function(id, add)
     type: "editScorebox",
     id: id,
     add: add
+  }
+  this.sendToWs(sendData);
+}
+
+WsHandler.prototype.devToolsState = function(opened)
+{
+  sendData = {
+    type: "devToolsState",
+    opened: opened
   }
   this.sendToWs(sendData);
 }

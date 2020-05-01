@@ -1,4 +1,5 @@
 let ClientController = require("./client_controller").ClientController;
+require("./devtools-detect");
 
 var clientController = new ClientController()
 
@@ -40,6 +41,8 @@ var lastTouchedCardId = null;
 
 var blockCardChange = [];
 
+var devToolsOpenedTimes = {};
+
 function addWebcam(stream, playerId, mirrored, muted)
 {
   var video = document.createElement('video');
@@ -73,6 +76,10 @@ function addWebcam(stream, playerId, mirrored, muted)
     }, 500);
   });
   video.play();
+  updateCss("#webcam" + playerId, "display", "block");
+  updateCss("#player" + playerId + "box", "display", "block");
+  updateCss("#player" + playerId + "NameText", "display", "initial");
+  updateCss("#player" + playerId + "Name", "display", "initial");
 }
 
 var gameInitialized = false;
@@ -104,6 +111,14 @@ function InitWebSocket()
         addWebcam(myStream, myPlayerId, true, true);
         gameInitialized = true;
       }
+      else
+      {
+        for (var i = 0; i < 20; i++)
+        {
+          $("#micContainer" + i).css("display", "none");
+        }
+      }
+      $("#micContainer" + myPlayerId).css("display", "block");
     });
 
     clientController.on("updateGame", (gameObj, changedCardsBuffer, init) => {
@@ -131,7 +146,11 @@ function InitWebSocket()
 
     clientController.on("leftPeer", (playerId) => {
       $("#webcam" + playerId).html("");
+      updateCss("#webcam" + playerId, "display", "none");
       updateCss("#cursor" + playerId, "display", "none");
+      updateCss("#player" + playerId + "box", "display", "none");
+      updateCss("#player" + playerId + "NameText", "display", "none");
+      updateCss("#player" + playerId + "Name", "display", "none");
       updateCss("#player" + playerId + "box", "background-color", "#FFFFFF00");
       updateHtml("#player" + playerId + "NameText", "")
     });
@@ -143,6 +162,28 @@ function InitWebSocket()
     clientController.on("wsClosed", () => {
       clientController.removeAllListeners();
       setTimeout(function(){InitWebSocket();}, 2000);
+    });
+
+    clientController.on("devToolsState", (playerId, opened) => {
+      if(opened)
+      {
+        devToolsOpenedTimes[playerId] = new Date();
+        $("#duncehat" + playerId).css("display", "block");
+      }
+      else
+      {
+        var msHatVisible = new Date() - devToolsOpenedTimes[playerId];
+        if(msHatVisible < 20000)
+        {
+          setTimeout(() => {
+            $("#duncehat" + playerId).css("display", "none");
+          }, (20000 - msHatVisible));
+        }
+        else
+        {
+          $("#duncehat" + playerId).css("display", "none");
+        }
+      }
     });
   }
   else
@@ -184,9 +225,13 @@ $( document ).on( "mouseup", function( e ) {
 });
 
 $(document).on ("keydown", function (event) {
-    if (event.ctrlKey && event.key === "q") { 
-        $('#resetModal').modal();
-    }
+  if (event.ctrlKey && event.key === "q") { 
+    $('#resetModal').modal();
+  }
+});
+
+window.addEventListener('devtoolschange', event => {
+  clientController.devToolsState(event.detail.isOpen);
 });
 
 function adaptScale()
@@ -210,6 +255,8 @@ function adaptScale()
   }
   clientController.canvasHandler.updateScale(scale);
 }
+
+
 
 $( window ).resize(function() {
   adaptScale();
@@ -243,6 +290,7 @@ $( document ).ready(function() {
   $(".inspectDeckButton").on('click', inspectDeck);
 
   $(".scoreboxButton").on('click', scoreboxButton);
+  $(".mic").on('click', toggleMic);
 
   $('#name').keyup(function(){
     checkEnterIsAllowed();
@@ -256,16 +304,25 @@ $( document ).ready(function() {
   });
 
   $(".card").on("touchstart", function(event){
-    event.preventDefault();    
-    blockCardChange = [];
-    var posX = $(event.currentTarget).position().left;
-    var posY = $(event.currentTarget).position().top;
-    $(".touchindicator").css("left", posX * (1 / scale));
-    $(".touchindicator").css("top", posY * (1 / scale));
-    $(".touchindicator").css("display", "block");
-    $(".touchbox").css("opacity", "0.35");
-    clientController.touchCard(event.currentTarget.id, posX * (1 / scale), posY * (1 / scale));
-    lastTouchedCardId = event.currentTarget.id;
+    //console.log(event);
+    event.preventDefault(); 
+    if(valueExistsInDict(event.target.classList, "shuffleButton"))
+    {
+      shuffleDeck(event);
+    }
+    else
+    {
+      blockCardChange = [];
+      var posX = $(event.currentTarget).position().left;
+      var posY = $(event.currentTarget).position().top;
+      $(".touchindicator").css("left", posX * (1 / scale));
+      $(".touchindicator").css("top", posY * (1 / scale));
+      $(".touchindicator").css("display", "block");
+      $(".touchbox").css("opacity", "0.35");
+      clientController.touchCard(event.currentTarget.id, posX * (1 / scale), posY * (1 / scale));
+      lastTouchedCardId = event.currentTarget.id;
+    }
+
   });
 
   $(".touchbox").on("touchstart", function(event){
@@ -321,6 +378,40 @@ $( document ).ready(function() {
                           });
   });
 });
+
+function toggleMic(e) {
+  console.log(e)
+  if (myStream != null)
+  {
+    var audioTracks = myStream.getAudioTracks();
+    var micEnabled = true;
+    for (var i = 0, l = audioTracks.length; i < l; i++) {
+      audioTracks[i].enabled = !audioTracks[i].enabled;
+      micEnabled = audioTracks[i].enabled;
+    }
+  }
+  if(micEnabled)
+  {
+    $(".mute").css("display", "none");
+  }
+  else
+  {
+    console.log("disp")
+    $(".mute").css("display", "block");
+  }
+}
+
+function valueExistsInDict(dict, value)
+{
+  for (k in dict)
+  {
+    if(dict[k] === value)
+    {
+      return true;
+    }
+  }
+  return false;
+}
 
 function updateCss(selector, property, value)
 {
