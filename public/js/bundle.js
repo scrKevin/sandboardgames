@@ -3199,7 +3199,7 @@ $( window ).resize(function() {
 
 $( document ).ready(function() {
   $(".touchbox").css("opacity", "0");
-  $(".touchbox").css("transition", "opacity 200ms ease-in-out");
+  //$(".touchbox").css("transition", "opacity 200ms ease-in-out");
   var colorSelectionHtml = "";
   var nColorSelection = 0;
   for (color of colors)
@@ -3261,7 +3261,7 @@ $( document ).ready(function() {
 
   $(".touchbox").on("touchstart", function(event){
     event.preventDefault();
-    $(".touchbox").css("opacity", "0");
+    //$(".touchbox").css("opacity", "0");
     var posX = $(event.currentTarget).position().left;
     var posY = $(event.currentTarget).position().top;
     $(".touchindicator").css("display", "none");
