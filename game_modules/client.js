@@ -12,7 +12,7 @@ function Client(playerId, ws)
 
     this.isAlive = false;
     this.ws.ping(noop);
-  }, 8000);
+  }, 16000);
 
   this.ws.on("close", function(){
     clearInterval(interval);
