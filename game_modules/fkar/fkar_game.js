@@ -17,6 +17,12 @@ FKAR_Game.prototype.resetGame = function(game)
   game.gameObj.openboxes = [];
   game.gameObj.scoreboxes = [];
 
+  for (player of game.gameObj.players)
+  {
+    player.drawArray = [];
+    player.newCoords = [];
+  }
+
   var startDeckX = 255;
   var startDeckY = 0;
   var startDeck = new Deck('startDeck', startDeckX, startDeckY, 207, 185);
