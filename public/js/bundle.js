@@ -2938,7 +2938,7 @@ CanvasHandler.prototype.sendDrawCoordinates = function(){
 
 CanvasHandler.prototype.adjustLatency = function(latency)
 {
-  this.canvasFpsLimiter.setMs(latency);
+  this.canvasFpsLimiter.setMs(latency * 1.5);
 }
 
 function getPlayer(gameObj, playerId)
@@ -4050,7 +4050,7 @@ MouseHandler.prototype.touchTouchbox = function(x, y)
 MouseHandler.prototype.adjustLatency = function(latency)
 {
   
-  this.mouseFpsLimiter.setMs(latency)
+  this.mouseFpsLimiter.setMs(latency * 1.5)
 }
 
 module.exports = {MouseHandler: MouseHandler}

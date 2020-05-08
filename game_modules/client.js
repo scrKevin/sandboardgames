@@ -21,7 +21,7 @@ function Client(playerId, ws)
   this.ws.on("pong", () => {
     this.isAlive = true;
     this.latency = Math.round((new Date() - this.pingSentTimestamp) / 2);
-    this.broadcastLimiter.setMs(this.latency)
+    this.broadcastLimiter.setMs(this.latency * 1.5)
     //console.log("player " + playerId + " latency = " + this.latency + " ms")
     this.sendLatency();
   });
