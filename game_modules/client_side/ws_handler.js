@@ -10,7 +10,7 @@ function WsHandler(ws)
   this.lastGameObj = "";
 
   this.lastReceivedPatch = new Date();
-  this.lagTimeout = null;
+  // this.lagTimeout = null;
 
   this.dmp = new diff_match_patch();
   this.changedCardsBuffer = [];
@@ -33,28 +33,28 @@ function WsHandler(ws)
         {
           this.addToChangedCardsBuffer(changedCard);
         }
-        var now = new Date();
-        var ms = now - this.lastReceivedPatch;
+        // var now = new Date();
+        // var ms = now - this.lastReceivedPatch;
         // console.log(ms);
         // console.log(" ");
-        this.lastReceivedPatch = now;
-        if (ms >= json.ms * 1.25)
-        {
-          //console.log("Detected lag. Delay this update.")
-          //client is lagging, skip to give it some time to catch up.
-          clearTimeout(this.lagTimeout);
-          this.lagTimeout = setTimeout(() => {
-            //console.log(this.changedCardsBuffer)
-            this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, false);
-            this.changedCardsBuffer = [];
-          }, 125);
-        }
-        else
-        {
-          clearTimeout(this.lagTimeout);
-          this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, false);
-          this.changedCardsBuffer = [];
-        }
+        // this.lastReceivedPatch = now;
+        // if (ms >= json.ms * 1.25)
+        // {
+        //   //console.log("Detected lag. Delay this update.")
+        //   //client is lagging, skip to give it some time to catch up.
+        //   clearTimeout(this.lagTimeout);
+        //   this.lagTimeout = setTimeout(() => {
+        //     //console.log(this.changedCardsBuffer)
+        //     this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, false);
+        //     this.changedCardsBuffer = [];
+        //   }, 125);
+        // }
+        // else
+        // {
+          // clearTimeout(this.lagTimeout);
+        this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, false);
+        this.changedCardsBuffer = [];
+        // }
       }
       catch (err)
       {

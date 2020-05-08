@@ -4,7 +4,7 @@ function MouseHandler(wsHandler)
 {
   this.wsHandler = wsHandler;
 
-  this.mouseFpsLimiter = new FpsLimiter(20);
+  this.mouseFpsLimiter = new FpsLimiter(15);
   this.mouseFpsLimiter.on("update", () => {
     this.sendMouseMove()
   });

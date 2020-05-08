@@ -49,7 +49,7 @@ function addWebcam(stream, playerId, mirrored, muted)
   $("#webcam" + playerId).html(video)
   if (mirrored)
   {
-    $("#webcam" + playerId).css("transform", "rotateY(180deg)")
+    $("#webcam" + playerId).css("transform", "scale(-1, 1)")
   }
   video.muted = muted;
   video.srcObject = stream;
@@ -264,6 +264,7 @@ $( window ).resize(function() {
 });
 
 $( document ).ready(function() {
+  console.log(navigator.mediaDevices.getSupportedConstraints())
   $(".touchbox").css("opacity", "0");
   //$(".touchbox").css("transition", "opacity 200ms ease-in-out");
   var colorSelectionHtml = "";
@@ -366,8 +367,9 @@ $( document ).ready(function() {
                           height: {
                               max: 480,
                               ideal: 240
-                          }
-                      }, audio: true})
+                          },
+                          frameRate: {ideal: 10, max: 15}
+                      }, audio: {sampleRate: 16000}})
     .then(function(stream) {
       myStream = stream;
       InitWebSocket();

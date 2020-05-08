@@ -10,7 +10,7 @@ let FpsLimiter = require('./fps_limiter').FpsLimiter;
 function WS_distributor(wss, resetGameFunction)
 {
   this.lastSentTime = new Date();
-  this.broadcastLimiter = new FpsLimiter(20);
+  this.broadcastLimiter = new FpsLimiter(15);
   this.broadcastLimiter.on("update", () => {
     var currentGameObj = JSON.stringify(this.gameObj)
     var diffs = this.dmp.diff_main(this.lastSentGameObj, currentGameObj);

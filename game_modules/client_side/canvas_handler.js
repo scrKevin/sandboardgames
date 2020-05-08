@@ -19,7 +19,7 @@ function CanvasHandler() {
 
   this.lastDrawCoordinates = [];
 
-  this.canvasFpsLimiter = new FpsLimiter(20);
+  this.canvasFpsLimiter = new FpsLimiter(15);
   this.canvasFpsLimiter.on("update", () => {
     this.sendDrawCoordinates()
   });
