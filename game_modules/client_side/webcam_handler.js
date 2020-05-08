@@ -21,7 +21,7 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId)
   //console.log("initiating peer for player " + playerId)
   var peerOptions = {
     initiator: true,
-    trickle: true,
+    trickle: false,
     stream: this.myStream
   }
   if(process.env.NODE_ENV === 'test')
@@ -78,7 +78,7 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
 {
   var peerOptions = {
     initiator: false,
-    trickle: true,
+    trickle: false,
     stream: this.myStream
   }
   if(process.env.NODE_ENV === 'test')
