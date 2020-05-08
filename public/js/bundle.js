@@ -4040,7 +4040,7 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId)
   //console.log("initiating peer for player " + playerId)
   var peerOptions = {
     initiator: true,
-    trickle: false,
+    trickle: true,
     stream: this.myStream
   }
   if(process.env.NODE_ENV === 'test')
@@ -4050,6 +4050,8 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId)
   this.peers[playerId] = new SimplePeer(peerOptions);
 
   this.peers[playerId].on('signal', (data) => {
+    console.log("initalizing peer for player " + playerId)
+    console.log(data);
     var sendData = {
       type: "initiatorReady",
       playerId: playerId,
@@ -4059,6 +4061,7 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId)
   });
 
   this.peers[playerId].on('stream', stream => {
+    console.log("got stream for player " + playerId)
     this.emit("stream", playerId, stream);
     var sendData = {
       type: "streamReceived",
@@ -4068,7 +4071,7 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId)
   });
 
   this.peers[playerId].on('error', err => {
-    console.log("error in initWebcamPeer")
+    console.log("error in initWebcamPeer for player " + playerId)
     console.log(err.code);
     if (err.code == "ERR_CONNECTION_FAILURE")
     {
@@ -4094,7 +4097,7 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
 {
   var peerOptions = {
     initiator: false,
-    trickle: false,
+    trickle: true,
     stream: this.myStream
   }
   if(process.env.NODE_ENV === 'test')
@@ -4104,11 +4107,12 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
   this.peers[fromPlayerId] = new SimplePeer(peerOptions);
 
   this.peers[fromPlayerId].on('stream', stream => {
+    console.log("got stream for player " + fromPlayerId)
     this.emit("stream", fromPlayerId, stream)
   });
 
   this.peers[fromPlayerId].on('signal', data => {
-
+    console.log("got peer signal from player " + fromPlayerId)
     var sendData = {
       type: "acceptPeer",
       fromPlayerId: fromPlayerId,
