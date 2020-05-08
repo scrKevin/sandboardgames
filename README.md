@@ -1,7 +1,9 @@
 # Sandboardgames
 
-Sandbox style board game engine written in NodeJS. P2P Webcam support with
-WebRTC.
+Play some board games with your friends around a virtual table.
+
+Sandbox style board game engine running on NodeJS.
+P2P Webcam support with WebRTC.
 
 Working example @ https://bitwiseworkshop.nl/
 
