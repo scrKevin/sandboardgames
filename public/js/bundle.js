@@ -3323,12 +3323,12 @@ $( document ).ready(function() {
 
   navigator.mediaDevices.getUserMedia({video: {
                           width: {
-                              max: 640,
-                              ideal: 320 
+                              max: 320,
+                              ideal: 160 
                           },
                           height: {
-                              max: 480,
-                              ideal: 240
+                              max: 240,
+                              ideal: 120
                           },
                           frameRate: {ideal: 10, max: 15}
                       }, audio: {sampleRate: 16000}})
