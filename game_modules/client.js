@@ -21,7 +21,7 @@ function Client(playerId, ws)
   this.ws.on("pong", () => {
     this.isAlive = true;
     this.latency = Math.round((new Date() - this.pingSentTimestamp) / 2);
-    this.broadcastLimiter.setFps(1000 / (this.latency + 1))
+    this.broadcastLimiter.setMs(this.latency)
     //console.log("player " + playerId + " latency = " + this.latency + " ms")
     this.sendLatency();
   });
@@ -94,7 +94,8 @@ Client.prototype.sendLatency = function()
 {
   var sendData = {
     type: "latency",
-    latency: this.latency
+    latency: this.latency,
+    playerId: this.playerId
   }
   var strToSend = JSON.stringify(sendData);
 

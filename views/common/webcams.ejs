@@ -5,6 +5,7 @@
     <img class="mic" src="/img/common/mic.svg" style="position: absolute; z-index: 4; display: block"/>
     <img class="mute mic" src="/img/common/forbidden.svg" style="position: absolute; z-index: 5; display: none;"/>
   </div>
+  <div id="latency<%= i %>" style="position: absolute; top: <%= webcamPos[i].top %>px; left: <%= webcamPos[i].left + 80%>px; z-index: 2"></div>
 <% } %>
 
 <% for (var i = fixedPlayers; i <20;  i++ ) { %>
@@ -14,6 +15,7 @@
       <div class="micContainer" id="micContainer<%= i %>" style="display: none;">
         <img class="mic" src="/img/common/mic.svg" style="position: absolute; z-index: 4; display: block; right: 0px; bottom: 0px;"/>
         <img class="mute mic" src="/img/common/forbidden.svg" style="position: absolute; z-index: 5; display: none; right: 0px; bottom: 0px;"/>
+        <div id="latency<%= i %>" style="position: absolute; bottom: 5px; right: 80px; z-index: 5"></div>
       </div>
     </div>
   </div>

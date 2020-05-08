@@ -101,7 +101,7 @@ function WsHandler(ws)
     }
     else if (json.type == "latency")
     {
-      this.eventEmitter.emit("latency", json.latency);
+      this.eventEmitter.emit("latency", json.latency, json.playerId);
     }
   }.bind(this);
   this.ws.onclose = function()

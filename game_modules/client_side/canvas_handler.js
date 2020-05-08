@@ -203,7 +203,7 @@ CanvasHandler.prototype.sendDrawCoordinates = function(){
 
 CanvasHandler.prototype.adjustLatency = function(latency)
 {
-  this.canvasFpsLimiter.setFps(1000 / (latency + 1));
+  this.canvasFpsLimiter.setMs(latency);
 }
 
 function getPlayer(gameObj, playerId)

@@ -186,6 +186,9 @@ function InitWebSocket()
         }
       }
     });
+    clientController.on("latency", (latency, playerId) => {
+      $("#latency" + playerId).html("Latency: " + latency + "ms");
+    });
   }
   else
   {

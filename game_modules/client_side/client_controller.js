@@ -55,9 +55,10 @@ ClientController.prototype.initialize = function(ws, myStream)
   this.wsHandler.eventEmitter.on("devToolsState", (playerId, opened) => {
     this.emit("devToolsState", playerId, opened);
   });
-  this.wsHandler.eventEmitter.on("latency", (latency) => {
+  this.wsHandler.eventEmitter.on("latency", (latency, playerId) => {
     this.init && this.mouseHandler.adjustLatency(latency);
     this.init && this.canvasHandler.adjustLatency(latency);
+    this.emit("latency", latency, playerId);
   });
 
   this.mouseHandler = new MouseHandler(this.wsHandler);

@@ -2938,7 +2938,7 @@ CanvasHandler.prototype.sendDrawCoordinates = function(){
 
 CanvasHandler.prototype.adjustLatency = function(latency)
 {
-  this.canvasFpsLimiter.setFps(1000 / (latency + 1));
+  this.canvasFpsLimiter.setMs(latency);
 }
 
 function getPlayer(gameObj, playerId)
@@ -3143,6 +3143,9 @@ function InitWebSocket()
           $("#duncehat" + playerId).css("display", "none");
         }
       }
+    });
+    clientController.on("latency", (latency, playerId) => {
+      $("#latency" + playerId).html("Latency: " + latency + "ms");
     });
   }
   else
@@ -3810,9 +3813,10 @@ ClientController.prototype.initialize = function(ws, myStream)
   this.wsHandler.eventEmitter.on("devToolsState", (playerId, opened) => {
     this.emit("devToolsState", playerId, opened);
   });
-  this.wsHandler.eventEmitter.on("latency", (latency) => {
+  this.wsHandler.eventEmitter.on("latency", (latency, playerId) => {
     this.init && this.mouseHandler.adjustLatency(latency);
     this.init && this.canvasHandler.adjustLatency(latency);
+    this.emit("latency", latency, playerId);
   });
 
   this.mouseHandler = new MouseHandler(this.wsHandler);
@@ -4046,7 +4050,7 @@ MouseHandler.prototype.touchTouchbox = function(x, y)
 MouseHandler.prototype.adjustLatency = function(latency)
 {
   
-  this.mouseFpsLimiter.setFps(1000 / (latency + 1));
+  this.mouseFpsLimiter.setMs(latency)
 }
 
 module.exports = {MouseHandler: MouseHandler}
@@ -4302,7 +4306,7 @@ function WsHandler(ws)
     }
     else if (json.type == "latency")
     {
-      this.eventEmitter.emit("latency", json.latency);
+      this.eventEmitter.emit("latency", json.latency, json.playerId);
     }
   }.bind(this);
   this.ws.onclose = function()
@@ -4438,6 +4442,18 @@ FpsLimiter.prototype.setFps = function(fps)
   if (this.ms < 40)
   {
     this.ms = 40;
+  }
+}
+
+FpsLimiter.prototype.setMs = function(ms)
+{
+  if (ms < 40)
+  {
+    this.ms = 40;
+  }
+  else
+  {
+    this.ms = ms;
   }
 }
 
