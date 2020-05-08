@@ -371,9 +371,8 @@ $( document ).ready(function() {
                           height: {
                               max: 240,
                               ideal: 120
-                          },
-                          frameRate: {ideal: 10, max: 15}
-                      }, audio: {sampleRate: 16000}})
+                          }
+                      }, audio: true})
     .then(function(stream) {
       myStream = stream;
       InitWebSocket();
