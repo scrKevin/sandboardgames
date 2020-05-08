@@ -29,4 +29,13 @@ FpsLimiter.prototype.update = function()
   return;
 }
 
+FpsLimiter.prototype.setFps = function(fps)
+{
+  this.ms = Math.round(1000 / fps);
+  if (this.ms < 40)
+  {
+    this.ms = 40;
+  }
+}
+
 module.exports = {FpsLimiter: FpsLimiter}

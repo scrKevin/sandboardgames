@@ -22,8 +22,8 @@ ClientController.prototype.initialize = function(ws, myStream)
   this.wsHandler.eventEmitter.on("playerId", (playerId) => {
     this.emit("playerId", playerId);
   });
-  this.wsHandler.eventEmitter.on("updateGame", (gameObj, changedCardsBuffer, init) => {
-    this.emit("updateGame", gameObj, changedCardsBuffer, init);
+  this.wsHandler.eventEmitter.on("updateGame", (gameObj, changedCardsBuffer, newDrawCoords, init) => {
+    this.emit("updateGame", gameObj, changedCardsBuffer, newDrawCoords, init);
   });
   this.wsHandler.eventEmitter.on("newPeer", (playerId) => {
     this.webcamHandler.initWebcamPeer(playerId);
@@ -54,6 +54,10 @@ ClientController.prototype.initialize = function(ws, myStream)
   });
   this.wsHandler.eventEmitter.on("devToolsState", (playerId, opened) => {
     this.emit("devToolsState", playerId, opened);
+  });
+  this.wsHandler.eventEmitter.on("latency", (latency) => {
+    this.init && this.mouseHandler.adjustLatency(latency);
+    this.init && this.canvasHandler.adjustLatency(latency);
   });
 
   this.mouseHandler = new MouseHandler(this.wsHandler);

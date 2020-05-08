@@ -7,7 +7,7 @@ function Player(){
     y: 0
   };
   this.drawArray = [];
-  this.newCoords = [];
+  //this.newCoords = [];
 }
 
 Player.prototype.setId = function(playerNumbers){
@@ -49,13 +49,13 @@ Player.prototype.addDrawCoordinates = function(newCoords)
   for(coord of newCoords)
   {
     this.drawArray.push(coord);
-    this.newCoords.push(coord);
+    //this.newCoords.push(coord);
   }
 }
 
 Player.prototype.resetBroadcastedDrawArray = function()
 {
-  this.newCoords = [];
+  //this.newCoords = [];
 }
 
 module.exports = {Player: Player}

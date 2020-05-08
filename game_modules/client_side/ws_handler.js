@@ -52,13 +52,15 @@ function WsHandler(ws)
         // else
         // {
           // clearTimeout(this.lagTimeout);
-        this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, false);
+        //console.log(this.lastGameObj);
+        this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, json.newDrawCoords, false);
         this.changedCardsBuffer = [];
         // }
       }
       catch (err)
       {
         console.log(err);
+        //console.log(this.lastGameObj)
         this.requestPlayerId();
       }
     }
@@ -67,7 +69,7 @@ function WsHandler(ws)
       this.lastGameObj = json.gameObj;
       this.myPlayerId = json.playerId;
       this.eventEmitter.emit('playerId', json.playerId);
-      this.eventEmitter.emit('updateGame', JSON.parse(this.lastGameObj), [], true)
+      this.eventEmitter.emit('updateGame', JSON.parse(this.lastGameObj), [], {}, true)
     }
     else if (json.type == "newPeer")
     {
@@ -91,11 +93,15 @@ function WsHandler(ws)
     else if (json.type == "reset")
     {
       this.eventEmitter.emit("reset");
-      this.eventEmitter.emit('updateGame', JSON.parse(this.lastGameObj), [], true)
+      this.eventEmitter.emit('updateGame', JSON.parse(this.lastGameObj), [], {}, true)
     }
     else if (json.type == "devToolsState")
     {
       this.eventEmitter.emit("devToolsState", json.playerId, json.opened);
+    }
+    else if (json.type == "latency")
+    {
+      this.eventEmitter.emit("latency", json.latency);
     }
   }.bind(this);
   this.ws.onclose = function()

@@ -121,10 +121,11 @@ function InitWebSocket()
       $("#micContainer" + myPlayerId).css("display", "block");
     });
 
-    clientController.on("updateGame", (gameObj, changedCardsBuffer, init) => {
+    clientController.on("updateGame", (gameObj, changedCardsBuffer, newDrawCoords, init) => {
       if(init)
       {
         initCards(gameObj)
+        console.log("reset or init")
       }
       else
       {

@@ -2754,7 +2754,7 @@ function CanvasHandler() {
 
   this.lastDrawCoordinates = [];
 
-  this.canvasFpsLimiter = new FpsLimiter(15);
+  this.canvasFpsLimiter = new FpsLimiter(5);
   this.canvasFpsLimiter.on("update", () => {
     this.sendDrawCoordinates()
   });
@@ -2854,20 +2854,25 @@ CanvasHandler.prototype.initWsHandler = function(wsHandler)
   this.wsHandler.eventEmitter.on("playerId", (playerId) => {
     this.myPlayerId = playerId;
   });
-  this.wsHandler.eventEmitter.on("updateGame", (gameObj, changedCards, wsIsInitialized) => {
+  this.wsHandler.eventEmitter.on("updateGame", (gameObj, changedCards, newDrawCoords, wsIsInitialized) => {
     if(this.initialized)
     {
-      for (player of gameObj.players)
+      for (playerId in newDrawCoords)
       {
-        if(player.id == this.myPlayerId)
+        var player = getPlayer(gameObj, playerId);
+        if (player != null)
         {
-          this.myColor = player.color;
-        }
-        else
-        {
-          if (player.newCoords.length > 0)
+          if(playerId == this.myPlayerId)
           {
-            this.drawOtherPlayer(player.newCoords, player.color);
+            this.myColor = player.color;
+          }
+          else
+          {
+            //console.log(newDrawCoords[playerId])
+            if (newDrawCoords[playerId].length > 0)
+            {
+              this.drawOtherPlayer(newDrawCoords[playerId], player.color);
+            }
           }
         }
       }
@@ -2901,6 +2906,7 @@ CanvasHandler.prototype.drawOtherPlayer = function(coords, color)
 {
   for (line of coords)
   {
+    //console.log(line)
     this.ctx.beginPath();
     this.ctx.moveTo(line.x0, line.y0);
     this.ctx.lineTo(line.x1, line.y1);
@@ -2928,6 +2934,24 @@ CanvasHandler.prototype.sendDrawCoordinates = function(){
     this.lastDrawCoordinates = [];
     this.wsHandler.sendToWs(sendData);
   }
+}
+
+CanvasHandler.prototype.adjustLatency = function(latency)
+{
+  this.canvasFpsLimiter.setFps(1000 / (latency + 1));
+}
+
+function getPlayer(gameObj, playerId)
+{
+  for (player of gameObj.players)
+  {
+    if (player.id == playerId)
+    {
+      return player;
+      break;
+    }
+  }
+  return null;
 }
 
 module.exports = {CanvasHandler: CanvasHandler}
@@ -3055,10 +3079,11 @@ function InitWebSocket()
       $("#micContainer" + myPlayerId).css("display", "block");
     });
 
-    clientController.on("updateGame", (gameObj, changedCardsBuffer, init) => {
+    clientController.on("updateGame", (gameObj, changedCardsBuffer, newDrawCoords, init) => {
       if(init)
       {
         initCards(gameObj)
+        console.log("reset or init")
       }
       else
       {
@@ -3752,8 +3777,8 @@ ClientController.prototype.initialize = function(ws, myStream)
   this.wsHandler.eventEmitter.on("playerId", (playerId) => {
     this.emit("playerId", playerId);
   });
-  this.wsHandler.eventEmitter.on("updateGame", (gameObj, changedCardsBuffer, init) => {
-    this.emit("updateGame", gameObj, changedCardsBuffer, init);
+  this.wsHandler.eventEmitter.on("updateGame", (gameObj, changedCardsBuffer, newDrawCoords, init) => {
+    this.emit("updateGame", gameObj, changedCardsBuffer, newDrawCoords, init);
   });
   this.wsHandler.eventEmitter.on("newPeer", (playerId) => {
     this.webcamHandler.initWebcamPeer(playerId);
@@ -3784,6 +3809,10 @@ ClientController.prototype.initialize = function(ws, myStream)
   });
   this.wsHandler.eventEmitter.on("devToolsState", (playerId, opened) => {
     this.emit("devToolsState", playerId, opened);
+  });
+  this.wsHandler.eventEmitter.on("latency", (latency) => {
+    this.init && this.mouseHandler.adjustLatency(latency);
+    this.init && this.canvasHandler.adjustLatency(latency);
   });
 
   this.mouseHandler = new MouseHandler(this.wsHandler);
@@ -3931,7 +3960,7 @@ function MouseHandler(wsHandler)
 {
   this.wsHandler = wsHandler;
 
-  this.mouseFpsLimiter = new FpsLimiter(15);
+  this.mouseFpsLimiter = new FpsLimiter(5);
   this.mouseFpsLimiter.on("update", () => {
     this.sendMouseMove()
   });
@@ -4012,6 +4041,12 @@ MouseHandler.prototype.touchTouchbox = function(x, y)
   }
   this.wsHandler.sendToWs(sendData);
   this.dragCardId = null;
+}
+
+MouseHandler.prototype.adjustLatency = function(latency)
+{
+  
+  this.mouseFpsLimiter.setFps(1000 / (latency + 1));
 }
 
 module.exports = {MouseHandler: MouseHandler}
@@ -4218,13 +4253,15 @@ function WsHandler(ws)
         // else
         // {
           // clearTimeout(this.lagTimeout);
-        this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, false);
+        //console.log(this.lastGameObj);
+        this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, json.newDrawCoords, false);
         this.changedCardsBuffer = [];
         // }
       }
       catch (err)
       {
         console.log(err);
+        //console.log(this.lastGameObj)
         this.requestPlayerId();
       }
     }
@@ -4233,7 +4270,7 @@ function WsHandler(ws)
       this.lastGameObj = json.gameObj;
       this.myPlayerId = json.playerId;
       this.eventEmitter.emit('playerId', json.playerId);
-      this.eventEmitter.emit('updateGame', JSON.parse(this.lastGameObj), [], true)
+      this.eventEmitter.emit('updateGame', JSON.parse(this.lastGameObj), [], {}, true)
     }
     else if (json.type == "newPeer")
     {
@@ -4257,11 +4294,15 @@ function WsHandler(ws)
     else if (json.type == "reset")
     {
       this.eventEmitter.emit("reset");
-      this.eventEmitter.emit('updateGame', JSON.parse(this.lastGameObj), [], true)
+      this.eventEmitter.emit('updateGame', JSON.parse(this.lastGameObj), [], {}, true)
     }
     else if (json.type == "devToolsState")
     {
       this.eventEmitter.emit("devToolsState", json.playerId, json.opened);
+    }
+    else if (json.type == "latency")
+    {
+      this.eventEmitter.emit("latency", json.latency);
     }
   }.bind(this);
   this.ws.onclose = function()
@@ -4389,6 +4430,15 @@ FpsLimiter.prototype.update = function()
     }
   }.bind(this), this.ms);
   return;
+}
+
+FpsLimiter.prototype.setFps = function(fps)
+{
+  this.ms = Math.round(1000 / fps);
+  if (this.ms < 40)
+  {
+    this.ms = 40;
+  }
 }
 
 module.exports = {FpsLimiter: FpsLimiter}

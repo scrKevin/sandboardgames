@@ -10,38 +10,38 @@ let FpsLimiter = require('./fps_limiter').FpsLimiter;
 function WS_distributor(wss, resetGameFunction)
 {
   this.lastSentTime = new Date();
-  this.broadcastLimiter = new FpsLimiter(15);
-  this.broadcastLimiter.on("update", () => {
-    var currentGameObj = JSON.stringify(this.gameObj)
-    var diffs = this.dmp.diff_main(this.lastSentGameObj, currentGameObj);
-    this.dmp.diff_cleanupEfficiency(diffs);
-    var patches = this.dmp.patch_make(this.lastSentGameObj, diffs);
-    this.lastSentGameObj = currentGameObj;
-    var patchToSend = this.dmp.patch_toText(patches);
-    var now = new Date();
-    var sendData = {
-      type: "patches",
-      changedCards: this.changedCardsBuffer,
-      patches: patchToSend,
-      ms: now - this.lastSentTime
-    }
-    this.lastSentTime = now;
-    var strToSend = JSON.stringify(sendData);
-    this.changedCardsBuffer = [];
-    for(player of this.gameObj.players)
-    {
-      player.resetBroadcastedDrawArray();
-    }
+  // this.broadcastLimiter = new FpsLimiter(15);
+  // this.broadcastLimiter.on("update", () => {
+  //   var currentGameObj = JSON.stringify(this.gameObj)
+  //   var diffs = this.dmp.diff_main(this.lastSentGameObj, currentGameObj);
+  //   this.dmp.diff_cleanupEfficiency(diffs);
+  //   var patches = this.dmp.patch_make(this.lastSentGameObj, diffs);
+  //   this.lastSentGameObj = currentGameObj;
+  //   var patchToSend = this.dmp.patch_toText(patches);
+  //   var now = new Date();
+  //   var sendData = {
+  //     type: "patches",
+  //     changedCards: this.changedCardsBuffer,
+  //     patches: patchToSend,
+  //     ms: now - this.lastSentTime
+  //   }
+  //   this.lastSentTime = now;
+  //   var strToSend = JSON.stringify(sendData);
+  //   this.changedCardsBuffer = [];
+  //   for(player of this.gameObj.players)
+  //   {
+  //     player.resetBroadcastedDrawArray();
+  //   }
 
-    var binaryString = pako.deflate(strToSend, { to: 'string' });
-    this.wss.clients.forEach(function each(client) {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(binaryString);
-      }
-    });
-  })
+  //   var binaryString = pako.deflate(strToSend, { to: 'string' });
+  //   this.wss.clients.forEach(function each(client) {
+  //     if (client.readyState === WebSocket.OPEN) {
+  //       client.send(binaryString);
+  //     }
+  //   });
+  // })
   this.transmittedBytes = 0;
-  this.dmp = new diff_match_patch();
+  // this.dmp = new diff_match_patch();
 
   this.resetGame = resetGameFunction;
   this.wss = wss;
@@ -58,7 +58,7 @@ function WS_distributor(wss, resetGameFunction)
     decks: [],
     openboxes: []
   }
-  this.lastSentGameObj = JSON.stringify(this.gameObj);
+  // this.lastSentGameObj = JSON.stringify(this.gameObj);
   this.changedCardsBuffer = [];
 
   this.timer = null;
@@ -354,23 +354,29 @@ function WS_distributor(wss, resetGameFunction)
       }
       else if (json.type == "requestId")
       {
-        var sendData = {
-          type: "playerId",
-          playerId: id,
-          gameObj: this.lastSentGameObj
-        }
-        var strToSend = JSON.stringify(sendData);
-        var binaryString = pako.deflate(strToSend, { to: 'string' });
-        ws.send(binaryString);
+        // var sendData = {
+        //   type: "playerId",
+        //   playerId: id,
+        //   gameObj: this.lastSentGameObj
+        // }
+        client.setGameObj(this.gameObj);
+        // var strToSend = JSON.stringify(sendData);
+        // var binaryString = pako.deflate(strToSend, { to: 'string' });
+        // ws.send(binaryString);
       }
       else if (json.type == "reset")
       {
         this.resetGame(this);
         this.broadcastReset();
+        this.broadcast();
       }
       else if (json.type == "draw")
       {
         player.addDrawCoordinates(json.coords);
+        for(client of this.clients)
+        {
+          client.addDrawCoordinates(id, json.coords);
+        }
       }
       else if (json.type == "devToolsState")
       {
@@ -401,9 +407,13 @@ function WS_distributor(wss, resetGameFunction)
 
 WS_distributor.prototype.addToChangedCardsBuffer = function(newItem)
 {
-  if (this.changedCardsBuffer.indexOf(newItem) === -1)
+  // if (this.changedCardsBuffer.indexOf(newItem) === -1)
+  // {
+  //   this.changedCardsBuffer.push(newItem);
+  // }
+  for (client of this.clients)
   {
-    this.changedCardsBuffer.push(newItem);
+    client.addToChangedCardsBuffer(newItem)
   }
 }
 
@@ -497,7 +507,11 @@ WS_distributor.prototype.broadcastDevToolsState = function (playerId, opened)
 }
 
 WS_distributor.prototype.broadcast = function(){
-  this.broadcastLimiter.update();
+  for (client of this.clients)
+  {
+    client.updateBroadcast();
+  }
+  //this.broadcastLimiter.update();
 }
 
 WS_distributor.prototype.startAnimationCard = async function(card, targetX, targetY){
@@ -511,13 +525,15 @@ WS_distributor.prototype.startAnimationCard = async function(card, targetX, targ
     card.x += stepX;
     card.y += stepY;
     this.addToChangedCardsBuffer(card.id)
-    this.broadcastLimiter.update();
+    this.broadcast();
+    //this.broadcastLimiter.update();
     await delayAsync(300 / steps);
   }
   card.x = targetX;
   card.y = targetY;
   this.addToChangedCardsBuffer(card.id)
-  this.broadcastLimiter.update();
+  this.broadcast();
+  //this.broadcastLimiter.update();
 }
 
 function delayAsync(ms)

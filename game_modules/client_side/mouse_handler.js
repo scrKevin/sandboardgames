@@ -4,7 +4,7 @@ function MouseHandler(wsHandler)
 {
   this.wsHandler = wsHandler;
 
-  this.mouseFpsLimiter = new FpsLimiter(15);
+  this.mouseFpsLimiter = new FpsLimiter(5);
   this.mouseFpsLimiter.on("update", () => {
     this.sendMouseMove()
   });
@@ -85,6 +85,12 @@ MouseHandler.prototype.touchTouchbox = function(x, y)
   }
   this.wsHandler.sendToWs(sendData);
   this.dragCardId = null;
+}
+
+MouseHandler.prototype.adjustLatency = function(latency)
+{
+  
+  this.mouseFpsLimiter.setFps(1000 / (latency + 1));
 }
 
 module.exports = {MouseHandler: MouseHandler}

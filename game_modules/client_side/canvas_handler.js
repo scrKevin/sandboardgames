@@ -19,7 +19,7 @@ function CanvasHandler() {
 
   this.lastDrawCoordinates = [];
 
-  this.canvasFpsLimiter = new FpsLimiter(15);
+  this.canvasFpsLimiter = new FpsLimiter(5);
   this.canvasFpsLimiter.on("update", () => {
     this.sendDrawCoordinates()
   });
@@ -119,20 +119,25 @@ CanvasHandler.prototype.initWsHandler = function(wsHandler)
   this.wsHandler.eventEmitter.on("playerId", (playerId) => {
     this.myPlayerId = playerId;
   });
-  this.wsHandler.eventEmitter.on("updateGame", (gameObj, changedCards, wsIsInitialized) => {
+  this.wsHandler.eventEmitter.on("updateGame", (gameObj, changedCards, newDrawCoords, wsIsInitialized) => {
     if(this.initialized)
     {
-      for (player of gameObj.players)
+      for (playerId in newDrawCoords)
       {
-        if(player.id == this.myPlayerId)
+        var player = getPlayer(gameObj, playerId);
+        if (player != null)
         {
-          this.myColor = player.color;
-        }
-        else
-        {
-          if (player.newCoords.length > 0)
+          if(playerId == this.myPlayerId)
           {
-            this.drawOtherPlayer(player.newCoords, player.color);
+            this.myColor = player.color;
+          }
+          else
+          {
+            //console.log(newDrawCoords[playerId])
+            if (newDrawCoords[playerId].length > 0)
+            {
+              this.drawOtherPlayer(newDrawCoords[playerId], player.color);
+            }
           }
         }
       }
@@ -166,6 +171,7 @@ CanvasHandler.prototype.drawOtherPlayer = function(coords, color)
 {
   for (line of coords)
   {
+    //console.log(line)
     this.ctx.beginPath();
     this.ctx.moveTo(line.x0, line.y0);
     this.ctx.lineTo(line.x1, line.y1);
@@ -193,6 +199,24 @@ CanvasHandler.prototype.sendDrawCoordinates = function(){
     this.lastDrawCoordinates = [];
     this.wsHandler.sendToWs(sendData);
   }
+}
+
+CanvasHandler.prototype.adjustLatency = function(latency)
+{
+  this.canvasFpsLimiter.setFps(1000 / (latency + 1));
+}
+
+function getPlayer(gameObj, playerId)
+{
+  for (player of gameObj.players)
+  {
+    if (player.id == playerId)
+    {
+      return player;
+      break;
+    }
+  }
+  return null;
 }
 
 module.exports = {CanvasHandler: CanvasHandler}

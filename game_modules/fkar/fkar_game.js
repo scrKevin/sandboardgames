@@ -20,7 +20,6 @@ FKAR_Game.prototype.resetGame = function(game)
   for (player of game.gameObj.players)
   {
     player.drawArray = [];
-    player.newCoords = [];
   }
 
   var startDeckX = 255;
