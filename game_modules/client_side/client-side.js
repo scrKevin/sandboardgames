@@ -359,7 +359,7 @@ $( document ).ready(function() {
   
   $(".card").bind("mouseup", function(e){
     e.preventDefault();
-    var cardPosition = $(e.currentTarget).position();
+    var cardPosition = $("#" + dragCardId).position();
     var cardX = Math.round(cardPosition.left * (1 / scale));
     var cardY = Math.round(cardPosition.top * (1 / scale));
     clientController.releaseCard(e.pageX * (1 / scale), e.pageY * (1 / scale), cardX, cardY);
