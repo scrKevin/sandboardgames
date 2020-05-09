@@ -2938,7 +2938,12 @@ CanvasHandler.prototype.sendDrawCoordinates = function(){
 
 CanvasHandler.prototype.adjustLatency = function(latency)
 {
-  this.canvasFpsLimiter.setMs(latency * 1.5);
+  var ms = latency * 1.5;
+  if (ms > 3000)
+  {
+    ms = 3000;
+  }
+  this.canvasFpsLimiter.setMs(ms);
 }
 
 function getPlayer(gameObj, playerId)
@@ -4082,8 +4087,12 @@ MouseHandler.prototype.touchTouchbox = function(x, y)
 
 MouseHandler.prototype.adjustLatency = function(latency)
 {
-  
-  this.mouseFpsLimiter.setMs(latency * 1.5)
+  var ms = latency * 1.5;
+  if (ms > 3000)
+  {
+    ms = 3000;
+  }
+  this.mouseFpsLimiter.setMs(ms)
 }
 
 module.exports = {MouseHandler: MouseHandler}
@@ -4291,6 +4300,7 @@ function WsHandler(ws)
         // {
           // clearTimeout(this.lagTimeout);
         //console.log(this.lastGameObj);
+        //console.log("patches")
         this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, json.newDrawCoords, false);
         this.changedCardsBuffer = [];
         // }
@@ -4303,6 +4313,7 @@ function WsHandler(ws)
       }
       if(json.echo)
       {
+        //console.log("sending echo")
         var sendData = {
           type: "echo"
         };

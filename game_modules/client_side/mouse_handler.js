@@ -103,8 +103,12 @@ MouseHandler.prototype.touchTouchbox = function(x, y)
 
 MouseHandler.prototype.adjustLatency = function(latency)
 {
-  
-  this.mouseFpsLimiter.setMs(latency * 1.5)
+  var ms = latency * 1.5;
+  if (ms > 3000)
+  {
+    ms = 3000;
+  }
+  this.mouseFpsLimiter.setMs(ms)
 }
 
 module.exports = {MouseHandler: MouseHandler}

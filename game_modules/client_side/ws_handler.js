@@ -53,6 +53,7 @@ function WsHandler(ws)
         // {
           // clearTimeout(this.lagTimeout);
         //console.log(this.lastGameObj);
+        //console.log("patches")
         this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, json.newDrawCoords, false);
         this.changedCardsBuffer = [];
         // }
@@ -65,6 +66,7 @@ function WsHandler(ws)
       }
       if(json.echo)
       {
+        //console.log("sending echo")
         var sendData = {
           type: "echo"
         };

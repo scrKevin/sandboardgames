@@ -18,7 +18,8 @@ function Client(playerId, ws)
   this.playerId = playerId;
   this.ws = ws;
   this.isAlive = true;
-  this.latencyTestCounter = 101;
+  this.latencyTestCounter = 6001;
+  this.latencyTestCouterIncrement = 200;
   this.latencyTestTimeStamp = new Date();
   this.ws.on("pong", () => {
     this.isAlive = true;
@@ -79,8 +80,8 @@ Client.prototype.broadcast = function()
       patches: patchToSend,
       echo: false
     }
-    this.latencyTestCounter++;
-    if (this.latencyTestCounter >= 100)
+    this.latencyTestCounter += this.latencyTestCouterIncrement;
+    if (this.latencyTestCounter >= 6000)
     {
       sendData.echo = true;
       this.latencyTestCounter = 0;
@@ -103,7 +104,19 @@ Client.prototype.broadcast = function()
 Client.prototype.echo = function()
 {
   this.latency = Math.round((new Date() - this.latencyTestTimeStamp) / 2);
-  this.broadcastLimiter.setMs(this.latency * 1.5)
+  var ms = this.latency * 1.5;
+  this.latencyTestCouterIncrement = ms;
+  if (ms < 40)
+  {
+    this.latencyTestCouterIncrement = 40
+  }
+  if (ms > 3000)
+  {
+    ms = 3000;
+    this.latencyTestCouterIncrement = 3000;
+  }
+
+  this.broadcastLimiter.setMs(ms);
   //console.log("player " + playerId + " latency = " + this.latency + " ms")
   this.sendLatency();
 }
@@ -129,6 +142,7 @@ Client.prototype.addToChangedCardsBuffer = function(newItem)
   {
     this.changedCardsBuffer.push(newItem);
   }
+  this.broadcastLimiter.update();
 }
 
 Client.prototype.addDrawCoordinates = function(playerId, newCoords)
@@ -141,6 +155,7 @@ Client.prototype.addDrawCoordinates = function(playerId, newCoords)
   {
     this.newDrawCoordinates[playerId].push(coord);
   }
+  this.broadcastLimiter.update();
 }
 
 function noop() {}
