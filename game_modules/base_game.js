@@ -99,42 +99,45 @@ function WS_distributor(wss, resetGameFunction)
       else if (json.type == "mouse")
       {
         var moved = player.updatePos(json.pos)
-        if (json.card !== null)
+        if (json.card.id !== null)
         {
-          this.addToChangedCardsBuffer(json.card);
-          if (this.isDeck(json.card))
+          this.addToChangedCardsBuffer(json.card.id);
+          if (this.isDeck(json.card.id))
           {
             var deck = this.gameObj.decks.find(function(deck){
-              return deck.id === json.card
+              return deck.id === json.card.id
             });
             if (!deck.immovable)
             {
               if (deck.isMyDeck(id, json.mouseclicked) && json.mouseclicked)
               {
-                var xCorrection = 0;
-                var yCorrection = 0;
-                deck.x -= moved.deltaX;
-                if (deck.x < 0)
-                {
-                  xCorrection = 0 - deck.x;
-                  deck.x = 0;
-                }
-                deck.y -= moved.deltaY;
-                if (deck.y < 0)
-                {
-                  yCorrection = 0 - deck.y;
-                  deck.y = 0;
-                }
+                // var xCorrection = 0;
+                // var yCorrection = 0;
+                // //deck.x -= moved.deltaX;
+                // deck.x = json.card.pos.x;
+                // if (deck.x < 0)
+                // {
+                //   xCorrection = 0 - deck.x;
+                //   deck.x = 0;
+                // }
+                // //deck.y -= moved.deltaY;
+                // deck.y = json.card.pos.y;
+                // if (deck.y < 0)
+                // {
+                //   yCorrection = 0 - deck.y;
+                //   deck.y = 0;
+                // }
+                var movedDeck = deck.updatePos(json.card.pos)
                 for (card of deck.attachedCards)
                 {
-                  card.x -= moved.deltaX - xCorrection;
-                  card.y -= moved.deltaY - yCorrection;
+                  card.x -= movedDeck.deltaX - movedDeck.xCorrection;
+                  card.y -= movedDeck.deltaY - movedDeck.yCorrection;
                   this.addToChangedCardsBuffer(card.id);
                 }
                 for (openbox of deck.attachedOpenboxes)
                 {
-                  openbox.x -= moved.deltaX - xCorrection;
-                  openbox.y -= moved.deltaY - yCorrection;
+                  openbox.x -= movedDeck.deltaX - movedDeck.xCorrection;
+                  openbox.y -= movedDeck.deltaY - movedDeck.yCorrection;
                 }
               }
               if(!json.mouseclicked && deck.clickedBy == id)
@@ -146,15 +149,16 @@ function WS_distributor(wss, resetGameFunction)
           else
           {
             var card = this.gameObj.cards.find(function(card){
-              return card.id === json.card;
+              return card.id === json.card.id;
             });
             card.setLastTouchedBy(id);
-            if(card.isMyCard(id, json.mouseclicked) && json.mouseclicked)
+            if((card.isMyCard(id, json.mouseclicked) && json.mouseclicked) || json.card.release)
             {
-              card.x -= moved.deltaX;
-              if (card.x < 0) { card.x = 0;}
-              card.y -= moved.deltaY;
-              if (card.y < 0) { card.y = 0;}
+              // card.x -= moved.deltaX;
+              // if (card.x < 0) { card.x = 0;}
+              // card.y -= moved.deltaY;
+              // if (card.y < 0) { card.y = 0;}
+              card.updatePos(json.card.pos)
               for (deck of this.gameObj.decks)
               {
                 if(deck.isInDeck(json.pos.x, json.pos.y))
@@ -381,6 +385,10 @@ function WS_distributor(wss, resetGameFunction)
       else if (json.type == "devToolsState")
       {
         this.broadcastDevToolsState(id, json.opened);
+      }
+      else if (json.type == "echo")
+      {
+        client.echo();
       }
       
     });

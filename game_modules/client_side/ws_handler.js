@@ -63,6 +63,13 @@ function WsHandler(ws)
         //console.log(this.lastGameObj)
         this.requestPlayerId();
       }
+      if(json.echo)
+      {
+        var sendData = {
+          type: "echo"
+        };
+        this.sendToWs(sendData);
+      }
     }
     else if (json.type == "playerId")
     {
