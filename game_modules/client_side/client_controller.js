@@ -73,9 +73,9 @@ ClientController.prototype.initialize = function(ws, myStream)
   this.init = true;
 }
 
-ClientController.prototype.mouseMove = function(x, y)
+ClientController.prototype.mouseMove = function(x, y, cardX, cardY)
 {
-  this.init && this.mouseHandler.mouseMove(x, y);
+  this.init && this.mouseHandler.mouseMove(x, y, cardX, cardY);
 }
 
 ClientController.prototype.mouseUp = function()
@@ -83,9 +83,9 @@ ClientController.prototype.mouseUp = function()
   this.init && this.mouseHandler.mouseUp();
 }
 
-ClientController.prototype.clickOnCard = function(id)
+ClientController.prototype.clickOnCard = function(id, cardX, cardY)
 {
-  this.init && this.mouseHandler.clickOnCard(id);
+  this.init && this.mouseHandler.clickOnCard(id, cardX, cardY);
 }
 
 ClientController.prototype.touchCard = function(id, x, y)
@@ -98,9 +98,9 @@ ClientController.prototype.touchTouchbox = function(x, y)
   this.init && this.mouseHandler.touchTouchbox(x, y);
 }
 
-ClientController.prototype.releaseCard = function(x, y)
+ClientController.prototype.releaseCard = function(x, y, cardX, cardY)
 {
-  this.init && this.mouseHandler.releaseCard(x, y);
+  this.init && this.mouseHandler.releaseCard(x, y, cardX, cardY);
 }
 
 ClientController.prototype.shuffleDeck = function(deckId, xStackMinimum)

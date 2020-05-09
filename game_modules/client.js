@@ -18,18 +18,20 @@ function Client(playerId, ws)
   this.playerId = playerId;
   this.ws = ws;
   this.isAlive = true;
+  this.latencyTestCounter = 101;
+  this.latencyTestTimeStamp = new Date();
   this.ws.on("pong", () => {
     this.isAlive = true;
-    this.latency = Math.round((new Date() - this.pingSentTimestamp) / 2);
-    this.broadcastLimiter.setMs(this.latency * 1.5)
+    //this.latency = Math.round((new Date() - this.pingSentTimestamp) / 2);
+    //this.broadcastLimiter.setMs(this.latency * 1.5)
     //console.log("player " + playerId + " latency = " + this.latency + " ms")
-    this.sendLatency();
+    //this.sendLatency();
   });
   const interval = setInterval(() => {
     if (this.isAlive === false) return this.ws.terminate();
 
     this.isAlive = false;
-    this.pingSentTimestamp = new Date();
+    //this.pingSentTimestamp = new Date();
     this.ws.ping(noop);
   }, 16000);
   this.pingSentTimestamp = new Date();
@@ -74,7 +76,15 @@ Client.prototype.broadcast = function()
       type: "patches",
       changedCards: this.changedCardsBuffer,
       newDrawCoords: this.newDrawCoordinates,
-      patches: patchToSend
+      patches: patchToSend,
+      echo: false
+    }
+    this.latencyTestCounter++;
+    if (this.latencyTestCounter >= 100)
+    {
+      sendData.echo = true;
+      this.latencyTestCounter = 0;
+      this.latencyTestTimeStamp = new Date();
     }
     var strToSend = JSON.stringify(sendData);
     this.changedCardsBuffer = [];
@@ -88,6 +98,14 @@ Client.prototype.broadcast = function()
       this.ws.send(binaryString);
     }
   }
+}
+
+Client.prototype.echo = function()
+{
+  this.latency = Math.round((new Date() - this.latencyTestTimeStamp) / 2);
+  this.broadcastLimiter.setMs(this.latency * 1.5)
+  //console.log("player " + playerId + " latency = " + this.latency + " ms")
+  this.sendLatency();
 }
 
 Client.prototype.sendLatency = function()

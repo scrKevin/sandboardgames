@@ -44,4 +44,18 @@ Card.prototype.isMyCard = function(playerId, mouseClicked)
   }
 }
 
+Card.prototype.updatePos = function(pos)
+{
+  this.x = pos.x;
+  if (this.x < 0)
+  {
+    this.x = 0;
+  }
+  this.y = pos.y;
+  if (this.y < 0)
+  {
+    this.y = 0;
+  }
+}
+
 module.exports = {Card: Card}

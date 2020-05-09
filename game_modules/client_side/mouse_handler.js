@@ -14,12 +14,16 @@ function MouseHandler(wsHandler)
 
   this.mouseclicked = false;
   this.dragCardId = null;
+  this.dragCardX = 0;
+  this.dragCardY = 0;
 }
 
-MouseHandler.prototype.mouseMove = function(x, y)
+MouseHandler.prototype.mouseMove = function(x, y, cardX, cardY)
 {
   this.latestMouseY = y;
   this.latestMouseX = x;
+  this.dragCardX = cardX;
+  this.dragCardY = cardY;
   this.mouseFpsLimiter.update();
 }
 
@@ -30,9 +34,11 @@ MouseHandler.prototype.mouseUp = function()
   this.mouseFpsLimiter.update();
 }
 
-MouseHandler.prototype.clickOnCard = function(id)
+MouseHandler.prototype.clickOnCard = function(id, cardX, cardY)
 {
   this.dragCardId = id;
+  this.dragCardX = cardX;
+  this.dragCardY = cardY;
   this.mouseclicked = true;
   this.mouseFpsLimiter.update();
 }
@@ -48,7 +54,7 @@ MouseHandler.prototype.touchCard = function(id, x, y)
   this.wsHandler.sendToWs(sendData);
 }
 
-MouseHandler.prototype.releaseCard = function(x, y)
+MouseHandler.prototype.releaseCard = function(x, y, cardX, cardY)
 {
   this.mouseclicked = false;
 
@@ -57,8 +63,12 @@ MouseHandler.prototype.releaseCard = function(x, y)
   var sendData = {
     type: "mouse",
     mouseclicked: this.mouseclicked,
-    pos: {x: this.latestMouseX, y: this.latestMouseY},
-    card: this.dragCardId
+    pos: {x: Math.round(this.latestMouseX), y: Math.round(this.latestMouseY)},
+    card: {
+      id: this.dragCardId, 
+      pos: {x: cardX, y: cardY},
+      release: true
+    }
   }
   this.wsHandler.sendToWs(sendData);
   this.dragCardId = null;
@@ -70,7 +80,11 @@ MouseHandler.prototype.sendMouseMove = function()
     type: "mouse",
     mouseclicked: this.mouseclicked,
     pos: {x: this.latestMouseX, y: this.latestMouseY},
-    card: this.dragCardId
+    card: {
+      id: this.dragCardId,
+      pos: {x: this.dragCardX, y: this.dragCardY },
+      release: false
+    }
   }
   //console.log(this.dragCardId)
   this.wsHandler.sendToWs(sendData);

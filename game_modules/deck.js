@@ -106,4 +106,25 @@ Deck.prototype.isMyDeck = function(playerId, mouseClicked)
   }
 }
 
+Deck.prototype.updatePos = function(pos)
+{
+  var deltaY = this.y - pos.y;
+  var deltaX = this.x - pos.x;
+  var xCorrection = 0;
+  var yCorrection = 0;
+  this.x = pos.x;
+  if (this.x < 0)
+  {
+    xCorrection = 0 - this.x;
+    this.x = 0;
+  }
+  this.y = pos.y;
+  if (this.y < 0)
+  {
+    yCorrection = 0 - this.y;
+    this.y = 0;
+  }
+  return {deltaX: deltaX, deltaY: deltaY, xCorrection: xCorrection, yCorrection: yCorrection}
+}
+
 module.exports = {Deck: Deck}

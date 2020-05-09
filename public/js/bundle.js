@@ -3162,22 +3162,34 @@ $(document).bind('mousemove', function (e) {
   var currentXScaled = Math.round(e.pageX * (1 / scale));
   var currentYScaled = Math.round(e.pageY * (1 / scale));
 
+  var cardX = 0;
+  var cardY = 0;
+
   if (latestMouseX != -1)
   {
     var deltaX = latestMouseX - currentXScaled;
     var deltaY = latestMouseY - currentYScaled;
 
-
     if (dragCardId != null)
     {
-      updateCss("#" + dragCardId, "left", (($("#" + dragCardId).position().left * (1 / scale)) - deltaX) + "px");
-      updateCss("#" + dragCardId, "top", (($("#" + dragCardId).position().top * (1 / scale)) - deltaY) + "px");
+      cardX = (($("#" + dragCardId).position().left * (1 / scale)) - deltaX)
+      if (cardX < 0)
+      {
+        cardX = 0;
+      }
+      cardY = (($("#" + dragCardId).position().top * (1 / scale)) - deltaY)
+      if (cardY < 0)
+      {
+        cardY = 0;
+      }
+      updateCss("#" + dragCardId, "left", cardX + "px");
+      updateCss("#" + dragCardId, "top", cardY + "px");
     }
   }
 
   latestMouseY = currentYScaled
   latestMouseX = currentXScaled;
-  clientController.mouseMove(currentXScaled, currentYScaled);
+  clientController.mouseMove(currentXScaled, currentYScaled, cardX, cardY);
 });
 
 
@@ -3262,7 +3274,10 @@ $( document ).ready(function() {
 
   $(".card").on("mousedown", function(event){
     dragCardId = event.currentTarget.id;
-    clientController.clickOnCard(event.currentTarget.id);
+    var cardPosition = $(event.currentTarget).position();
+    var cardX = Math.round(cardPosition.left * (1 / scale));
+    var cardY = Math.round(cardPosition.top * (1 / scale));
+    clientController.clickOnCard(event.currentTarget.id, cardX, cardY);
     blockCardChange = [];
   });
 
@@ -3302,8 +3317,10 @@ $( document ).ready(function() {
   
   $(".card").bind("mouseup", function(e){
     e.preventDefault();
-
-    clientController.releaseCard(e.pageX * (1 / scale), e.pageY * (1 / scale));
+    var cardPosition = $(e.currentTarget).position();
+    var cardX = Math.round(cardPosition.left * (1 / scale));
+    var cardY = Math.round(cardPosition.top * (1 / scale));
+    clientController.releaseCard(e.pageX * (1 / scale), e.pageY * (1 / scale), cardX, cardY);
     //updateCss("#" + dragCardId, "z-index", '50');
     dragCardId = null;
   });
@@ -3487,8 +3504,11 @@ function updateCards(gameObj, changedCardsBuffer)
 {
   for (var i = 0; i < gameObj.decks.length; i++)
   {
-    updateCss("#" + gameObj.decks[i].id, "left", gameObj.decks[i].x + "px");
-    updateCss("#" + gameObj.decks[i].id, "top", gameObj.decks[i].y + "px");
+    if (gameObj.decks[i].id != dragCardId)
+    {
+      updateCss("#" + gameObj.decks[i].id, "left", gameObj.decks[i].x + "px");
+      updateCss("#" + gameObj.decks[i].id, "top", gameObj.decks[i].y + "px");
+    }
   }
   var cards = gameObj.cards.filter(function(card){
     return changedCardsBuffer.includes(card.id);
@@ -3830,9 +3850,9 @@ ClientController.prototype.initialize = function(ws, myStream)
   this.init = true;
 }
 
-ClientController.prototype.mouseMove = function(x, y)
+ClientController.prototype.mouseMove = function(x, y, cardX, cardY)
 {
-  this.init && this.mouseHandler.mouseMove(x, y);
+  this.init && this.mouseHandler.mouseMove(x, y, cardX, cardY);
 }
 
 ClientController.prototype.mouseUp = function()
@@ -3840,9 +3860,9 @@ ClientController.prototype.mouseUp = function()
   this.init && this.mouseHandler.mouseUp();
 }
 
-ClientController.prototype.clickOnCard = function(id)
+ClientController.prototype.clickOnCard = function(id, cardX, cardY)
 {
-  this.init && this.mouseHandler.clickOnCard(id);
+  this.init && this.mouseHandler.clickOnCard(id, cardX, cardY);
 }
 
 ClientController.prototype.touchCard = function(id, x, y)
@@ -3855,9 +3875,9 @@ ClientController.prototype.touchTouchbox = function(x, y)
   this.init && this.mouseHandler.touchTouchbox(x, y);
 }
 
-ClientController.prototype.releaseCard = function(x, y)
+ClientController.prototype.releaseCard = function(x, y, cardX, cardY)
 {
-  this.init && this.mouseHandler.releaseCard(x, y);
+  this.init && this.mouseHandler.releaseCard(x, y, cardX, cardY);
 }
 
 ClientController.prototype.shuffleDeck = function(deckId, xStackMinimum)
@@ -3973,12 +3993,16 @@ function MouseHandler(wsHandler)
 
   this.mouseclicked = false;
   this.dragCardId = null;
+  this.dragCardX = 0;
+  this.dragCardY = 0;
 }
 
-MouseHandler.prototype.mouseMove = function(x, y)
+MouseHandler.prototype.mouseMove = function(x, y, cardX, cardY)
 {
   this.latestMouseY = y;
   this.latestMouseX = x;
+  this.dragCardX = cardX;
+  this.dragCardY = cardY;
   this.mouseFpsLimiter.update();
 }
 
@@ -3989,9 +4013,11 @@ MouseHandler.prototype.mouseUp = function()
   this.mouseFpsLimiter.update();
 }
 
-MouseHandler.prototype.clickOnCard = function(id)
+MouseHandler.prototype.clickOnCard = function(id, cardX, cardY)
 {
   this.dragCardId = id;
+  this.dragCardX = cardX;
+  this.dragCardY = cardY;
   this.mouseclicked = true;
   this.mouseFpsLimiter.update();
 }
@@ -4007,7 +4033,7 @@ MouseHandler.prototype.touchCard = function(id, x, y)
   this.wsHandler.sendToWs(sendData);
 }
 
-MouseHandler.prototype.releaseCard = function(x, y)
+MouseHandler.prototype.releaseCard = function(x, y, cardX, cardY)
 {
   this.mouseclicked = false;
 
@@ -4016,8 +4042,12 @@ MouseHandler.prototype.releaseCard = function(x, y)
   var sendData = {
     type: "mouse",
     mouseclicked: this.mouseclicked,
-    pos: {x: this.latestMouseX, y: this.latestMouseY},
-    card: this.dragCardId
+    pos: {x: Math.round(this.latestMouseX), y: Math.round(this.latestMouseY)},
+    card: {
+      id: this.dragCardId, 
+      pos: {x: cardX, y: cardY},
+      release: true
+    }
   }
   this.wsHandler.sendToWs(sendData);
   this.dragCardId = null;
@@ -4029,7 +4059,11 @@ MouseHandler.prototype.sendMouseMove = function()
     type: "mouse",
     mouseclicked: this.mouseclicked,
     pos: {x: this.latestMouseX, y: this.latestMouseY},
-    card: this.dragCardId
+    card: {
+      id: this.dragCardId,
+      pos: {x: this.dragCardX, y: this.dragCardY },
+      release: false
+    }
   }
   //console.log(this.dragCardId)
   this.wsHandler.sendToWs(sendData);
@@ -4266,6 +4300,13 @@ function WsHandler(ws)
         console.log(err);
         //console.log(this.lastGameObj)
         this.requestPlayerId();
+      }
+      if(json.echo)
+      {
+        var sendData = {
+          type: "echo"
+        };
+        this.sendToWs(sendData);
       }
     }
     else if (json.type == "playerId")
