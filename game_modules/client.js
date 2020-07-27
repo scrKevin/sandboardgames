@@ -5,6 +5,7 @@ var pako = require('pako');
 
 function Client(playerId, ws)
 {
+  this.useZip = false;
   this.gameObj = null;
   this.lastSentGameObj = ""
   this.changedCardsBuffer = [];
@@ -51,7 +52,7 @@ Client.prototype.setGameObj = function(gameObj)
     gameObj: this.lastSentGameObj
   };
   var strToSend = JSON.stringify(sendData);
-  var binaryString = pako.deflate(strToSend, { to: 'string' });
+  var binaryString = this.constructMessage(strToSend);// pako.deflate(strToSend, { to: 'string' });
   if (this.ws.readyState === WebSocket.OPEN) {
     this.ws.send(binaryString);
   }
@@ -94,10 +95,34 @@ Client.prototype.broadcast = function()
       this.newDrawCoordinates[playerId] = [];
     }
   
-    var binaryString = pako.deflate(strToSend, { to: 'string' });
+    var binaryString = this.constructMessage(strToSend);// pako.deflate(strToSend, { to: 'string' });
     if (this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(binaryString);
     }
+  }
+}
+
+Client.prototype.deconstructMessage = function (data)
+{
+  if (this.useZip)
+  {
+    return pako.inflate(data, { to: 'string' })
+  }
+  else
+  {
+    return data
+  }
+}
+
+Client.prototype.constructMessage = function (data)
+{
+  if (this.useZip)
+  {
+    return pako.deflate(JSON.stringify(data), { to: 'string' })
+  }
+  else
+  {
+    return data
   }
 }
 
@@ -130,7 +155,7 @@ Client.prototype.sendLatency = function()
   }
   var strToSend = JSON.stringify(sendData);
 
-  var binaryString = pako.deflate(strToSend, { to: 'string' });
+  var binaryString = this.constructMessage(strToSend); //pako.deflate(strToSend, { to: 'string' });
   if (this.ws.readyState === WebSocket.OPEN) {
     this.ws.send(binaryString);
   }

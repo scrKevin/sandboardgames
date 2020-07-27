@@ -5,6 +5,8 @@ let EventEmitter = require('events').EventEmitter;
 
 function WsHandler(ws)
 {
+  this.useZip = false;
+
   this.ws = ws;
   this.myPlayerId = -1;
   this.lastGameObj = "";
@@ -20,9 +22,11 @@ function WsHandler(ws)
     this.requestPlayerId();
   }.bind(this);
 
+
   this.ws.onmessage = function (evt) 
   {
-    var json = JSON.parse(pako.inflate(evt.data, { to: 'string' }));
+    // console.log(evt.data)
+    var json = JSON.parse(this.deconstructMessage(evt.data));
     if(json.type == "patches")
     {
       // console.log(json.ms);
@@ -119,6 +123,30 @@ function WsHandler(ws)
   }.bind(this);
 }
 
+WsHandler.prototype.deconstructMessage = function (data)
+{
+  if (this.useZip)
+  {
+    return pako.inflate(data, { to: 'string' })
+  }
+  else
+  {
+    return data
+  }
+}
+
+WsHandler.prototype.constructMessage = function (data)
+{
+  if (this.useZip)
+  {
+    return pako.deflate(JSON.stringify(data), { to: 'string' })
+  }
+  else
+  {
+    return JSON.stringify(data)
+  }
+}
+
 WsHandler.prototype.requestPlayerId = function()
 {
   var sendData = {
@@ -148,9 +176,10 @@ WsHandler.prototype.selectColor = function(color)
 
 WsHandler.prototype.sendToWs = function(data)
 {
+  // console.log(data)
   if (this.ws != null && this.ws.readyState === this.ws.constructor.OPEN)
   {
-    this.ws.send(pako.deflate(JSON.stringify(data), { to: 'string' }));
+    this.ws.send(this.constructMessage(data));
   }
 }
 
