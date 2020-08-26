@@ -60,10 +60,14 @@ Run the test server in a separate terminal:
   
 ### Creating a new game:
 
-Requirements for a new game:
+Requirements for a new game (detailed instructions below):
 - A javascript file in `sandboardgames/game_modules/` that constructs the required Card and Deck objects and ensures they are correctly loaded at startup.
 - A javascript file in `sandboardgames/public/js/[new game name]` that defines some specific client-side settings for this game and has some specific function overrides (if needed).
 - A folder in the `sandboardgames/views` directory that holds the HTML layout (EJS templating is supported).
+- Add your game and created objects to `sandboardgames/game_modules/game_list.js`.
+- Add an icon/image of your game to `sandboardgames/public/img/[new game name]`.
+- Add your game icon to the Lobby view in `sandboardgames/views/lobby/partials/games.ejs`.
+- Add your game name into the games array of the lobby_game.js file in `sandboardgames/game_modules/lobby/lobby_game.js`. Yes, the Lobby is also a game ;).
 
 Detailed instructions:
 - Start by adding a folder to the `sandboardgames/game_modules/` directory. Give it an abbreviated name of the new game (i.e. 'scbl' for Scrabble, etc.). The abbreviated name is referred to as `[new game name]` in further documentation.
