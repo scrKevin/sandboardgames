@@ -61,15 +61,16 @@ Run the test server in a separate terminal:
 ### Creating a new game:
 
 Requirements for a new game (detailed instructions below):
-- A javascript file in `sandboardgames/game_modules/` that constructs the required Card and Deck objects and ensures they are correctly loaded at startup.
-- A javascript file in `sandboardgames/public/js/[new game name]` that defines some specific client-side settings for this game and has some specific function overrides (if needed).
-- A folder in the `sandboardgames/views` directory that holds the HTML layout (EJS templating is supported).
-- Add your game and created objects to `sandboardgames/game_modules/game_list.js`.
-- Add an icon/image of your game to `sandboardgames/public/img/[new game name]`.
-- Add your game icon to the Lobby view in `sandboardgames/views/lobby/partials/games.ejs`.
-- Add your game name into the games array of the lobby_game.js file in `sandboardgames/game_modules/lobby/lobby_game.js`. Yes, the Lobby is also a game ;).
+1. A javascript file in `sandboardgames/game_modules/` that constructs the required Card and Deck objects and ensures they are correctly loaded at startup.
+2. A javascript file in `sandboardgames/public/js/[new game name]` that defines some specific client-side settings for this game and has some specific function overrides (if needed).
+3. A folder in the `sandboardgames/views` directory that holds the HTML layout (EJS templating is supported).
+4. Add your game and created objects to `sandboardgames/game_modules/game_list.js`.
+5. Add an icon/image of your game to `sandboardgames/public/img/[new game name]`.
+6. Add your game icon to the Lobby view in `sandboardgames/views/lobby/partials/games.ejs`.
+7. Add your game name into the games array of the lobby_game.js file in `sandboardgames/game_modules/lobby/lobby_game.js`. Yes, the Lobby is also a game ;).
 
 Detailed instructions:
+Step 1:
 - Start by adding a folder to the `sandboardgames/game_modules/` directory. Give it an abbreviated name of the new game (i.e. 'scbl' for Scrabble, etc.). The abbreviated name is referred to as `[new game name]` in further documentation.
 - Create a new file in this folder named: `[new game name]_game.js` (i.e. scbl_game.js)
 
