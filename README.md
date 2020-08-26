@@ -73,7 +73,7 @@ Requirements for a new game (detailed instructions below):
 - Create a new file in this folder named: `[new game name]_game.js` (i.e. scbl_game.js)
 
 Copy the scaffold-code below for easy development:
-```
+```javascript
 let Card = require('../card').Card;
 // The 'Card' object makes an element on the webpage draggable by players. 
 // Construcor: var myCard = new Card([id of card - IMPORTANT: id should match an id in the HTML DOM)], [x-position at start], [y-position at start])
