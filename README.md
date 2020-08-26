@@ -5,8 +5,6 @@ Play some board games with your friends around a virtual table.
 Sandbox style board game engine running on NodeJS.
 P2P Webcam support with WebRTC.
 
-Working example @ https://bitwiseworkshop.nl/
-
 ### Requirements:
 
 - You will need a SSL certificate for the webcams to work.
@@ -69,8 +67,8 @@ Requirements for a new game (detailed instructions below):
 6. Add your game icon to the Lobby view in `sandboardgames/views/lobby/partials/games.ejs`.
 7. Add your game name into the games array of the lobby_game.js file in `sandboardgames/game_modules/lobby/lobby_game.js`. Yes, the Lobby is also a game ;).
 
-Detailed instructions:
-Step 1:
+### Detailed instructions:
+#### Step 1:
 - Start by adding a folder to the `sandboardgames/game_modules/` directory. Give it an abbreviated name of the new game (i.e. 'scbl' for Scrabble, etc.). The abbreviated name is referred to as `[new game name]` in further documentation.
 - Create a new file in this folder named: `[new game name]_game.js` (i.e. scbl_game.js)
 
