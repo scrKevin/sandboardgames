@@ -368,3 +368,58 @@ Add a reference for your game icon in the Lobby layout file `sandboardgames/view
 <div class="card moveBtn" id="gamecardMoveBtn7"><img src="/img/lobby/move.png"/></div>
 ```
 Be sure to increment the id of 'gamecard[n]' and 'gamecardMoveBtn[n]. Edit the href attribute to the abbreviation of your game and edit the src attribute of the img. 
+
+#### Step 7:
+One line of code in the `sandboardgames/game_modules/lobby/lobby_game.js` file needs to be updated, see example below.
+```javascript
+let Deck = require('../deck').Deck;
+let Card = require('../card').Card;
+let Openbox = require('../openbox').Openbox;
+
+// var Startpositions = require("./startpositions")
+
+let Game = require('../base_game').Game;
+
+// Add the abbreviated name of your game here.
+var games = ['sh', 'sy', 'cah', 'rmk', 'ctd', 'fkar', 'strg', 'scbl']
+
+function Lobby_Game(wss){
+  this.game = new Game(wss, this.resetGame);
+}
+
+Lobby_Game.prototype.resetGame = function(game)
+{
+  game.gameObj.cards = [];
+  game.gameObj.decks = [];
+  game.gameObj.openboxes = [];
+  game.gameObj.scoreboxes = [];
+
+  for (var i = 0; i < 5; i++)
+  {
+    for (var j = 0; j < 4; j++)
+    {
+      var startPosX = j * 300;
+      var startPosY = i * 45;
+      var moveBtnDeck = new Deck('webcamMoveBtn' + ((i * 4) + j), startPosX, startPosY, 32, 32)
+      var webcamBox = new Card('webcambox' + ((i * 4) + j), startPosX, startPosY)
+      game.gameObj.cards.push(webcamBox)
+      moveBtnDeck.attachedCards.push(webcamBox)
+      game.gameObj.decks.push(moveBtnDeck)
+    }
+  }
+
+  for (var i = 0; i < games.length; i++)
+  {
+    var startPosX = 1500;
+    var startPosY = i * 60;
+    var gameMoveBtnDeck = new Deck('gamecardMoveBtn' + i, startPosX, startPosY, 32, 32)
+    var gameBox = new Card('gamecard' + i, startPosX, startPosY)
+    game.gameObj.cards.push(gameBox)
+    gameMoveBtnDeck.attachedCards.push(gameBox)
+    game.gameObj.decks.push(gameMoveBtnDeck)
+  }
+
+}
+
+module.exports = {Lobby_Game: Lobby_Game}
+```
