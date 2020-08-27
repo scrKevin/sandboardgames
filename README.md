@@ -72,7 +72,7 @@ Requirements for a new game (detailed instructions below):
 - Start by adding a folder to the `sandboardgames/game_modules/` directory. Give it an abbreviated name of the new game (i.e. 'scbl' for Scrabble, etc.). The abbreviated name is referred to as `[new game name]` in further documentation.
 - Create a new file in this folder named: `[new game name]_game.js` (i.e. scbl_game.js)
 
-Copy the scaffold-code below for easy development:
+Copy the scaffold-code below to get you started:
 ```javascript
 let Card = require('../card').Card;
 // The 'Card' object makes an element on the webpage draggable by players. 
@@ -227,3 +227,31 @@ $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
 
 });
 ```
+#### Step 3:
+- Add a folder for your game in `sandboardgames/views`. The system will render your EJS template located at `sandboardgames/views/[new game name]/pages/index.ejs`. See an example `index.ejs` below (this is for the Scrabble (scbl) game):
+```html
+<html>
+  <head>
+    <%- include ("../partials/head") %>
+  </head>
+  <body>
+    <%- include ('../../common/welcomeModal'); -%>
+    <%- include ('../../common/resetModal'); -%>
+    <div class="scaleplane">
+      <%- include ('../partials/board') %>
+      <%- include ('../partials/playerboxes', {playerboxStartPos: playerboxStartPos}); -%>
+      <%- include ('../../common/webcams', {webcamPos: webcamPos, fixedPlayers:fixedPlayers}); -%>
+      <%- include ('../partials/openbox') %>
+      <%- include ('../partials/touchboxes') %>
+      <%  var scoreboxValues = [10, 1];
+          for (var i = 0; i < fixedPlayers; i++) { 
+            var id = i; -%>
+            <%- include('../../common/scorebox', {scoreboxId: id, scoreboxValues: scoreboxValues}); %>
+      <%  } -%>
+      <%- include ('../partials/decks') %>
+      <%- include ('../../common/cursors'); -%>
+    </div>
+  </body>
+</html>
+```
+For your convenience, you can re-use the welcome modal (where players can select their color and player name), reset modal for the game admin (displayed after pressing ctrl - q), webcam boxes and cursors. They are located at `sandboardgames/views/common`.
