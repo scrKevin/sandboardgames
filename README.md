@@ -228,7 +228,7 @@ $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
 });
 ```
 #### Step 3:
-- Add a folder for your game in `sandboardgames/views`. The system will render your EJS template located at `sandboardgames/views/[new game name]/pages/index.ejs`. See an example `index.ejs` below (this is for the Scrabble (scbl) game):
+- Add a folder for your game in `sandboardgames/views`. Create two new folders in the created directory: `pages` and `partials`. The system will render your EJS template located at `sandboardgames/views/[new game name]/pages/index.ejs`. See an example `index.ejs` below (this is for the Scrabble (scbl) game):
 ```html
 <html>
   <head>
@@ -255,6 +255,28 @@ $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
 </html>
 ```
 For your convenience, you can re-use the welcome modal (where players can select their color and player name), reset modal for the game admin (displayed after pressing ctrl - q), webcam boxes and cursors. They are located at `sandboardgames/views/common`.
+
+Create your own `header.ejs` file in `sandboardgames/views/[new game name]/partials`. Copy/Paste the example below and edit to fit your needs.
+```html
+ 
+<!-- views/partials/head.ejs -->
+<meta charset="UTF-8">
+<!-- <meta name="viewport" content="width=device-width,user-scalable=no"> -->
+<title>Your awesome game title.</title> 
+
+<!-- Bootstrap CSS -->
+<link href="/css/bootstrap.min.css" rel="stylesheet" type="text/css"> <!-- required to use Modals (Player color selection etc.) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js" integrity="sha256-pasqAKBDmFT4eHoN2ndd6lN370kFiGUFyTiUHWhU7k8=" crossorigin="anonymous"></script> <!-- required since JQuery is used extensively on the client-side javascript -->
+<script src='/js/bootstrap.min.js'></script> <!-- required for those Modals -->
+<script src="/js/scbl/scbl.js"></script> <!-- replace with your own .js file you created in Step 2. -->
+<script src="/js/bundle.js"></script> <!-- this is the client-side javascript shared across all games for basic functionality -->
+
+<style>
+// Add your css styling here.
+</style>
+```
 
 #### Step 4:
 - Insert references to your created Game object into `sandboardgames/game_modules/game_list.js`. See example and comments below:
