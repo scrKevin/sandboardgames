@@ -255,3 +255,116 @@ $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
 </html>
 ```
 For your convenience, you can re-use the welcome modal (where players can select their color and player name), reset modal for the game admin (displayed after pressing ctrl - q), webcam boxes and cursors. They are located at `sandboardgames/views/common`.
+
+#### Step 4:
+- Insert references to your created Game object into `sandboardgames/game_modules/game_list.js`. See example and comments below:
+```javascript
+const StartpositionsSH = require("./sh/startpositions");
+const StartpositionsSY = require("./sy/startpositions");
+const StartpositionsRMK = require("./rmk/startpositions");
+const StartpositionsCTD = require("./ctd/startpositions");
+const StartpositionsFKAR = require("./fkar/startpositions");
+const StartpositionsSTRG = require("./strg/startpositions");
+const StartpositionsSCBL = require("./scbl/startpositions");
+// These are references to JSON files that contain starting positions. If you import them here, you can pass these as variables to your EJS layout. See example for scbl game below:
+/*
+module.exports.playerBoxes = {
+  0: {top: 0, left: 0},
+  1: {top: 540, left: 498},
+  2: {top: 0, left: 498},
+  3: {top: 540, left: 0}
+}
+
+module.exports.webcamPos = {
+  0: {top: 300, left: 0},
+  1: {top: 540, left: 498},
+  2: {top: 300, left: 498},
+  3: {top: 540, left: 0}
+}
+*/
+
+let SY_Game = require("./sy/sy_game").SY_Game;
+let SH_Game = require("./sh/sh_game").SH_Game;
+let Lobby_Game = require("./lobby/lobby_game").Lobby_Game;
+let CAH_Game = require("./cah/cah_game").CAH_Game;
+let RMK_Game = require("./rmk/rmk_game").RMK_Game;
+let CTD_Game = require("./ctd/ctd_game").CTD_Game;
+let FKAR_Game = require("./fkar/fkar_game").FKAR_Game;
+let STRG_Game = require("./strg/strg_game").STRG_Game;
+let SCBL_Game = require("./scbl/scbl_game").SCBL_Game;
+// add a reference to your own game here.
+
+
+function ImplementedGame(name, wsLocation, GameClass, routerLocation, viewsLocation, objectToPassToView)
+{
+  this.name = name;
+  this.wsLocation = wsLocation;
+  this.GameClass = GameClass;
+  this.routerLocation = routerLocation;
+  this.viewsLocation = viewsLocation;
+  this.objectToPassToView = objectToPassToView;
+}
+
+// Create your own 'ImplementedGame' object here and add it to the dictionary
+module.exports.availableGames = {
+  'lobby': new ImplementedGame('Lobby', 'lobby', Lobby_Game, "lobby", 'lobby', {fixedPlayers: 0}),
+  'sy': new ImplementedGame('Scotland Yard', 'sy', SY_Game, "sy", 'sy', {webcamPos: StartpositionsSY.webcamPos, fixedPlayers: 6}),
+  'sh': new ImplementedGame('Secret Hitler', 'sh', SH_Game, "sh", 'sh', {playerboxStartPos: StartpositionsSH.playerBoxes, webcamPos: StartpositionsSH.webcamPos, fixedPlayers: 10}),
+  'cah': new ImplementedGame('Cards against Humanity', 'cah', CAH_Game.class, 'cah', 'cah', {nBlackCards: CAH_Game.nBlackCards, nWhiteCards: CAH_Game.nWhiteCards, fixedPlayers: 0}),
+  'rmk': new ImplementedGame("Rummikub", 'rmk', RMK_Game, 'rmk', 'rmk', {playerboxStartPos: StartpositionsRMK.playerBoxes, webcamPos: StartpositionsRMK.webcamPos, fixedPlayers: 4}),
+  'ctd': new ImplementedGame("Citadels", 'ctd', CTD_Game, 'ctd', 'ctd', {playerboxStartPos: StartpositionsCTD.playerBoxes, webcamPos: StartpositionsCTD.webcamPos, fixedPlayers: 7}),
+  'fkar': new ImplementedGame('Fake Artist goes to New York', 'fkar', FKAR_Game, "fkar", 'fkar', {playerboxStartPos: StartpositionsFKAR.playerBoxes, webcamPos: StartpositionsFKAR.webcamPos, fixedPlayers: 10}),
+  'strg': new ImplementedGame("Stratego", 'strg', STRG_Game, 'strg', 'strg', {playerboxStartPos: StartpositionsSTRG.playerBoxes, webcamPos: StartpositionsSTRG.webcamPos, fixedPlayers: 2}),
+  'scbl': new ImplementedGame("Scrabble", 'scbl', SCBL_Game, 'scbl', 'scbl', {playerboxStartPos: StartpositionsSCBL.playerBoxes, webcamPos: StartpositionsSCBL.webcamPos, fixedPlayers: 4}),
+}
+```
+
+#### Step 5:
+To add an icon for your game into the Lobby:
+- Create a folder in the `sandboardgames/public/img` directory for your own game. You can also use this folder for other image assets for your game.
+- Add an icon (image) for your game.
+
+#### Step 6:
+Add a reference for your game icon in the Lobby layout file `sandboardgames/views/lobby/partials/games.ejs`. See example below:
+```html
+<div class="gamecard" id='gamecard0'>
+	<a href='sh'><img src='/img/sh/logo.png'/></a>
+</div>
+<div class="card moveBtn" id="gamecardMoveBtn0"><img src="/img/lobby/move.png"/></div>
+
+<div class="gamecard" id='gamecard1'>
+	<a href='sy'><img src='/img/sy/scotland-yard.svg'/></a>
+</div>
+<div class="card moveBtn" id="gamecardMoveBtn1"><img src="/img/lobby/move.png"/></div>
+
+<div class="gamecard" id='gamecard2'>
+  <a href='cah'><img src='/img/cah/cah.png'/></a>
+</div>
+<div class="card moveBtn" id="gamecardMoveBtn2"><img src="/img/lobby/move.png"/></div>
+
+<div class="gamecard" id='gamecard3'>
+  <a href='rmk'><img src='/img/rmk/rummikub.svg'/></a>
+</div>
+<div class="card moveBtn" id="gamecardMoveBtn3"><img src="/img/lobby/move.png"/></div>
+
+<div class="gamecard" id='gamecard4'>
+  <a href='ctd'><img src='/img/ctd/citadels.svg'/></a>
+</div>
+<div class="card moveBtn" id="gamecardMoveBtn4"><img src="/img/lobby/move.png"/></div>
+
+<div class="gamecard" id='gamecard5'>
+  <a href='fkar'><img src='/img/fkar/fake_artist.svg'/></a>
+</div>
+<div class="card moveBtn" id="gamecardMoveBtn5"><img src="/img/lobby/move.png"/></div>
+
+<div class="gamecard" id='gamecard6'>
+  <a href='strg'><img src='/img/strg/stratego.svg'/></a>
+</div>
+<div class="card moveBtn" id="gamecardMoveBtn6"><img src="/img/lobby/move.png"/></div>
+
+<div class="gamecard" id='gamecard7'>
+  <a href='scbl'><img src='/img/scbl/scrabble.svg'/></a>
+</div>
+<div class="card moveBtn" id="gamecardMoveBtn7"><img src="/img/lobby/move.png"/></div>
+```
+Be sure to increment the id of 'gamecard[n]' and 'gamecardMoveBtn[n]. Edit the href attribute to the abbreviation of your game and edit the src attribute of the img. 
