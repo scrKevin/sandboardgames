@@ -27,7 +27,7 @@
     "mock-socket": "^9.0.3",
     "nodemon": "^2.0.2",
     "sinon": "^9.0.2",
-    "wrtc": "^0.4.4"
+    "wrtc": "^0.4.7"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.1",
