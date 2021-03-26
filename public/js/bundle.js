@@ -3326,6 +3326,7 @@ $( document ).ready(function() {
     var cardX = Math.round(cardPosition.left * (1 / scale));
     var cardY = Math.round(cardPosition.top * (1 / scale));
     clientController.releaseCard(e.pageX * (1 / scale), e.pageY * (1 / scale), cardX, cardY);
+    // console.log("RELEASED " + dragCardId)
     //updateCss("#" + dragCardId, "z-index", '50');
     dragCardId = null;
   });

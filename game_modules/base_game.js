@@ -134,13 +134,15 @@ function WS_distributor(wss, resetGameFunction)
                   break;
                 }
               }
-              if (isInAnOpenbox && !json.mouseclicked)
+              if (isInAnOpenbox && (!json.mouseclicked || json.card.release))
               {
+                this.addToChangedCardsBuffer(card.id);
                 card.show = 'frontface';
                 card.isInAnOpenbox = true;
               }
               else
               {
+                this.addToChangedCardsBuffer(card.id);
                 card.show = 'backface';
                 card.isInAnOpenbox = false;
               }
