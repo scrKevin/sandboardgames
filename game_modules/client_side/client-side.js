@@ -303,6 +303,8 @@ $( document ).ready(function() {
   $('#enterGameBtn').attr('disabled',true);
   $('#enterGameBtn').on('click', enterGame);
   $('#resetGameBtn').on('click', resetGame);
+  $('#takeSnapshotBtn').on('click', takeSnapshot);
+  $('#recoverSnapshotBtn').on('click', recoverSnapshot);
   $(".shuffleButton").on('click', shuffleDeck);
   $(".inspectDeckButton").on('click', inspectDeck);
 
@@ -816,4 +818,17 @@ function enterGame()
 function resetGame()
 {
   clientController.resetGame();
+  $('#resetModal').modal('hide');
+}
+
+function takeSnapshot()
+{
+  clientController.takeSnapshot();
+  $('#resetModal').modal('hide');
+}
+
+function recoverSnapshot()
+{
+  clientController.recoverSnapshot();
+  $('#resetModal').modal('hide');
 }

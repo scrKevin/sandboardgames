@@ -118,6 +118,16 @@ ClientController.prototype.resetGame = function()
   this.init && this.wsHandler.resetGame();
 }
 
+ClientController.prototype.takeSnapshot = function()
+{
+  this.init && this.wsHandler.takeSnapshot();
+}
+
+ClientController.prototype.recoverSnapshot = function()
+{
+  this.init && this.wsHandler.recoverSnapshot();
+}
+
 ClientController.prototype.typeName = function(name)
 {
   this.init && this.wsHandler.typeName(name);

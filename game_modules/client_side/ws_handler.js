@@ -196,7 +196,23 @@ WsHandler.prototype.resetGame = function()
   var sendData = {
     type: "reset"
   }
-  this.sendToWs(sendData)
+  this.sendToWs(sendData);
+}
+
+WsHandler.prototype.takeSnapshot = function()
+{
+  var sendData = {
+    type: 'takeSnapshot'
+  }
+  this.sendToWs(sendData);
+}
+
+WsHandler.prototype.recoverSnapshot = function()
+{
+  var sendData = {
+    type: 'recoverSnapshot'
+  }
+  this.sendToWs(sendData);
 }
 
 WsHandler.prototype.typeName = function(name)

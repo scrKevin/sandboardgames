@@ -16,6 +16,8 @@ const app = express();
 const httpsPort = process.env.PORT || "8000";
 const httpPort = "8080";
 
+console.log("PORTS: https: " + httpsPort + ", http: " + httpPort);
+
 app.set("view engine", "ejs");
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: true }))

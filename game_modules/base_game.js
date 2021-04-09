@@ -4,6 +4,10 @@ let Client = require('./client').Client
 let diff_match_patch = require('diff-match-patch')
 var pako = require('pako');
 
+var Card = require('./card').Card
+var Deck = require('./deck').Deck
+var Openbox = require('./openbox').Openbox
+
 let FpsLimiter = require('./fps_limiter').FpsLimiter;
 
 
@@ -310,7 +314,27 @@ function WS_distributor(wss, resetGameFunction)
       else if (json.type == "reset")
       {
         this.resetGame(this);
+        for (card of this.gameObj.cards)
+        {
+          this.addToChangedCardsBuffer(card.id);
+        }
         this.broadcastReset();
+        this.broadcast();
+      }
+      else if (json.type == "takeSnapshot")
+      {
+        this.snapshot = JSON.stringify(this.gameObj);
+        //console.log(this.snapshot);
+      }
+      else if (json.type == 'recoverSnapshot')
+      {
+        this.restoreSnapshot();
+        for (card of this.gameObj.cards)
+        {
+          this.addToChangedCardsBuffer(card.id);
+        }
+        this.broadcastReset();
+        // console.log(this.gameObj);
         this.broadcast();
       }
       else if (json.type == "draw")
@@ -350,6 +374,7 @@ function WS_distributor(wss, resetGameFunction)
 
   this.resetGame(this);
   this.lastSentGameObj = JSON.stringify(this.gameObj);
+  this.snapshot = JSON.stringify(this.gameObj);
 }
 
 WS_distributor.prototype.deconstructMessage = function (data)
@@ -400,6 +425,71 @@ WS_distributor.prototype.isDeck = function (id)
   return false;
 }
 
+WS_distributor.prototype.restoreSnapshot = function()
+{
+  var snapshotObj = JSON.parse(this.snapshot);
+  this.gameObj.cards = [];
+  this.gameObj.decks = [];
+  this.gameObj.openboxes = [];
+  this.gameObj.scoreboxes = snapshotObj.scoreboxes;
+
+  for (card of snapshotObj.cards)
+  {
+    var newCard = new Card(card.id, card.x, card.y);
+
+    for (var key in card)
+    {
+      newCard[key] = card[key];
+    }
+
+    this.gameObj.cards.push(newCard);
+  }
+
+  for (openbox of snapshotObj.openboxes)
+  {
+    var newOpenbox = new Openbox(openbox.id, openbox.x, openbox.y, openbox.width, openbox.height);
+    for (var key in openbox)
+    {
+      if (key !== "attachedCards")
+      {
+        newOpenbox[key] = openbox[key];
+      }
+    }
+    
+    this.gameObj.openboxes.push(newOpenbox);
+  }
+
+  for (deck of snapshotObj.decks)
+  {
+    var newDeck = new Deck(deck.id, deck.x, deck.y, deck.width, deck.height);
+    for (var key in deck)
+    {
+      if (key !== "attachedCards" && key !== "attachedOpenboxes")
+      {
+        newDeck[key] = deck[key];
+      }
+    }
+
+    for (card of deck.attachedCards)
+    {
+      var cardToAttach = this.gameObj.cards.find(function(cardToAttach){
+        return cardToAttach.id === card.id;
+      });
+      newDeck.attachedCards.push(cardToAttach);
+    }
+
+    for (openbox of deck.attachedOpenboxes)
+    {
+      var openboxToAttach = this.gameObj.openboxes.find(function(openboxToAttach){
+        return openboxToAttach.id === openbox.id;
+      });
+      newDeck.attachedOpenboxes.push(openboxToAttach);
+    }
+
+    this.gameObj.decks.push(newDeck);
+  }
+
+}
 
 WS_distributor.prototype.broadcastLeftPeer = function (playerId)
 {
