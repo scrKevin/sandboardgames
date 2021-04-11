@@ -1,0 +1,278 @@
+<!-- views/partials/head.ejs -->
+<meta charset="UTF-8">
+<!-- <meta name="viewport" content="width=device-width,user-scalable=no"> -->
+<title>Settlers of Catan Sandboard</title>
+
+<!-- Bootstrap CSS -->
+<link href="/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="/css/common.css" rel="stylesheet" type="text/css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js" integrity="sha256-pasqAKBDmFT4eHoN2ndd6lN370kFiGUFyTiUHWhU7k8=" crossorigin="anonymous"></script>
+<script src='/js/bootstrap.min.js'></script>
+<script src="/js/soc/soc.js"></script>
+<script src="/js/bundle.js"></script>
+
+<style>
+
+body
+{
+  background-color: #000000;
+  background-image: url("/img/soc/water.svg");
+}
+
+.scaleplane
+{
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  transform-origin: 0 0;
+}
+
+.number
+{
+    background-color: #f4a460;
+    font-size: 30px;
+    font-weight: bold;
+    width: 50px;
+    height: 50px;
+    border-radius: 25px;
+    border: 3px solid black;
+    text-align: center;
+    line-height: 44px;
+    color: black;
+}
+
+.cursor
+{
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  border: 1px solid black;
+  z-index: 1000;
+  display: none;
+}
+
+.playerbox
+{
+  position: absolute;
+  z-index: 1;
+  display: none;
+}
+
+.webcambox
+{
+  position: relative;
+  padding: 8px;
+  border-radius: 6px;
+  background-color: #cccccc;
+  border: 1px solid black;
+  -webkit-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+  -moz-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+  box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+}
+
+.webcamContainer
+{
+  transform-origin: 50% 0
+}
+
+.webcamContainer video
+{
+  height: 240px;
+}
+
+.webcam
+{
+  height: 240px;
+}
+
+.card
+{
+  position: absolute;
+  z-index: 2;
+}
+
+.deck
+{
+  background-color: grey;
+  width: 117px;
+  height: 165px;
+}
+
+.playcard
+{
+  transform-origin: 0 0;
+  transform: scale(0.65);
+}
+
+.tile
+{
+  width: 68px;
+  height: 68px;
+  background-color: #ffffff;
+  padding: 5px;
+  font-size: 35px;
+  font-family: "Arial", sans;
+  font-weight: bold;
+  text-align: center;
+  border-radius: 12px;
+}
+
+.moveBtn
+{
+  z-index: 2000;
+  padding: 8px;
+  border: 1px solid black;
+  border-radius: 6px;
+  background-color: white;
+  top: -5px;
+  -webkit-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+  -moz-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+  box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+}
+
+.gamecard
+{
+  position: absolute;
+  padding-left: 32px;
+}
+
+.openbox
+{
+  position: fixed;
+  /*border: 1px solid #77ff77;*/
+}
+
+.playerbox
+{
+  position: absolute;
+  border: 3px solid white;
+  opacity: 0.6;
+}
+
+#player0box
+{
+  width: 320px;
+  height: 540px;
+}
+
+#player1box
+{
+  width: 320px;
+  height: 540px;
+}
+
+#player2box
+{
+  width: 320px;
+  height: 540px;
+}
+
+#player3box
+{
+  width: 320px;
+  height: 540px;
+}
+
+#scorebox0
+{
+  top: 175px;
+  left: 10px;
+}
+
+#scorebox1
+{
+  top: 175px;
+  left: 508px;
+}
+
+#scorebox2
+{
+  top: 795px;
+  left: 10px;
+}
+
+#scorebox3
+{
+  top: 795px;
+  left: 508px;
+}
+
+.points
+{
+  font-size: 15px;
+  display:inline-block;
+  position:relative; 
+  left:2px; 
+  top: 8px;
+}
+
+.board
+{
+  /*border-collapse: collapse;*/
+  table-layout: fixed;
+  width: 1080px;
+  position: relative;
+  top: 0px;
+  left: 818px;
+}
+
+.board td
+{
+  border: 2px solid #000000;
+  border-radius: 11px;
+  width: 72px;
+  height: 72px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.normal
+{
+  background-color: #009c1a;
+}
+
+.threeXword
+{
+  background-color: #FF0000;
+  color: #FFFFFF;
+}
+
+.twoXword
+{
+  background-color: pink;
+}
+
+.twoXletter
+{
+  background-color: lightblue;
+}
+
+.threeXletter
+{
+  color: #FFFFFF;
+  background-color: blue;
+}
+
+.touchbox
+{
+  background-color: #CCCCCC;
+  opacity: 0.5;
+  border: 1px solid orange;
+  border-radius: 11px;
+  width: 68px;
+  height: 68px;
+  z-index: 2;
+}
+
+.harbour img
+{
+    height: 100px;
+}
+
+
+</style>

@@ -1,0 +1,46 @@
+<div class='card deck' id='diceDeck'><button type="button" class="btn btn-primary btn-lg shuffleButton" style="width: 110px;">Shuffle</button></div>
+
+<% for (var i = 0; i < 3; i++) { -%>
+    <div class='card hex' id='hex_<%= i %>'><img src='/img/soc/hex_brick.png'></div>
+<% } -%>
+<% for (var i = 3; i < 4; i++) { -%>
+    <div class='card hex' id='hex_<%= i %>'><img src='/img/soc/hex_desert.png'></div>
+<% } -%>
+<% for (var i = 4; i < 7; i++) { -%>
+    <div class='card hex' id='hex_<%= i %>'><img src='/img/soc/hex_ore.png'></div>
+<% } -%>
+<% for (var i = 7; i < 11; i++) { -%>
+    <div class='card hex' id='hex_<%= i %>'><img src='/img/soc/hex_wheat.png'></div>
+<% } -%>
+<% for (var i = 11; i < 15; i++) { -%>
+    <div class='card hex' id='hex_<%= i %>'><img src='/img/soc/hex_wood.png'></div>
+<% } -%>
+<% for (var i = 15; i < 19; i++) { -%>
+    <div class='card hex' id='hex_<%= i %>'><img src='/img/soc/hex_wool.png'></div>
+<% } -%>
+
+
+<div class='card number' id='n_21'><span class="numberText">2</span></div>
+<div class='card number' id='n_31'><span class="numberText">3</span></div>
+<div class='card number' id='n_32'><span class="numberText">3</span></div>
+<div class='card number' id='n_41'><span class="numberText">4</span></div>
+<div class='card number' id='n_42'><span class="numberText">4</span></div>
+<div class='card number' id='n_51'><span class="numberText">5</span></div>
+<div class='card number' id='n_52'><span class="numberText">5</span></div>
+<div class='card number' id='n_61'><span class="numberText">6</span></div>
+<div class='card number' id='n_62'><span class="numberText">6</span></div>
+<div class='card number' id='n_81'><span class="numberText">8</span></div>
+<div class='card number' id='n_82'><span class="numberText">8</span></div>
+<div class='card number' id='n_91'><span class="numberText">9</span></div>
+<div class='card number' id='n_92'><span class="numberText">9</span></div>
+<div class='card number' id='n_101'><span class="numberText">10</span></div>
+<div class='card number' id='n_102'><span class="numberText">10</span></div>
+<div class='card number' id='n_111'><span class="numberText">11</span></div>
+<div class='card number' id='n_112'><span class="numberText">11</span></div>
+<div class='card number' id='n_121'><span class="numberText">12</span></div>
+
+<div class='card robber' id='robber0'><img src='/img/soc/robber.png'></div>
+
+<% for (var i = 0; i < 9; i++) { var img=i; if(i < 4){img=0} -%>
+    <div class="card harbour" id="harbour<%= i %>"><img src='/img/soc/harbour<%= img %>.svg'></div>
+<% } -%>
