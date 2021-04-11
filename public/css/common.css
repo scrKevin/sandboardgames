@@ -1,0 +1,29 @@
+.cardFace
+{
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+
+.threeDcontainer
+{
+    position: relative;
+    /* width: 86px;
+    height: 120px; */
+    transform-origin: 0% 50%;
+    transform-style: preserve-3d;
+    transform: rotateY(0deg);
+    transition: transform 600ms;
+}
+
+.scaleplane
+{
+    perspective: 1920px;
+    width: 100vw;
+    height: 100vh;
+    perspective-origin: 50vw 50vh;
+    transform-style: preserve-3d;
+}

@@ -1,3 +1,3 @@
 <% for (var i = 1; i <= 8; i++) { -%>
-  <div class="card characterCard" id="c<%= i %>"><span class="cN" id="c<%= i %>_sec"></span><span class="characterText" id="c<%= i %>_text"></span></div>
+  <%- include ('../../common/textCard', {id: "c" + i, cardFaceClass: "characterCard", textClass: "characterText", secTextClass:"cN"}); -%>
 <% } -%>

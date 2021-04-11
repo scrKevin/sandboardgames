@@ -3390,28 +3390,51 @@ function updateParentCss(selector, property, value)
   }
 }
 
-function updateCardFace(card, value)
+// function updateCardFace(card, value)
+// {
+//   if(card.faceType === 'image')
+//   {
+//     if ($("#" + card.id).children('img').attr("src") !== value)
+//     {
+//       $("#" + card.id).children('img').attr("src", value);
+//     }
+//   }
+//   else if(card.faceType === 'text')
+//   {
+//     if ($("#" + card.id + "_text").html() !== value.text)
+//     {
+//       $("#" + card.id + "_text").html(value.text);
+//       $("#" + card.id).css("color", value.color);
+//       $("#" + card.id).css("border", "4px solid " + value.color);
+//       $("#" + card.id).css("background-color", value.backgroundcolor);
+//       if(value.hasOwnProperty("secondarytext"))
+//       {
+//         $("#" + card.id + "_sec").html(value.secondarytext);
+//       }
+//       $(document).trigger("cardTextChanged", [card.id]);
+//     }
+//   }
+// }
+
+function updateCardFace(card, faceType)
 {
-  if(card.faceType === 'image')
+  if (faceType == "frontface")
   {
-    if ($("#" + card.id).children('img').attr("src") !== value)
+    $("#" + card.id + " .threeDcontainer").css('transform', 'translateX(100%) rotateY(180deg)');
+  }
+  else if(faceType == 'backface')
+  {
+    $("#" + card.id + " .threeDcontainer").css('transform', 'rotateY(0deg)');
+    if ($("#" + card.id + "BFimg").attr("src") !== card.backface)
     {
-      $("#" + card.id).children('img').attr("src", value);
+      $("#" + card.id + "BFimg").attr("src", card.backface);
     }
   }
-  else if(card.faceType === 'text')
+  else if(faceType == 'altFrontface')
   {
-    if ($("#" + card.id + "_text").html() !== value.text)
+    if ($("#" + card.id + "BFimg").attr("src") !== card.altFrontface)
     {
-      $("#" + card.id + "_text").html(value.text);
-      $("#" + card.id).css("color", value.color);
-      $("#" + card.id).css("border", "4px solid " + value.color);
-      $("#" + card.id).css("background-color", value.backgroundcolor);
-      if(value.hasOwnProperty("secondarytext"))
-      {
-        $("#" + card.id + "_sec").html(value.secondarytext);
-      }
-      $(document).trigger("cardTextChanged", [card.id]);
+      $("#" + card.id + "BFimg").attr("src", card.altFrontface);
     }
   }
 }
@@ -3442,6 +3465,44 @@ function addOrRemoveAttr(selector, attrName, add)
   }
 }
 
+function init3dCard(card)
+{
+  if (card.faceType == "image")
+  {
+    $("#" + card.id).html("<div class='threeDcontainer'><div class='cardFace' style='transform:rotateY(180deg)'><img src='" + card.frontface + "'/></div><div class='cardFace'><img id='" + card.id + "BFimg' src='" + card.backface + "'/></div></div>")
+    var width = $("#" + card.id + " img").outerWidth();
+
+    // var width = document.defaultView.getComputedStyle($("#" + card.id + "cardFace"), null).width;
+    // var height = $("#" + card.id + "cardFace").height();
+    $("#" + card.id).css("width", width);
+    // $("#" + card.id).css("height", height);
+  }
+  else if(card.faceType === 'text')
+  {
+    $("#" + card.id + "_textFF").html(card.frontface.text);
+    $("#" + card.id + "FF").css("color", card.frontface.color);
+    $("#" + card.id + "FF").css("border", "4px solid " + card.frontface.color);
+    $("#" + card.id + "FF").css("background-color", card.frontface.backgroundcolor);
+    if(card.frontface.hasOwnProperty("secondarytext"))
+    {
+      $("#" + card.id + "_secFF").html(card.frontface.secondarytext);
+    }
+
+    $("#" + card.id + "_textBF").html(card.backface.text);
+    $("#" + card.id + "BF").css("color", card.backface.color);
+    $("#" + card.id + "BF").css("border", "4px solid " + card.backface.color);
+    $("#" + card.id + "BF").css("background-color", card.backface.backgroundcolor);
+    if(card.backface.hasOwnProperty("secondarytext"))
+    {
+      $("#" + card.id + "_secBF").html(card.backface.secondarytext);
+    }
+
+    var width = $("#" + card.id + " .cardFace").outerWidth();
+    $("#" + card.id).css("width", width);
+    $(document).trigger("cardTextChanged", [card.id]);
+  }
+}
+
 function initCards(gameObj){
   for (var i = 0; i < gameObj.decks.length; i++)
   {
@@ -3455,26 +3516,20 @@ function initCards(gameObj){
     updateCss("#" + gameObj.cards[i].id, "top", gameObj.cards[i].y + "px");
     if (gameObj.cards[i].hasOwnProperty("show"))
     {
+      init3dCard(gameObj.cards[i]);
       if (cardIsInMyOwnBox(gameObj.cards[i]) || gameObj.cards[i].visibleFor == myPlayerId)
       {
-        updateCardFace(gameObj.cards[i], gameObj.cards[i].frontface);
+        updateCardFace(gameObj.cards[i], "frontface");
       }
       else
       {
         if(cardIsInInspectorBox(gameObj.cards[i]))
         {
-          updateCardFace(gameObj.cards[i], gameObj.cards[i].altFrontface);
+          updateCardFace(gameObj.cards[i], "altFrontface");
         }
         else
         {
-          if (gameObj.cards[i].show == "backface")
-          {
-            updateCardFace(gameObj.cards[i], gameObj.cards[i].backface);
-          }
-          else if (gameObj.cards[i].show == "frontface")
-          {
-            updateCardFace(gameObj.cards[i], gameObj.cards[i].frontface);
-          }
+          updateCardFace(gameObj.cards[i], gameObj.cards[i].show);
         }
       }
     }
@@ -3497,6 +3552,14 @@ function updateCards(gameObj, changedCardsBuffer)
   //changedCardsBuffer = [];
   for (card of cards)
   {
+    if (card.hasOwnProperty("varText"))
+    {
+      if ($("#" + card.id + "_textFF").html() !== card.frontface.text)
+      {
+        $("#" + card.id + "_textFF").html(card.frontface.text);
+        $(document).trigger("cardTextChanged", [card.id]);
+      }
+    }
     if(card.id != dragCardId)
     {
       updateCss("#" + card.id, "z-index", String(card.z + 60));
@@ -3508,14 +3571,7 @@ function updateCards(gameObj, changedCardsBuffer)
     {
       if(card.hasOwnProperty("show") && card.isInAnOpenbox)
       {
-        if (card.show == "backface")
-        {
-          updateCardFace(card, card.backface);
-        }
-        else if (card.show == "frontface")
-        {
-          updateCardFace(card, card.frontface);
-        }
+        updateCardFace(card, card.show);
       }
       else
       {
@@ -3524,24 +3580,17 @@ function updateCards(gameObj, changedCardsBuffer)
           var cardInMyBox = cardIsInMyOwnBox(card);
           if (cardInMyBox || card.visibleFor == myPlayerId)
           {
-            updateCardFace(card, card.frontface);
+            updateCardFace(card, "frontface");
           }
           else
           {
             if(cardIsInInspectorBox(card))
             {
-              updateCardFace(card, card.altFrontface);
+              updateCardFace(card, "altFrontface");
             }
             else
             {
-              if (card.show == "backface")
-              {
-                updateCardFace(card, card.backface);
-              }
-              else if (card.show == "frontface")
-              {
-                updateCardFace(card, card.frontface);
-              }
+              updateCardFace(card, card.show);
             }
           }
         }
@@ -3718,7 +3767,8 @@ function inspectDeck(e){
   blockCardChange = [];
   for (card of foundDeck.attachedCards)
   {
-    updateCardFace(card, card.frontface)
+    // updateCardFace(card, card.frontface)
+    updateCardFace(card, "frontface");
     blockCardChange.push(card.id);
   }
 }

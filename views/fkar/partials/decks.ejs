@@ -1,8 +1,8 @@
 <div class='card deck rolecardsdeck' id='startDeck'><button type="button" class="btn btn-primary btn-lg shuffleButton" style="width: 110px;">Shuffle</button></div>
 <div class='card deck rolecardsdeck' id='remainingDeck'>Other players</div>
 
-<div class='card playcard' id='f0'><span id='f0_text'></span></div>
+<%- include ('../../common/textCard', {id: "f0", cardFaceClass: "playcard", textClass: "", secTextClass:""}); -%>
 
 <% for (var i = 0; i < 9; i++) { -%>
-  <div class='card playcard' id='r<%= i %>'><span id='r<%= i %>_text'></span></div>
+  <%- include ('../../common/textCard', {id: "r" + i, cardFaceClass: "playcard", textClass: "", secTextClass:""}); -%>
 <% } -%>

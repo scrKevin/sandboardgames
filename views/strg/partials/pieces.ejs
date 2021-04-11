@@ -1,6 +1,6 @@
 <% for (var i = 0; i < 40; i++) { -%>
-  <div class="card piece" id="r<%= i %>"><span class="pieceText" id="r<%= i %>_text"></span><div class="pieceImg"><span id="r<%= i %>_sec"></div></div>
+  <%- include ('../../common/textCard', {id: "r" + i, cardFaceClass: "piece", textClass: "pieceText", secTextClass:"pieceImg"}); -%>
 <% } -%>
 <% for (var i = 0; i < 40; i++) { -%>
-  <div class="card piece" id="b<%= i %>"><span class="pieceText" id="b<%= i %>_text"></span><div class="pieceImg"><span id="b<%= i %>_sec"></div></div>
+  <%- include ('../../common/textCard', {id: "b" + i, cardFaceClass: "piece", textClass: "pieceText", secTextClass:"pieceImg"}); -%>
 <% } -%>

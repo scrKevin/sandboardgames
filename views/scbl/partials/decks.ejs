@@ -1,5 +1,5 @@
 <div class='card deck' id='tileDeck'><button type="button" class="btn btn-primary btn-lg shuffleButton" style="width: 110px;">Shuffle</button></div>
 
 <% for (var i = 0; i < 104; i++) { -%>
-  <div class='card tile' id="t<%= i%>"><span id="t<%= i%>_text"></span><sub><span class="points" id="t<%= i%>_sec"></span></sub></div>
+  <%- include ('../../common/textCard', {id: "t" + i, cardFaceClass: "tile", textClass: "", secTextClass:"points"}); -%>
 <% } -%>

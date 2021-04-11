@@ -8,7 +8,7 @@ var maxPlayers = 10;
 var maxSpectators = 20;
 
 $(document).on("cardTextChanged", function(e, cardId){
-  textFit($('#' + cardId)[0], {multiLine: true, maxFontSize: 32})
+  textFit($('#' + cardId + "FF"), {multiLine: true, maxFontSize: 32})
 })
 
 function toggleVisible(selector, shouldBeVisible)
