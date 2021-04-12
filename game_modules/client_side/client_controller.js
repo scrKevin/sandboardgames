@@ -108,6 +108,11 @@ ClientController.prototype.shuffleDeck = function(deckId, xStackMinimum)
   this.init && this.wsHandler.shuffleDeck(deckId, xStackMinimum);
 }
 
+ClientController.prototype.rollDeck = function(deckId)
+{
+  this.init && this.wsHandler.rollDeck(deckId);
+}
+
 ClientController.prototype.selectColor = function(color)
 {
   this.init && this.wsHandler.selectColor(color);

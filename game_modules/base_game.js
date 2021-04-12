@@ -227,6 +227,21 @@ function WS_distributor(wss, resetGameFunction)
           }
         }
       }
+      else if (json.type == "rollDeck")
+      {
+        for (deck of this.gameObj.decks)
+        {
+          if (deck.id == json.deckId)
+          {
+            deck.rollDeck();
+            for (card of deck.attachedCards)
+            {
+              this.addToChangedCardsBuffer(card.id)
+            }
+            break;
+          }
+        }
+      }
       else if (json.type == "editScorebox")
       {
         for (scorebox of this.gameObj.scoreboxes)

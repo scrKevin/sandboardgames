@@ -1,4 +1,4 @@
-<div class='card deck' id='diceDeck'><button type="button" class="btn btn-primary btn-lg shuffleButton" style="width: 110px;">Shuffle</button></div>
+<div class='card deck' id='diceDeck'><button type="button" class="btn btn-primary btn-lg rollButton" style="width: 110px;">Roll</button></div>
 
 <% for (var i = 0; i < 3; i++) { -%>
     <div class='card hex' id='hex_<%= i %>'><img src='/img/soc/hex_brick.png'></div>
@@ -18,6 +18,7 @@
 <% for (var i = 15; i < 19; i++) { -%>
     <div class='card hex' id='hex_<%= i %>'><img src='/img/soc/hex_wool.png'></div>
 <% } -%>
+
 
 
 <div class='card number' id='n_21'><span class="numberText">2</span></div>
@@ -43,4 +44,21 @@
 
 <% for (var i = 0; i < 9; i++) { var img=i; if(i < 4){img=0} -%>
     <div class="card harbour" id="harbour<%= i %>"><img src='/img/soc/harbour<%= img %>.svg'></div>
+<% } -%>
+
+<%- include ('../../common/dice', {id: "dice1", width: 100}); -%>
+<%- include ('../../common/dice', {id: "dice2", width: 100}); -%>
+
+<% for (var p = 0; p < 4; p++) { -%>
+    <% for (var i = 0; i < 5; i++) { -%>
+        <div class='card settlement' id='settlement_<%= p %>_<%= i %>'><img class="settlementImg" src='/img/soc/house.svg'></div>
+    <% } -%>
+
+    <% for (var i = 0; i < 4; i++) { -%>
+        <div class='card city' id='city_<%= p %>_<%= i %>'><img class="settlementImg" src='/img/soc/city.svg'></div>
+    <% } -%>
+
+    <% for (var i = 0; i < 15; i++) { -%>
+        <div class='card road' id='road_<%= p %>_<%= i %>'><img class="settlementImg" src='/img/soc/road.svg'></div>
+    <% } -%>
 <% } -%>

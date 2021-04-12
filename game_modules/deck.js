@@ -25,6 +25,10 @@ function Deck(id, x, y, width, height){
   this.clickedBy = -1;
 }
 
+Deck.prototype.getRandomFace = function(max, min){
+  return (Math.floor(Math.random() * (max-min)) + min) * 90;
+}
+
 Deck.prototype.shuffle = function(a){
   var j, x, i;
   for (i = a.length - 1; i > 0; i--) {
@@ -52,6 +56,15 @@ Deck.prototype.shuffleDeck = function(xStackMinimum)
     this.attachedCards[i].setZ(numberArray[i]);
     this.attachedCards[i].setX(this.x + 5 + Math.round(numberArray[i] * incrementXForStackEffect));
     this.attachedCards[i].setY(this.y + 80 - Math.round(numberArray[i] * incrementYForStackEffect));
+  }
+}
+
+Deck.prototype.rollDeck = function()
+{
+  for(var i = 0; i < this.attachedCards.length; i++)
+  {
+    this.attachedCards[i].setRotationX(this.getRandomFace(1, 24));
+    this.attachedCards[i].setRotationY(this.getRandomFace(1, 24));
   }
 }
 

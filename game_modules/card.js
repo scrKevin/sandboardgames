@@ -31,6 +31,16 @@ Card.prototype.setY = function(y)
 	this.y = y
 }
 
+Card.prototype.setRotationX = function(rotationX)
+{
+  this.rotationX = rotationX;
+}
+
+Card.prototype.setRotationY = function(rotationY)
+{
+  this.rotationY = rotationY;
+}
+
 Card.prototype.isMyCard = function(playerId, mouseClicked)
 {
   if ((this.clickedBy == playerId || this.clickedBy == -1) && mouseClicked)

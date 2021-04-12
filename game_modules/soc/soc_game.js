@@ -66,7 +66,7 @@ SOC_Game.prototype.resetGame = function(game)
     "wool": {img: 'hex_wool.png', quantity: 4}
   }
 
-  var diceDeck = new Deck("diceDeck", 20, 20);
+  var diceDeck = new Deck("diceDeck", 520, 8, 260, 170);
   game.gameObj.decks.push(diceDeck);
 
   var numberPositions = [];
@@ -133,6 +133,52 @@ SOC_Game.prototype.resetGame = function(game)
   {
     var h0 = new Card("harbour" + i, shuffledHarbourPositions[i].x, shuffledHarbourPositions[i].y);
     game.gameObj.cards.push(h0)
+  }
+
+  var dice1 = new Card("dice1", diceDeck.x + 20, diceDeck.y + 60);
+  dice1.rotationX = 0;
+  dice1.rotationY = 0;
+  game.gameObj.cards.push(dice1);
+  var dice2 = new Card("dice2", diceDeck.x + 145, diceDeck.y + 60);
+  dice2.rotationX = 0;
+  dice2.rotationY = 0;
+  game.gameObj.cards.push(dice2);
+
+  diceDeck.attachedCards.push(dice1);
+  diceDeck.attachedCards.push(dice2);
+
+
+  var refPositions = [{x: 324, y: 475, leftRightDir: 1}, {x: 1540, y: 800, leftRightDir: -1}, {x: 1540, y: 475, leftRightDir: -1}, {x: 324, y: 800, leftRightDir: 1}];
+  for (var p = 0; p < 4; p++)
+  {  
+    game.gameObj.cards.push(new Card("settlement_" + p + "_0", refPositions[p].x, refPositions[p].y));
+    game.gameObj.cards.push(new Card("settlement_" + p + "_1", refPositions[p].x + (54 * refPositions[p].leftRightDir), refPositions[p].y));
+    game.gameObj.cards.push(new Card("road_" + p + "_0", refPositions[p].x + (21 * refPositions[p].leftRightDir), refPositions[p].y - 44));
+    game.gameObj.cards.push(new Card("road_" + p + "_1", refPositions[p].x + (75 * refPositions[p].leftRightDir), refPositions[p].y - 44));
+    var xIncrement = 10;
+    var yIncrement = 10;
+    var startX = refPositions[p].x + (2*xIncrement*refPositions[p].leftRightDir);
+    var startY = refPositions[p].y - 120 - (2*yIncrement);
+    for (var i = 0; i < 3; i++)
+    {
+      game.gameObj.cards.push(new Card("settlement_" + p + "_" + (i + 2), startX - (xIncrement * i * refPositions[p].leftRightDir), startY + (yIncrement * i)));
+    }
+    var xIncrement = 10;
+    var yIncrement = 10;
+    var startX = refPositions[p].x + ((3*xIncrement + 100)*refPositions[p].leftRightDir);
+    var startY = refPositions[p].y - 120 - (3*yIncrement);
+    for (var i = 0; i < 4; i++)
+    {
+      game.gameObj.cards.push(new Card("city_" + p + "_" + i, startX - (xIncrement * i * refPositions[p].leftRightDir), startY + (yIncrement * i)));
+    }
+    var xIncrement = 3;
+    var yIncrement = 1;
+    var startX = refPositions[p].x + ((12*xIncrement)*refPositions[p].leftRightDir);
+    var startY = refPositions[p].y - 200 - (12*yIncrement);
+    for (var i = 0; i < 13; i++)
+    {
+      game.gameObj.cards.push(new Card("road_" + p + "_" + (i + 2), startX - (xIncrement * i * refPositions[p].leftRightDir), startY + (yIncrement * i)));
+    }
   }
 }
 

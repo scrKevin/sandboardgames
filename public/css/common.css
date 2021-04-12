@@ -7,6 +7,24 @@
     backface-visibility: hidden;
 }
 
+.diceFace
+{
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    -webkit-box-shadow:inset 0px 0px 0px 3px rgba(200, 0, 0, 0.85);
+    -moz-box-shadow:inset 0px 0px 0px 3px rgba(200, 0, 0, 0.85);
+    box-shadow:inset 0px 0px 0px 3px rgba(200, 0, 0, 0.85);
+    background-color: rgba(255, 0, 0, 0.75);
+    /* border-radius: 6px; */
+}
+
+.diceDot
+{
+    position:absolute;
+    display: block;
+    background: #fff;
+}
 
 .threeDcontainer
 {
@@ -19,11 +37,21 @@
     transition: transform 600ms;
 }
 
+.dice .threeDcontainer
+{
+    transition: transform 3s;
+}
+
 .scaleplane
 {
-    perspective: 1920px;
+    perspective: 3500px;
     width: 100vw;
     height: 100vh;
     perspective-origin: 50vw 50vh;
     transform-style: preserve-3d;
+}
+
+.settlementImg
+{
+    filter: invert(11%) sepia(88%) saturate(7320%) hue-rotate(5deg) brightness(104%) contrast(114%) drop-shadow(1px 1px 0px black) drop-shadow(-1px 1px 0px black) drop-shadow(1px -1px 0px black) drop-shadow(-1px -1px 0px black);
 }

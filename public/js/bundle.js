@@ -3205,6 +3205,11 @@ function adaptScale()
     scale = width / 1920;
     $(".scaleplane").css("transform", "scale(" + scale + ")")
   }
+  $(".scaleplane").css("width", (100 / scale) + "vw");
+  $(".scaleplane").css("height", (100 / scale) + "vh");
+
+  $(".scaleplane").css("perspective-origin", (50 / scale) + "vw " + (50 / scale) + "vh");
+  $(".scaleplane").css("perspective", (3500 / scale) + "px");
   clientController.canvasHandler.updateScale(scale);
 }
 
@@ -3242,6 +3247,7 @@ $( document ).ready(function() {
   $('#takeSnapshotBtn').on('click', takeSnapshot);
   $('#recoverSnapshotBtn').on('click', recoverSnapshot);
   $(".shuffleButton").on('click', shuffleDeck);
+  $(".rollButton").on('click', rollDeck);
   $(".inspectDeckButton").on('click', inspectDeck);
 
   $(".scoreboxButton").on('click', scoreboxButton);
@@ -3465,6 +3471,14 @@ function addOrRemoveAttr(selector, attrName, add)
   }
 }
 
+function initDice(card)
+{
+  if (card.hasOwnProperty("rotationX") && card.hasOwnProperty("rotationY"))
+  {
+    updateCss("#" + card.id + " .threeDcontainer", "transform", "rotateX(" + card.rotationX + "deg) rotateY(" + card.rotationY + "deg)")      
+  }
+}
+
 function init3dCard(card)
 {
   if (card.faceType == "image")
@@ -3533,6 +3547,7 @@ function initCards(gameObj){
         }
       }
     }
+    initDice(gameObj.cards[i]);
   }
 }
 
@@ -3559,6 +3574,10 @@ function updateCards(gameObj, changedCardsBuffer)
         $("#" + card.id + "_textFF").html(card.frontface.text);
         $(document).trigger("cardTextChanged", [card.id]);
       }
+    }
+    if (card.hasOwnProperty("rotationX") && card.hasOwnProperty("rotationY"))
+    {
+      updateCss("#" + card.id + " .threeDcontainer", "transform", "rotateX(" + card.rotationX + "deg) rotateY(" + card.rotationY + "deg)")      
     }
     if(card.id != dragCardId)
     {
@@ -3758,6 +3777,11 @@ function shuffleDeck(e){
   clientController.shuffleDeck(deckId, xStackMinimum);
 }
 
+function rollDeck(e){
+  var deckId = e.target.parentElement.id;
+  clientController.rollDeck(deckId);
+}
+
 function inspectDeck(e){
   var deckId = e.target.parentElement.id;
   var tmpGameObj = JSON.parse(clientController.wsHandler.lastGameObj);
@@ -3927,6 +3951,11 @@ ClientController.prototype.releaseCard = function(x, y, cardX, cardY)
 ClientController.prototype.shuffleDeck = function(deckId, xStackMinimum)
 {
   this.init && this.wsHandler.shuffleDeck(deckId, xStackMinimum);
+}
+
+ClientController.prototype.rollDeck = function(deckId)
+{
+  this.init && this.wsHandler.rollDeck(deckId);
 }
 
 ClientController.prototype.selectColor = function(color)
@@ -4456,6 +4485,15 @@ WsHandler.prototype.shuffleDeck = function(deckId, xStackMinimum)
   var sendData = {
     type: "shuffleDeck",
     xStackMinimum: xStackMinimum,
+    deckId: deckId
+  }
+  this.sendToWs(sendData);
+}
+
+WsHandler.prototype.rollDeck = function(deckId)
+{
+  var sendData = {
+    type: "rollDeck",
     deckId: deckId
   }
   this.sendToWs(sendData);

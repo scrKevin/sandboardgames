@@ -165,6 +165,15 @@ WsHandler.prototype.shuffleDeck = function(deckId, xStackMinimum)
   this.sendToWs(sendData);
 }
 
+WsHandler.prototype.rollDeck = function(deckId)
+{
+  var sendData = {
+    type: "rollDeck",
+    deckId: deckId
+  }
+  this.sendToWs(sendData);
+}
+
 WsHandler.prototype.selectColor = function(color)
 {
   var sendData = {
