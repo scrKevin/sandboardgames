@@ -62,3 +62,18 @@
         <div class='card pieceFor_<%= p %> road' id='road_<%= p %>_<%= i %>' style="display: none;"><img class="pieceImg" src='/img/soc/road.svg'></div>
     <% } -%>
 <% } -%>
+
+<div class='card deck resourceDeck' id='woolDeck'><button type="button" class="btn btn-primary btn-lg shuffleButton" style="width: 78px;" value='0'>Sheep</button></div>
+<div class='card deck resourceDeck' id='brickDeck'><button type="button" class="btn btn-primary btn-lg shuffleButton" style="width: 78px;" value='0'>Brick</button></div>
+<div class='card deck resourceDeck' id='woodDeck'><button type="button" class="btn btn-primary btn-lg shuffleButton" style="width: 78px;" value='0'>Wood</button></div>
+<div class='card deck resourceDeck' id='wheatDeck'><button type="button" class="btn btn-primary btn-lg shuffleButton" style="width: 78px;" value='0'>Wheat</button></div>
+<div class='card deck resourceDeck' id='oreDeck'><button type="button" class="btn btn-primary btn-lg shuffleButton" style="width: 78px;" value='0'>Ore</button></div>
+
+<div class='card deck developmentDeck' id='developmentDeck0'><button type="button" class="btn btn-primary btn-lg shuffleButton" style="width: 132px;" value='0'>Development</button></div>
+
+<% for (var i = 0; i < 95;  i++ ) { %>
+	<div class='card resource' id='resource_<%= i %>'></div>
+<% } %>
+<% for (var i = 0; i < 25;  i++ ) { %>
+	<div class='card development' id='development_<%= i %>'></div>
+<% } %>

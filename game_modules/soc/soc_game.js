@@ -190,6 +190,148 @@ SOC_Game.prototype.resetGame = function(game)
       game.gameObj.cards.push(new Card("road_" + p + "_" + (i + 2), startX - (xIncrement * i * refPositions[p].leftRightDir), startY + (yIncrement * i)));
     }
   }
+  var startX = 571;
+  var startY = 897;
+  var woolDeck = new Deck("woolDeck", startX, startY, 78, 182);
+  for (var i = 0; i < 19; i++)
+  {
+    newCard = new Card('resource_' + i, startX + 5, startY + 80 - (i * 2));
+    newCard.backface = '/img/soc/resource_bf.png';
+    newCard.frontface = '/img/soc/wool_ff.png';
+    newCard.show = "frontface";
+    newCard.attachedToDeck = true;
+    game.gameObj.cards.push(newCard);
+    woolDeck.attachedCards.push(newCard);
+  }
+
+  game.gameObj.decks.push(woolDeck);
+
+  var startX = 658;
+  var startY = 897;
+  var brickDeck = new Deck("brickDeck", startX, startY, 78, 182);
+  for (var i = 0; i < 19; i++)
+  {
+    newCard = new Card('resource_' + (i + 19), startX + 5, startY + 80 - (i * 2));
+    newCard.backface = '/img/soc/resource_bf.png';
+    newCard.frontface = '/img/soc/brick_ff.png';
+    newCard.show = "frontface";
+    newCard.attachedToDeck = true;
+    game.gameObj.cards.push(newCard);
+    brickDeck.attachedCards.push(newCard);
+  }
+
+  game.gameObj.decks.push(brickDeck);
+
+  var startX = 745;
+  var startY = 897;
+  var woodDeck = new Deck("woodDeck", startX, startY, 78, 182);
+  for (var i = 0; i < 19; i++)
+  {
+    newCard = new Card('resource_' + (i + 38), startX + 5, startY + 80 - (i * 2));
+    newCard.backface = '/img/soc/resource_bf.png';
+    newCard.frontface = '/img/soc/wood_ff.png';
+    newCard.show = "frontface";
+    newCard.attachedToDeck = true;
+    game.gameObj.cards.push(newCard);
+    woodDeck.attachedCards.push(newCard);
+  }
+
+  game.gameObj.decks.push(woodDeck);
+
+  var startX = 957;
+  var startY = 897;
+  var wheatDeck = new Deck("wheatDeck", startX, startY, 78, 182);
+  for (var i = 0; i < 19; i++)
+  {
+    newCard = new Card('resource_' + (i + 57), startX + 5, startY + 80 - (i * 2));
+    newCard.backface = '/img/soc/resource_bf.png';
+    newCard.frontface = '/img/soc/wheat_ff.png';
+    newCard.show = "frontface";
+    newCard.attachedToDeck = true;
+    game.gameObj.cards.push(newCard);
+    wheatDeck.attachedCards.push(newCard);
+  }
+
+  game.gameObj.decks.push(wheatDeck);
+
+  var startX = 1044;
+  var startY = 897;
+  var oreDeck = new Deck("oreDeck", startX, startY, 78, 182);
+  for (var i = 0; i < 19; i++)
+  {
+    newCard = new Card('resource_' + (i + 76), startX + 5, startY + 80 - (i * 2));
+    newCard.backface = '/img/soc/resource_bf.png';
+    newCard.frontface = '/img/soc/ore_ff.png';
+    newCard.show = "frontface";
+    newCard.attachedToDeck = true;
+    game.gameObj.cards.push(newCard);
+    oreDeck.attachedCards.push(newCard);
+  }
+
+  game.gameObj.decks.push(oreDeck);
+
+  var startX = 1239;
+  var startY = 81;
+  var developmentDeck = new Deck("developmentDeck0", startX, startY, 100, 222);
+  for (var i = 0; i < 14; i++)
+  {
+    newCard = new Card('development_' + i, startX + 5, startY + 80 - (i * 2));
+    newCard.backface = '/img/soc/development_bf.png';
+    newCard.frontface = '/img/soc/knight_ff.png';
+    newCard.show = "backface";
+    newCard.attachedToDeck = true;
+    game.gameObj.cards.push(newCard);
+    developmentDeck.attachedCards.push(newCard);
+  }
+
+  for (var i = 14; i < 19; i++)
+  {
+    newCard = new Card('development_' + i, startX + 5, startY + 80 - (i * 2));
+    newCard.backface = '/img/soc/development_bf.png';
+    newCard.frontface = '/img/soc/victorypoint_ff.png';
+    newCard.show = "backface";
+    newCard.attachedToDeck = true;
+    game.gameObj.cards.push(newCard);
+    developmentDeck.attachedCards.push(newCard);
+  }
+
+  for (var i = 19; i < 21; i++)
+  {
+    newCard = new Card('development_' + i, startX + 5, startY + 80 - (i * 2));
+    newCard.backface = '/img/soc/development_bf.png';
+    newCard.frontface = '/img/soc/roadbuilding_ff.png';
+    newCard.show = "backface";
+    newCard.attachedToDeck = true;
+    game.gameObj.cards.push(newCard);
+    developmentDeck.attachedCards.push(newCard);
+  }
+
+  for (var i = 21; i < 23; i++)
+  {
+    newCard = new Card('development_' + i, startX + 5, startY + 80 - (i * 2));
+    newCard.backface = '/img/soc/development_bf.png';
+    newCard.frontface = '/img/soc/yearofplenty_ff.png';
+    newCard.show = "backface";
+    newCard.attachedToDeck = true;
+    game.gameObj.cards.push(newCard);
+    developmentDeck.attachedCards.push(newCard);
+  }
+
+  for (var i = 23; i < 25; i++)
+  {
+    newCard = new Card('development_' + i, startX + 5, startY + 80 - (i * 2));
+    newCard.backface = '/img/soc/development_bf.png';
+    newCard.frontface = '/img/soc/monopoly_ff.png';
+    newCard.show = "backface";
+    newCard.attachedToDeck = true;
+    game.gameObj.cards.push(newCard);
+    developmentDeck.attachedCards.push(newCard);
+  }
+
+  game.gameObj.decks.push(developmentDeck);
+
+  game.gameObj.openboxes.push(new Openbox('openbox0', 320, 0, 1280, 1080))
 }
+
 
 module.exports = {SOC_Game: SOC_Game}

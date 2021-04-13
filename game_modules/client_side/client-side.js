@@ -570,7 +570,8 @@ function init3dCard(card)
   if (card.faceType == "image")
   {
     $("#" + card.id).html("<div class='threeDcontainer'><div class='cardFace' style='transform:rotateY(180deg)'><img src='" + card.frontface + "'/></div><div class='cardFace'><img id='" + card.id + "BFimg' src='" + card.backface + "'/></div></div>")
-    var width = $("#" + card.id + " img").outerWidth();
+    // var width = $("#" + card.id + " img").outerWidth();
+    var width = $("#" + card.id + "BFimg").outerWidth();
 
     // var width = document.defaultView.getComputedStyle($("#" + card.id + "cardFace"), null).width;
     // var height = $("#" + card.id + "cardFace").height();
