@@ -16,6 +16,8 @@ SH_Game.prototype.resetGame = function(game)
   game.gameObj.decks = [];
   game.gameObj.openboxes = [];
   game.gameObj.scoreboxes = [];
+
+  game.gameObj.highestZ = 10000;
   
   for (var i = 0; i < 10; i++)
   {

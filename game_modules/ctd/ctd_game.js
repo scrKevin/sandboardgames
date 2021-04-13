@@ -17,6 +17,8 @@ CTD_Game.prototype.resetGame = function(game)
   game.gameObj.openboxes = [];
   game.gameObj.scoreboxes = [];
 
+  game.gameObj.highestZ = 10000;
+
   game.gameObj.openboxes.push(new Openbox("upperOpenbox", 0, 0, 1920, 300))
   game.gameObj.openboxes.push(new Openbox("lowerOpenbox", 0, 610, 1920, 300))
 

@@ -15,6 +15,8 @@ RMK_Game.prototype.resetGame = function(game)
   game.gameObj.openboxes = [];
   game.gameObj.scoreboxes = [];
 
+  game.gameObj.highestZ = 10000;
+
   var tileDeckX = 960 - (134 / 2);
   var tileDeckY = 540 - (172 / 2);
   var tileDeck = new Deck('tileDeck', tileDeckX, tileDeckY, 134, 172);

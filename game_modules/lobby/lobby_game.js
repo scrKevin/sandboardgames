@@ -19,6 +19,8 @@ Lobby_Game.prototype.resetGame = function(game)
   game.gameObj.openboxes = [];
   game.gameObj.scoreboxes = [];
 
+  game.gameObj.highestZ = 10000;
+
   for (var i = 0; i < 5; i++)
   {
     for (var j = 0; j < 4; j++)

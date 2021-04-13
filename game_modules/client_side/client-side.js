@@ -28,6 +28,21 @@ var colors = [
   "#ffbff7"
 ]
 
+var filterMap = {
+  "#FF0000": "invert(11%) sepia(88%) saturate(7320%) hue-rotate(5deg) brightness(104%) contrast(114%)",
+  "#88ff91": "invert(93%) sepia(56%) saturate(660%) hue-rotate(52deg) brightness(104%) contrast(102%)",
+  "#0000FF": "invert(10%) sepia(100%) saturate(5585%) hue-rotate(245deg) brightness(92%) contrast(152%)",
+  "#FFFF00": "invert(96%) sepia(55%) saturate(6571%) hue-rotate(356deg) brightness(102%) contrast(105%)",
+  "#00FFFF": "invert(93%) sepia(100%) saturate(5902%) hue-rotate(103deg) brightness(103%) contrast(102%)",
+  "#790079": "invert(12%) sepia(41%) saturate(6323%) hue-rotate(289deg) brightness(97%) contrast(134%)",
+  "#FF8800": "invert(65%) sepia(50%) saturate(5390%) hue-rotate(2deg) brightness(105%) contrast(103%)",
+  "#888888": "invert(60%) sepia(5%) saturate(5%) hue-rotate(344deg) brightness(89%) contrast(86%)",
+  "#0e8200": "invert(27%) sepia(61%) saturate(2095%) hue-rotate(81deg) brightness(106%) contrast(104%)",
+  "#ffbff7": "invert(81%) sepia(19%) saturate(976%) hue-rotate(285deg) brightness(106%) contrast(106%)"
+}
+
+var cssFilterBorder = " drop-shadow(1px 1px 0px black) drop-shadow(-1px 1px 0px black) drop-shadow(1px -1px 0px black) drop-shadow(-1px -1px 0px black)"
+
 var ws = null;
 
 var doorbell = new Audio('/wav/doorbell.wav');
@@ -38,6 +53,8 @@ var latestMouseX = -1;
 var latestMouseY = -1;
 var dragCardId = null;
 var lastTouchedCardId = null;
+
+var highestZ;
 
 var blockCardChange = [];
 
@@ -78,6 +95,7 @@ function addWebcam(stream, playerId, mirrored, muted)
   video.play();
   updateCss("#webcam" + playerId, "display", "block");
   updateCss("#player" + playerId + "box", "display", "block");
+  updateCss(".pieceFor_" + playerId, "display", "block");
   updateCss("#player" + playerId + "NameText", "display", "initial");
   updateCss("#player" + playerId + "Name", "display", "initial");
 }
@@ -122,6 +140,8 @@ function InitWebSocket()
     });
 
     clientController.on("updateGame", (gameObj, changedCardsBuffer, newDrawCoords, init) => {
+      highestZ = gameObj.highestZ;
+      // console.log(gameObj.highestZ);
       if(init)
       {
         initCards(gameObj)
@@ -150,6 +170,7 @@ function InitWebSocket()
       updateCss("#webcam" + playerId, "display", "none");
       updateCss("#cursor" + playerId, "display", "none");
       updateCss("#player" + playerId + "box", "display", "none");
+      updateCss(".pieceFor_" + playerId, "display", "none");
       updateCss("#player" + playerId + "NameText", "display", "none");
       updateCss("#player" + playerId + "Name", "display", "none");
       updateCss("#player" + playerId + "box", "background-color", "#FFFFFF00");
@@ -328,6 +349,7 @@ $( document ).ready(function() {
     var cardX = Math.round(cardPosition.left * (1 / scale));
     var cardY = Math.round(cardPosition.top * (1 / scale));
     clientController.clickOnCard(event.currentTarget.id, cardX, cardY);
+    // updateCss("#" + dragCardId, "z-index", highestZ + 1);
     blockCardChange = [];
   });
 
@@ -589,7 +611,7 @@ function initCards(gameObj){
   }
   for (var i = 0; i < gameObj.cards.length; i++)
   {
-    updateCss("#" + gameObj.cards[i].id, "z-index", String(gameObj.cards[i].z + 60));
+    updateCss("#" + gameObj.cards[i].id, "z-index", String(gameObj.cards[i].z));
     updateCss("#" + gameObj.cards[i].id, "left", gameObj.cards[i].x + "px");
     updateCss("#" + gameObj.cards[i].id, "top", gameObj.cards[i].y + "px");
     if (gameObj.cards[i].hasOwnProperty("show"))
@@ -645,10 +667,11 @@ function updateCards(gameObj, changedCardsBuffer)
     }
     if(card.id != dragCardId)
     {
-      updateCss("#" + card.id, "z-index", String(card.z + 60));
+      // updateCss("#" + card.id, "z-index", String(card.z + 60));
       updateCss("#" + card.id, "left", card.x + "px");
       updateCss("#" + card.id, "top", card.y + "px");
     }
+    updateCss("#" + card.id, "z-index", String(card.z));
 
     if(!blockCardChange.includes(card.id))
     {
@@ -699,6 +722,7 @@ function updateCursors (gameObj)
   for (player of gameObj.players){
     updateCss("#cursor" + playerIndex, "background-color", player.color);
     updateCss("#player" + player.id + "box", "background-color", player.color);
+    updateCss(".pieceFor_" + player.id + " .pieceImg", "filter", filterMap[player.color] + cssFilterBorder);
     updateHtml("#player" + player.id + "NameText", player.name)
     if(player.id != myPlayerId)
     {

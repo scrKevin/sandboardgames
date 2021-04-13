@@ -41,6 +41,11 @@ MouseHandler.prototype.clickOnCard = function(id, cardX, cardY)
   this.dragCardY = cardY;
   this.mouseclicked = true;
   this.mouseFpsLimiter.update();
+  var sendData = {
+    type: "clickcard",
+    card: id
+  }
+  this.wsHandler.sendToWs(sendData);
 }
 
 MouseHandler.prototype.touchCard = function(id, x, y)

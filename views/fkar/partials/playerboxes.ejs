@@ -1,4 +1,4 @@
 <% for (var i = 0; i < 10;  i++ ) { %>
-  <div class="playerbox" id="player<%= i %>box" style="top: <%= playerboxStartPos[i].top - 10 %>px; left: <%= playerboxStartPos[i].left - 10 %>px"></div>
+  <div class="playerbox" id="player<%= i %>box" style="top: <%= playerboxStartPos[i].top - 10 %>px; left: <%= playerboxStartPos[i].left - 10 %>px; z-index: -1;"></div>
   <div class="playerName" id="player<%= i %>Name" style="top: <%= playerboxStartPos[i].top %>px; left: <%= playerboxStartPos[i].left %>px"><span class="playerNameText" id="player<%= i %>NameText"></span></div>
 <% } %>

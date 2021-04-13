@@ -27,6 +27,13 @@ SOC_Game.prototype.resetGame = function(game)
   game.gameObj.openboxes = [];
   game.gameObj.scoreboxes = [];
 
+  game.gameObj.highestZ = 10000;
+
+  for (var i = 0; i < 4; i++)
+  {
+    game.gameObj.scoreboxes.push(new Scorebox(i));
+  }
+
   var positionArray = [];
   xStart = 736;
   for (var i = 0; i < 3; i++)
@@ -77,6 +84,7 @@ SOC_Game.prototype.resetGame = function(game)
     for (var i = 0; i < hexObj[hex].quantity; i++)
     {
       var newHexCard = new Card("hex_" + index, shuffledPositions[index].x, shuffledPositions[index].y);
+      newHexCard.fixedZ = true;
       game.gameObj.cards.push(newHexCard);
       if (hex != "desert")
       {
@@ -107,6 +115,7 @@ SOC_Game.prototype.resetGame = function(game)
       {
         // console.log(shuffledNumberPositions[index]);
         var newNumberCard = new Card("n_" + i + j, shuffledNumberPositions[index].x, shuffledNumberPositions[index].y);
+        newNumberCard.fixedZ = true;
         game.gameObj.cards.push(newNumberCard);
         index++;
       }
@@ -132,6 +141,7 @@ SOC_Game.prototype.resetGame = function(game)
   for (var i = 0; i < shuffledHarbourPositions.length; i++)
   {
     var h0 = new Card("harbour" + i, shuffledHarbourPositions[i].x, shuffledHarbourPositions[i].y);
+    h0.fixedZ = true;
     game.gameObj.cards.push(h0)
   }
 

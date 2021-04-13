@@ -17,6 +17,8 @@ FKAR_Game.prototype.resetGame = function(game)
   game.gameObj.openboxes = [];
   game.gameObj.scoreboxes = [];
 
+  game.gameObj.highestZ = 10000;
+
   for (player of game.gameObj.players)
   {
     player.drawArray = [];

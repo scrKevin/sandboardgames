@@ -43,6 +43,8 @@ CAH_Game.prototype.resetGame = function(game)
   game.gameObj.openboxes = [];
   game.gameObj.scoreboxes = [];
 
+  game.gameObj.highestZ = 10000;
+
   var rows = 4;
   var columns = 6;
 

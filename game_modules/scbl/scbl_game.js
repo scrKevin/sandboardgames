@@ -16,6 +16,8 @@ SCBL_Game.prototype.resetGame = function(game)
   game.gameObj.openboxes = [];
   game.gameObj.scoreboxes = [];
 
+  game.gameObj.highestZ = 10000;
+
   for (var i = 0; i < 4; i++)
   {
     game.gameObj.scoreboxes.push(new Scorebox(i));

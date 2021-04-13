@@ -30,7 +30,7 @@ function WS_distributor(wss, resetGameFunction)
     players:[],
     cards: [],
     decks: [],
-    openboxes: []
+    openboxes: [],
   }
   this.changedCardsBuffer = [];
 
@@ -110,7 +110,7 @@ function WS_distributor(wss, resetGameFunction)
             card.setLastTouchedBy(id);
             if((card.isMyCard(id, json.mouseclicked) && json.mouseclicked) || json.card.release)
             {
-              card.updatePos(json.card.pos)
+              card.updatePos(json.card.pos);
               for (deck of this.gameObj.decks)
               {
                 if(deck.isInDeck(json.pos.x, json.pos.y))
@@ -154,6 +154,22 @@ function WS_distributor(wss, resetGameFunction)
           }
         }
         this.broadcast();
+      }
+      else if (json.type == "clickcard")
+      {
+        var card = this.gameObj.cards.find(function(card){
+          return card.id === json.card;
+        });
+        if (typeof(card) !== 'undefined')
+        {
+          card.setLastTouchedBy(id);
+
+          this.gameObj.highestZ++;
+          card.setZ(this.gameObj.highestZ);
+          
+          this.addToChangedCardsBuffer(card.id);
+          this.broadcast();
+        }
       }
       else if (json.type == "touchcard")
       {

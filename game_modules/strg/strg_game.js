@@ -15,6 +15,8 @@ STRG_Game.prototype.resetGame = function(game)
   game.gameObj.openboxes = [];
   game.gameObj.scoreboxes = [];
 
+  game.gameObj.highestZ = 10000;
+
   var pieces = {
     "B": {img: "B.svg", info: "Bomb", quantity: 6},
     "10": {img: "1.svg", info: "Marshall", quantity: 1},

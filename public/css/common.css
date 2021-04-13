@@ -26,6 +26,11 @@
     background: #fff;
 }
 
+.dice
+{
+    transform-style: preserve-3d;
+}
+
 .threeDcontainer
 {
     position: relative;

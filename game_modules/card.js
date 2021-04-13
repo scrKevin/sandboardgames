@@ -9,26 +9,30 @@ function Card(id, x, y){
   this.isInAnOpenbox = false;
   this.clickedBy = -1;
   this.visibleFor = -1;
+  this.fixedZ = false;
 }
 
 Card.prototype.setLastTouchedBy = function(playerId)
 {
-	this.lastTouchedBy = playerId
+	this.lastTouchedBy = playerId;
 }
 
 Card.prototype.setZ = function(z)
 {
-	this.z = z
+  if (!this.fixedZ)
+  {
+	  this.z = z;
+  }
 }
 
 Card.prototype.setX = function(x)
 {
-	this.x = x
+	this.x = x;
 }
 
 Card.prototype.setY = function(y)
 {
-	this.y = y
+	this.y = y;
 }
 
 Card.prototype.setRotationX = function(rotationX)

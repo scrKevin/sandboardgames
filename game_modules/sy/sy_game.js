@@ -15,6 +15,8 @@ SY_Game.prototype.resetGame = function(game)
   game.gameObj.decks = [];
   game.gameObj.openboxes = [];
   game.gameObj.scoreboxes = [];
+
+  game.gameObj.highestZ = 10000;
   
   var pionRed = new Card('pion-red', 1620, 880);
   game.gameObj.cards.push(pionRed);

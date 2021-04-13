@@ -1,11 +1,11 @@
 <% for (var i =0; i < fixedPlayers;  i++ ) { %>
-  <img id="duncehat<%= i%>" src="/img/common/dunce_hat.svg" style="position: absolute; top: <%= webcamPos[i].top %>px; left:  <%= webcamPos[i].left %>px; z-index: 3; display: none;"/>
-  <div class='webcam' id='webcam<%= i %>' style="position: absolute; z-index:2; top: <%= webcamPos[i].top %>px; left:  <%= webcamPos[i].left %>px; display: none;"></div>
-  <div class="micContainer" id="micContainer<%= i %>" style="width: 62px; height: 62px; display: none; position: absolute; top: <%= webcamPos[i].top %>px; left:  <%= webcamPos[i].left %>px;">
+  <div class='webcam' id='webcam<%= i %>' style="position: absolute; z-index:-1; top: <%= webcamPos[i].top %>px; left:  <%= webcamPos[i].left %>px; display: none;"></div>
+  <div class="micContainer" id="micContainer<%= i %>" style="width: 62px; height: 62px; display: none; position: absolute; top: <%= webcamPos[i].top %>px; left:  <%= webcamPos[i].left %>px; z-index:0;;">
     <img class="mic" src="/img/common/mic.svg" style="position: absolute; z-index: 4; display: block"/>
     <img class="mute mic" src="/img/common/forbidden.svg" style="position: absolute; z-index: 5; display: none;"/>
   </div>
   <div id="latency<%= i %>" style="position: absolute; top: <%= webcamPos[i].top %>px; left: <%= webcamPos[i].left + 80%>px; z-index: 2"></div>
+  <img id="duncehat<%= i%>" src="/img/common/dunce_hat.svg" style="position: absolute; top: <%= webcamPos[i].top %>px; left:  <%= webcamPos[i].left %>px; z-index: 5; display: none;"/>
 <% } %>
 
 <% for (var i = fixedPlayers; i <20;  i++ ) { %>
