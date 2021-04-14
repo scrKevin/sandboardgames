@@ -328,9 +328,21 @@ SOC_Game.prototype.resetGame = function(game)
     developmentDeck.attachedCards.push(newCard);
   }
 
-  game.gameObj.decks.push(developmentDeck);
+  
 
   game.gameObj.openboxes.push(new Openbox('openbox0', 320, 0, 1280, 1080))
+
+  var developmentDeckClosedbox = new Openbox('closedbox0', startX, startY, 100, 222);
+  developmentDeckClosedbox.showFace = 'backface';
+  game.gameObj.openboxes.push(developmentDeckClosedbox);
+
+  developmentDeck.attachedOpenboxes.push(developmentDeckClosedbox);
+  game.gameObj.decks.push(developmentDeck);
+
+  game.gameObj.cards.push(new Card('building_costs', 0, 1080));
+  game.gameObj.cards.push(new Card('longest_road', 960, 1080));
+  game.gameObj.cards.push(new Card('largest_army', 960, 1280));
+  game.gameObj.cards.push(new Card('development_cards', 1200, 1080));
 }
 
 

@@ -6,6 +6,7 @@ function Openbox(id, x, y, width, height){
   this.width = width;
   this.height = height;
   this.attachedToDeck = false;
+  this.showFace = "frontface";
 }
 
 Openbox.prototype.isInOpenBox = function(x, y){

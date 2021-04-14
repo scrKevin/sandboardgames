@@ -4279,7 +4279,12 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId)
       this.wsHandler.sendToWs(sendData);
     }
 
-  })
+  });
+  var sendData = {
+    type: "newPeerReceived",
+    playerId: playerId
+  }
+  this.wsHandler.sendToWs(sendData);
 }
 
 WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)

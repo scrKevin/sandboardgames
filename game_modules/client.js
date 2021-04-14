@@ -16,6 +16,9 @@ function Client(playerId, ws)
   });
   this.dmp = new diff_match_patch();
   this.peerStatus = {};
+  this.newPeerTimeouts = {};
+  this.newPeerState = "idle";
+  this.newPeerQueue = [];
   this.playerId = playerId;
   this.ws = ws;
   this.isAlive = true;
@@ -57,6 +60,70 @@ Client.prototype.setGameObj = function(gameObj)
     this.ws.send(binaryString);
   }
   this.gameObj = gameObj;
+}
+
+Client.prototype.sendNewPeer = function (playerId)
+{
+  this.newPeerQueue.push(playerId);
+  if (this.newPeerState == "idle")
+  {
+    this.processNewPeerQueue();
+  }
+  else
+  {
+    console.log("Queued newPeer of " + playerId + " for " + this.playerId)
+  }
+}
+
+Client.prototype.newPeerInitated = function()
+{
+  console.log("Last newPeer request for " + this.playerId + " was initiated.")
+  this.newPeerState = 'idle';
+  this.processNewPeerQueue();
+}
+
+Client.prototype.processNewPeerQueue = function()
+{
+  if (this.newPeerQueue.length > 0)
+  {
+    newPlayerId = this.newPeerQueue.shift();
+    this.newPeerState = 'waitingForInitiator';
+    var sendData = {
+      type: "newPeer",
+      playerId: newPlayerId
+    }
+    var strToSend = JSON.stringify(sendData);
+    var binaryString = this.constructMessage(strToSend);
+    if (this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(binaryString);
+      console.log("SENT newPeer of " + newPlayerId + " to " + this.playerId);
+    }
+    else
+    {
+      console.log("ERROR in sending newPeer of " + newPlayerId + " to " + this.playerId + ". ws.readyState not OPEN.");
+    }
+    this.newPeerTimeouts[newPlayerId] = setTimeout(function(){
+      this.sendNewPeer(newPlayerId);
+    }, 5000);
+  }
+  else
+  {
+    this.newPeerState = 'idle';
+    console.log("All newPeer requests for " + this.playerId + " initiated.")
+  }
+}
+
+Client.prototype.newPeerConfirmed = function(playerId)
+{
+  clearTimeout(this.newPeerTimeouts[playerId]);
+  console.log("newPeer " + playerId + " received by " + this.playerId);
+}
+
+Client.prototype.clearTimeouts = function()
+{
+  for (p in this.newPeerTimeouts){
+    clearTimeout(this.newPeerTimeouts[p]);
+  }
 }
 
 Client.prototype.updateBroadcast = function()

@@ -129,19 +129,20 @@ function WS_distributor(wss, resetGameFunction)
             }
             if (card.hasOwnProperty("show"))
             {
-              var isInAnOpenbox = false;
+              var openboxData = {isInAnOpenBox: false, openbox: null};
               for (openbox of this.gameObj.openboxes)
               {
                 if (openbox.isInOpenBox(json.pos.x, json.pos.y))
                 {
-                  isInAnOpenbox = true;
-                  break;
+                  openboxData.isInAnOpenbox = true;
+                  openboxData.openbox = openbox;
+                  // break;
                 }
               }
-              if (isInAnOpenbox && (!json.mouseclicked || json.card.release))
+              if (openboxData.isInAnOpenbox && (!json.mouseclicked || json.card.release))
               {
                 this.addToChangedCardsBuffer(card.id);
-                card.show = 'frontface';
+                card.show = openboxData.openbox.showFace;
                 card.isInAnOpenbox = true;
               }
               else
@@ -274,8 +275,13 @@ function WS_distributor(wss, resetGameFunction)
         player.updateColor(json.color)
         this.broadcast();
       }
+      else if (json.type == "newPeerReceived")
+      {
+        client.newPeerConfirmed(json.playerId);
+      }
       else if (json.type == "initiatorReady")
       {
+        client.newPeerInitated();
         for (clientI of this.clients)
         {
           if (clientI.playerId == json.playerId)
@@ -341,6 +347,7 @@ function WS_distributor(wss, resetGameFunction)
       else if (json.type == "requestId")
       {
         client.setGameObj(this.gameObj);
+        this.broadcastNewPeer(id, ws);
       }
       else if (json.type == "reset")
       {
@@ -388,6 +395,7 @@ function WS_distributor(wss, resetGameFunction)
     });
     
     ws.on('close', () => {
+      client.clearTimeouts();
       var removeIndexClients = this.clients.map(function(item) { return item.playerId; }).indexOf(id);
       this.clients.splice(removeIndexClients, 1);
 
@@ -399,7 +407,7 @@ function WS_distributor(wss, resetGameFunction)
 
     });
 
-    this.broadcastNewPeer(id, ws);
+    // this.broadcastNewPeer(id, ws);
     
   });
 
@@ -544,25 +552,25 @@ WS_distributor.prototype.broadcastLeftPeer = function (playerId)
   });
 }
 
+// WS_distributor.prototype.newPeerReceived = function (playerId, forPlayerId){
+//   for (clientI of this.clients)
+//   {
+//     if (clientI.playerId != playerId)
+//     {
+//       // clientI.peerStatus[playerId] = "newPeerSent";
+//     }
+//   }
+// }
+
 WS_distributor.prototype.broadcastNewPeer = function (playerId, newWs){
   for (clientI of this.clients)
   {
     if (clientI.playerId != playerId)
     {
       clientI.peerStatus[playerId] = "newPeerSent";
+      clientI.sendNewPeer(playerId);
     }
   }
-  var sendData = {
-    type: "newPeer",
-    playerId: playerId
-  }
-  var strToSend = JSON.stringify(sendData);
-  var binaryString = this.constructMessage(strToSend);
-  this.wss.clients.forEach(function each(client) {
-    if (client.readyState === WebSocket.OPEN && client != newWs) {
-      client.send(binaryString);
-    }
-  });
 }
 
 WS_distributor.prototype.broadcastReset = function ()
