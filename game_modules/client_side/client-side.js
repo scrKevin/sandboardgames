@@ -411,24 +411,34 @@ $( document ).ready(function() {
     })
   }
 
-  navigator.mediaDevices.getUserMedia({video: {
-                          width: {
-                              max: 320,
-                              ideal: 160 
-                          },
-                          height: {
-                              max: 240,
-                              ideal: 120
-                          }
-                      }, audio: true})
-    .then(function(stream) {
-      myStream = stream;
-      InitWebSocket();
-      $('#welcomeModal').modal({
-                          show: true,
-                          backdrop: 'static',
-                          keyboard: false
-                          });
+  // navigator.mediaDevices.getUserMedia({video: {
+  //                         width: {
+  //                             max: 320,
+  //                             ideal: 160 
+  //                         },
+  //                         height: {
+  //                             max: 240,
+  //                             ideal: 120
+  //                         }
+  //                     }, audio: true})
+  //   .then(function(stream) {
+  //     myStream = stream;
+  //     InitWebSocket();
+  //     $('#welcomeModal').modal({
+  //                         show: true,
+  //                         backdrop: 'static',
+  //                         keyboard: false
+  //                         });
+  // });
+    navigator.mediaDevices.getUserMedia({video: true, audio: true})
+  .then(function(stream) {
+  myStream = stream;
+  InitWebSocket();
+  $('#welcomeModal').modal({
+      show: true,
+      backdrop: 'static',
+      keyboard: false
+      });
   });
 });
 
