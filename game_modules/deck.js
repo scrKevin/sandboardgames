@@ -23,10 +23,30 @@ function Deck(id, x, y, width, height){
   this.height = height;
   this.immovable = false;
   this.clickedBy = -1;
+  this.fairMatrix = [
+    {x: 1, y: 1},
+    {x: 1, y: 3},
+    {x: 2, y: 1},
+    {x: 2, y: 2},
+    {x: 2, y: 3},
+    {x: 2, y: 4},
+    {x: 3, y: 1},
+    {x: 3, y: 3},
+    {x: 4, y: 1},
+    {x: 4, y: 2},
+    {x: 4, y: 3},
+    {x: 4, y: 4},
+  ];
 }
 
 Deck.prototype.getRandomFace = function(max, min){
   return (Math.floor(Math.random() * (max-min)) + min) * 90;
+}
+
+Deck.prototype.getRandomIntInclusive = function (min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min + 1) + min); //The maximum is inclusive and the minimum is inclusive
 }
 
 Deck.prototype.shuffle = function(a){
@@ -63,8 +83,13 @@ Deck.prototype.rollDeck = function()
 {
   for(var i = 0; i < this.attachedCards.length; i++)
   {
-    this.attachedCards[i].setRotationX(this.getRandomFace(1, 24));
-    this.attachedCards[i].setRotationY(this.getRandomFace(1, 24));
+    var r1 = this.getRandomIntInclusive(0, 11);
+    var r2 = this.getRandomIntInclusive(0, 5);
+    var r3 = this.getRandomIntInclusive(0, 5);
+    var rx = this.fairMatrix[r1].x;
+    var ry = this.fairMatrix[r1].y;
+    this.attachedCards[i].setRotationX((rx * 90) + (360 * r2));
+    this.attachedCards[i].setRotationY((ry * 90) + (360 * r3));
   }
 }
 
