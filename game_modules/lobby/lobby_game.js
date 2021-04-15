@@ -8,8 +8,8 @@ let Game = require('../base_game').Game;
 
 var games = ['sh', 'sy', 'cah', 'rmk', 'ctd', 'fkar', 'strg', 'scbl', 'soc']
 
-function Lobby_Game(wss){
-  this.game = new Game(wss, this.resetGame);
+function Lobby_Game(wss, turnServer){
+  this.game = new Game(wss, turnServer, this.resetGame);
 }
 
 Lobby_Game.prototype.resetGame = function(game)

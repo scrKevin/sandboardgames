@@ -81,8 +81,13 @@ function WsHandler(ws)
     {
       this.lastGameObj = json.gameObj;
       this.myPlayerId = json.playerId;
+      this.eventEmitter.emit('turnCredentials', json.turnCredentials);
       this.eventEmitter.emit('playerId', json.playerId);
-      this.eventEmitter.emit('updateGame', JSON.parse(this.lastGameObj), [], {}, true)
+      this.eventEmitter.emit('updateGame', JSON.parse(this.lastGameObj), [], {}, true);
+      var sendData = {
+        type: "initiated"
+      };
+      this.sendToWs(sendData);
     }
     else if (json.type == "newPeer")
     {

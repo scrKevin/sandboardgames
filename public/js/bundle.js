@@ -3347,35 +3347,35 @@ $( document ).ready(function() {
     })
   }
 
-  // navigator.mediaDevices.getUserMedia({video: {
-  //                         width: {
-  //                             max: 320,
-  //                             ideal: 160 
-  //                         },
-  //                         height: {
-  //                             max: 240,
-  //                             ideal: 120
-  //                         }
-  //                     }, audio: true})
-  //   .then(function(stream) {
-  //     myStream = stream;
-  //     InitWebSocket();
-  //     $('#welcomeModal').modal({
-  //                         show: true,
-  //                         backdrop: 'static',
-  //                         keyboard: false
-  //                         });
-  // });
-    navigator.mediaDevices.getUserMedia({video: true, audio: true})
-  .then(function(stream) {
-  myStream = stream;
-  InitWebSocket();
-  $('#welcomeModal').modal({
-      show: true,
-      backdrop: 'static',
-      keyboard: false
-      });
+  navigator.mediaDevices.getUserMedia({video: {
+                          width: {
+                              max: 320,
+                              ideal: 160 
+                          },
+                          height: {
+                              max: 240,
+                              ideal: 120
+                          }
+                      }, audio: true})
+    .then(function(stream) {
+      myStream = stream;
+      InitWebSocket();
+      $('#welcomeModal').modal({
+                          show: true,
+                          backdrop: 'static',
+                          keyboard: false
+                          });
   });
+  //   navigator.mediaDevices.getUserMedia({video: true, audio: true})
+  // .then(function(stream) {
+  // myStream = stream;
+  // InitWebSocket();
+  // $('#welcomeModal').modal({
+  //     show: true,
+  //     backdrop: 'static',
+  //     keyboard: false
+  //     });
+  // });
 });
 
 function toggleMic(e) {
@@ -3905,6 +3905,9 @@ ClientController.prototype.initialize = function(ws, myStream)
   this.wsHandler.eventEmitter.on("updateGame", (gameObj, changedCardsBuffer, newDrawCoords, init) => {
     this.emit("updateGame", gameObj, changedCardsBuffer, newDrawCoords, init);
   });
+  this.wsHandler.eventEmitter.on("turnCredentials", (turnCredentials) => {
+    this.webcamHandler.turnCredentials(turnCredentials);
+  });
   this.wsHandler.eventEmitter.on("newPeer", (playerId) => {
     this.webcamHandler.initWebcamPeer(playerId);
     this.emit("newPeer", playerId);
@@ -4219,6 +4222,10 @@ module.exports = {MouseHandler: MouseHandler}
 let SimplePeer = require('simple-peer');
 let EventEmitter = require('events').EventEmitter;
 
+var icehost = window.location.hostname;
+console.log("icehost: " + icehost);
+var peerConfig = {};
+
 if(process.env.NODE_ENV === 'test')
 {
   var wrtc = require('wrtc');
@@ -4234,12 +4241,22 @@ function WebcamHandler(wsHandler, myStream)
 
 WebcamHandler.prototype = Object.create(EventEmitter.prototype);
 
+WebcamHandler.prototype.turnCredentials = function(turnCredentials)
+{
+  peerConfig = {iceServers: [ {
+    urls: "turn:" + icehost + ':3478',
+    username: turnCredentials.username,
+    credential: turnCredentials.pass
+  }]}
+}
+
 WebcamHandler.prototype.initWebcamPeer = function(playerId)
 {
-  //console.log("initiating peer for player " + playerId)
+  console.log("initiating peer for player " + playerId)
   var peerOptions = {
     initiator: true,
     trickle: false,
+    config: peerConfig,
     stream: this.myStream
   }
   if(process.env.NODE_ENV === 'test')
@@ -4249,7 +4266,7 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId)
   this.peers[playerId] = new SimplePeer(peerOptions);
 
   this.peers[playerId].on('signal', (data) => {
-    console.log("initalizing peer for player " + playerId)
+    console.log("initiator ready - peer for player " + playerId)
     console.log(data);
     var sendData = {
       type: "initiatorReady",
@@ -4302,6 +4319,7 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
   var peerOptions = {
     initiator: false,
     trickle: false,
+    config: peerConfig,
     stream: this.myStream
   }
   if(process.env.NODE_ENV === 'test')
@@ -4451,8 +4469,13 @@ function WsHandler(ws)
     {
       this.lastGameObj = json.gameObj;
       this.myPlayerId = json.playerId;
+      this.eventEmitter.emit('turnCredentials', json.turnCredentials);
       this.eventEmitter.emit('playerId', json.playerId);
-      this.eventEmitter.emit('updateGame', JSON.parse(this.lastGameObj), [], {}, true)
+      this.eventEmitter.emit('updateGame', JSON.parse(this.lastGameObj), [], {}, true);
+      var sendData = {
+        type: "initiated"
+      };
+      this.sendToWs(sendData);
     }
     else if (json.type == "newPeer")
     {
@@ -19061,8 +19084,20 @@ function config (name) {
 'use strict';
 
 exports.MediaStream = window.MediaStream;
+exports.MediaStreamTrack = window.MediaStreamTrack;
+exports.RTCDataChannel = window.RTCDataChannel;
+exports.RTCDataChannelEvent = window.RTCDataChannelEvent;
+exports.RTCDtlsTransport = window.RTCDtlsTransport;
 exports.RTCIceCandidate = window.RTCIceCandidate;
+exports.RTCIceTransport = window.RTCIceTransport;
 exports.RTCPeerConnection = window.RTCPeerConnection;
+exports.RTCPeerConnectionIceEvent = window.RTCPeerConnectionIceEvent;
+exports.RTCRtpReceiver = window.RTCRtpReceiver;
+exports.RTCRtpSender = window.RTCRtpSender;
+exports.RTCRtpTransceiver = window.RTCRtpTransceiver;
+exports.RTCSctpTransport = window.RTCSctpTransport;
 exports.RTCSessionDescription = window.RTCSessionDescription;
+exports.getUserMedia = window.getUserMedia;
+exports.mediaDevices = navigator.mediaDevices;
 
 },{}]},{},[8]);

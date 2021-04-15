@@ -6,8 +6,8 @@ var Startpositions = require("./startpositions")
 
 let Game = require('../base_game').Game;
 
-function SH_Game(wss){
-  this.game = new Game(wss, this.resetGame);
+function SH_Game(wss, turnServer){
+  this.game = new Game(wss, turnServer, this.resetGame);
 }
 
 SH_Game.prototype.resetGame = function(game)

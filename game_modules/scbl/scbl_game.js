@@ -5,8 +5,8 @@ let Scorebox = require('../scorebox').Scorebox;
 
 let Game = require('../base_game').Game;
 
-function SCBL_Game(wss){
-  this.game = new Game(wss, this.resetGame);
+function SCBL_Game(wss, turnServer){
+  this.game = new Game(wss, turnServer, this.resetGame);
 }
 
 SCBL_Game.prototype.resetGame = function(game)

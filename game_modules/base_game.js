@@ -1,4 +1,5 @@
 const WebSocket = require('ws');
+const crypto = require('crypto');
 let Player = require('./player').Player
 let Client = require('./client').Client
 let diff_match_patch = require('diff-match-patch')
@@ -11,13 +12,14 @@ var Openbox = require('./openbox').Openbox
 let FpsLimiter = require('./fps_limiter').FpsLimiter;
 
 
-function WS_distributor(wss, resetGameFunction)
+function WS_distributor(wss, turnServer, resetGameFunction)
 {
   this.useZip = false;
   this.lastSentTime = new Date();
   this.transmittedBytes = 0;
 
   this.resetGame = resetGameFunction;
+  this.turnServer = turnServer;
   this.wss = wss;
   this.playerNumbers = []
   for (var i = 0; i < 20; i++)
@@ -39,8 +41,11 @@ function WS_distributor(wss, resetGameFunction)
   this.wss.on('connection', (ws) => {
 
     var player = new Player();
-
     var id = player.setId(this.playerNumbers);
+    var turnUsername =  crypto.randomBytes(20).toString('hex');
+    var turnPass = crypto.randomBytes(20).toString('hex');
+    this.turnServer.addUser(turnUsername, turnPass);
+    console.log("added turnCredentials for player " + id + ": u:" + turnUsername + " p:" + turnPass);
     var client = new Client(id, ws);
 
     this.clients.push(client);
@@ -346,7 +351,13 @@ function WS_distributor(wss, resetGameFunction)
       }
       else if (json.type == "requestId")
       {
-        client.setGameObj(this.gameObj);
+        client.setGameObj(this.gameObj, {username: turnUsername, pass: turnPass});
+        // this.broadcastNewPeer(id, ws);
+      }
+      else if (json.type == "initiated")
+      {
+        client.initiated = true;
+        console.log("player " + id + " initiated.")
         this.broadcastNewPeer(id, ws);
       }
       else if (json.type == "reset")
@@ -395,7 +406,10 @@ function WS_distributor(wss, resetGameFunction)
     });
     
     ws.on('close', () => {
+      this.turnServer.removeUser(this.turnServer);
+      console.log("removed turnCredentials for player " + id);
       client.clearTimeouts();
+      client.initiated = false;
       var removeIndexClients = this.clients.map(function(item) { return item.playerId; }).indexOf(id);
       this.clients.splice(removeIndexClients, 1);
 
@@ -565,7 +579,7 @@ WS_distributor.prototype.broadcastLeftPeer = function (playerId)
 WS_distributor.prototype.broadcastNewPeer = function (playerId, newWs){
   for (clientI of this.clients)
   {
-    if (clientI.playerId != playerId)
+    if (clientI.playerId != playerId && clientI.initiated)
     {
       clientI.peerStatus[playerId] = "newPeerSent";
       clientI.sendNewPeer(playerId);

@@ -1,5 +1,12 @@
 require('./game_modules/consoleTimestamp')();
 
+var Turn = require('node-turn');
+var turnServer = new Turn({
+  // set options
+  authMech: 'long-term'
+});
+turnServer.start();
+
 const express = require('express');
 const path = require("path");
 const https = require('https');
@@ -38,10 +45,11 @@ if(process.env.NODE_ENV === 'development')
 {
   // create a test gameroom on startup, this speeds up development..
   console.log("test gameRoom created at /0/");
-  newGameRoom = new GameRoom("test", " ", availableGames);
+  newGameRoom = new GameRoom("test", " ", availableGames, turnServer);
   newGameRoom.hash = "0";
   gameRooms.push(newGameRoom);
 }
+
 
 function onUpgrade(request, socket, head)
 {
@@ -98,7 +106,7 @@ app.post("/api/create", (req, res) => {
   var index = gameRooms.map(function(item){ return item.name;}).indexOf(req.body.nameCreate);
   if (index == -1)
   {
-    newGameRoom = new GameRoom(req.body.nameCreate, req.body.passCreate, availableGames);
+    newGameRoom = new GameRoom(req.body.nameCreate, req.body.passCreate, availableGames, turnServer);
     gameRooms.push(newGameRoom);
     console.log("Created GameRoom '" + req.body.nameCreate + "'");
     res.redirect("/" + newGameRoom.hash + "/lobby");

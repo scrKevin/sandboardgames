@@ -10,8 +10,8 @@ let Game = require('../base_game').Game;
 var cardsJson = JSON.parse(fs.readFileSync(path.join(__dirname, 'cards.json')));
 
 
-function CAH_Game(wss){
-  this.game = new Game(wss, this.resetGame);
+function CAH_Game(wss, turnServer){
+  this.game = new Game(wss, turnServer, this.resetGame);
 }
 
 function getRandom(arr, n) {

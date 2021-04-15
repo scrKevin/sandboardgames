@@ -1,9 +1,10 @@
 const crypto = require('crypto');
 const WebSocket = require('ws');
 
-function GameRoom(name, pass, availableGames)
+function GameRoom(name, pass, availableGames, turnServer)
 {
   this.name = name;
+  this.turnServer = turnServer;
   this.hash = crypto.createHash('md5').update(name + pass).digest("hex")
   this.availableGames = availableGames;
 
@@ -12,7 +13,7 @@ function GameRoom(name, pass, availableGames)
   for (gameName in this.availableGames)
   {
     var newWsServer = new WebSocket.Server({ noServer: true });
-    var newGameHandler = new this.availableGames[gameName].GameClass(newWsServer);
+    var newGameHandler = new this.availableGames[gameName].GameClass(newWsServer, this.turnServer);
     this.games.push({wsLocation: this.availableGames[gameName].wsLocation, wsServer: newWsServer, gameHandler: newGameHandler})
   }
   this.flagAsInactive = false;

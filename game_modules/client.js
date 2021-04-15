@@ -5,6 +5,7 @@ var pako = require('pako');
 
 function Client(playerId, ws)
 {
+  this.initiated = false;
   this.useZip = false;
   this.gameObj = null;
   this.lastSentGameObj = ""
@@ -46,13 +47,14 @@ function Client(playerId, ws)
   });
 }
 
-Client.prototype.setGameObj = function(gameObj)
+Client.prototype.setGameObj = function(gameObj, turnCredentials)
 {
   this.lastSentGameObj = JSON.stringify(gameObj);
   var sendData = {
     type: "playerId",
     playerId: this.playerId,
-    gameObj: this.lastSentGameObj
+    gameObj: this.lastSentGameObj,
+    turnCredentials: turnCredentials
   };
   var strToSend = JSON.stringify(sendData);
   var binaryString = this.constructMessage(strToSend);// pako.deflate(strToSend, { to: 'string' });

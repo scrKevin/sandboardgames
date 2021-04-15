@@ -15,6 +15,7 @@
     "ejs": "^3.0.2",
     "express": "^4.17.1",
     "express-basic-auth": "^1.2.0",
+    "node-turn": "0.0.6",
     "pako": "^1.0.11",
     "simple-peer": "^9.6.2",
     "uuid": "^7.0.3"

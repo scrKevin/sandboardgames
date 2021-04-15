@@ -5,8 +5,8 @@ let Scorebox = require('../scorebox').Scorebox;
 
 let Game = require('../base_game').Game;
 
-function SOC_Game(wss){
-  this.game = new Game(wss, this.resetGame);
+function SOC_Game(wss, turnServer){
+  this.game = new Game(wss, turnServer, this.resetGame);
 }
 
 function shuffle(a){

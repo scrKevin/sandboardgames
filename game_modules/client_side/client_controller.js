@@ -25,6 +25,9 @@ ClientController.prototype.initialize = function(ws, myStream)
   this.wsHandler.eventEmitter.on("updateGame", (gameObj, changedCardsBuffer, newDrawCoords, init) => {
     this.emit("updateGame", gameObj, changedCardsBuffer, newDrawCoords, init);
   });
+  this.wsHandler.eventEmitter.on("turnCredentials", (turnCredentials) => {
+    this.webcamHandler.turnCredentials(turnCredentials);
+  });
   this.wsHandler.eventEmitter.on("newPeer", (playerId) => {
     this.webcamHandler.initWebcamPeer(playerId);
     this.emit("newPeer", playerId);
