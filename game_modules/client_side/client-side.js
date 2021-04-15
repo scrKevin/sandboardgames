@@ -2,7 +2,7 @@ let ClientController = require("./client_controller").ClientController;
 require("./devtools-detect");
 
 var clientController = new ClientController()
-
+var myGameObj = null;
 var scale = 1;
 
 var myStream = null;
@@ -52,6 +52,7 @@ var scorePlusSound = new Audio('/wav/score_plus.wav');
 var latestMouseX = -1;
 var latestMouseY = -1;
 var dragCardId = null;
+var dragCardIds = [];
 var lastTouchedCardId = null;
 
 var highestZ;
@@ -140,6 +141,7 @@ function InitWebSocket()
     });
 
     clientController.on("updateGame", (gameObj, changedCardsBuffer, newDrawCoords, init) => {
+      myGameObj = gameObj;
       highestZ = gameObj.highestZ;
       // console.log(gameObj.highestZ);
       if(init)
@@ -245,8 +247,21 @@ $(document).bind('mousemove', function (e) {
       {
         cardY = 0;
       }
-      updateCss("#" + dragCardId, "left", cardX + "px");
-      updateCss("#" + dragCardId, "top", cardY + "px");
+    }
+    for (attachedCard of dragCardIds)
+    {
+      cardXLocal = (($("#" + attachedCard).position().left * (1 / scale)) - deltaX)
+      if (cardXLocal < 0)
+      {
+        cardXLocal = 0;
+      }
+      cardYLocal = (($("#" + attachedCard).position().top * (1 / scale)) - deltaY)
+      if (cardYLocal < 0)
+      {
+        cardYLocal = 0;
+      }
+      updateCss("#" + attachedCard, "left", cardXLocal + "px");
+      updateCss("#" + attachedCard, "top", cardYLocal + "px");
     }
   }
 
@@ -258,6 +273,7 @@ $(document).bind('mousemove', function (e) {
 
 $( document ).on( "mouseup", function( e ) {
   dragCardId = null;
+  dragCardIds = [];
   clientController.mouseUp();
 });
 
@@ -296,6 +312,18 @@ function adaptScale()
   $(".scaleplane").css("perspective-origin", (50 / scale) + "vw " + (50 / scale) + "vh");
   $(".scaleplane").css("perspective", (3500 / scale) + "px");
   clientController.canvasHandler.updateScale(scale);
+}
+
+function isDeck (id)
+{
+  for (deck of myGameObj.decks)
+  {
+    if (deck.id == id)
+    {
+      return true;
+    }
+  }
+  return false;
 }
 
 
@@ -345,6 +373,29 @@ $( document ).ready(function() {
 
   $(".card").on("mousedown", function(event){
     dragCardId = event.currentTarget.id;
+    dragCardIds = [dragCardId];
+    if (isDeck(dragCardId))
+    {
+      var deck = myGameObj.decks.find(function(deck){
+        return deck.id === dragCardId
+      });
+      if (!deck.immovable)
+      {
+        for (card of deck.attachedCards)
+        {
+          dragCardIds.push(card.id);
+        }
+        for (openbox of deck.attachedOpenboxes)
+        {
+          dragCardIds.push(openbox.id);
+        }
+      }
+      else
+      {
+        dragCardIds = [];
+      }
+    }
+
     var cardPosition = $(event.currentTarget).position();
     var cardX = Math.round(cardPosition.left * (1 / scale));
     var cardY = Math.round(cardPosition.top * (1 / scale));
@@ -396,6 +447,7 @@ $( document ).ready(function() {
     // console.log("RELEASED " + dragCardId)
     //updateCss("#" + dragCardId, "z-index", '50');
     dragCardId = null;
+    dragCardIds = [];
   });
 
   if ($("#drawCanvas").length) // initiate canvas if draw canvas exists
@@ -652,7 +704,8 @@ function updateCards(gameObj, changedCardsBuffer)
 {
   for (var i = 0; i < gameObj.decks.length; i++)
   {
-    if (gameObj.decks[i].id != dragCardId)
+    //if (gameObj.decks[i].id != dragCardId)
+    if (!dragCardIds.includes(gameObj.decks[i].id ))
     {
       updateCss("#" + gameObj.decks[i].id, "left", gameObj.decks[i].x + "px");
       updateCss("#" + gameObj.decks[i].id, "top", gameObj.decks[i].y + "px");
@@ -676,7 +729,8 @@ function updateCards(gameObj, changedCardsBuffer)
     {
       updateCss("#" + card.id + " .threeDcontainer", "transform", "rotateX(" + card.rotationX + "deg) rotateY(" + card.rotationY + "deg)")      
     }
-    if(card.id != dragCardId)
+    // if(card.id != dragCardId)
+    if(!dragCardIds.includes(card.id))
     {
       // updateCss("#" + card.id, "z-index", String(card.z + 60));
       updateCss("#" + card.id, "left", card.x + "px");
@@ -720,10 +774,13 @@ function updateOpenboxes(gameObj)
 {
   for (openbox of gameObj.openboxes)
   {
-    updateCss("#" + openbox.id, "left", (openbox.x) + "px");
-    updateCss("#" + openbox.id, "top", (openbox.y) + "px");
-    updateCss("#" + openbox.id, "width", (openbox.width) + "px");
-    updateCss("#" + openbox.id, "height", (openbox.height) + "px");
+    if(!dragCardIds.includes(openbox.id))
+    {
+      updateCss("#" + openbox.id, "left", (openbox.x) + "px");
+      updateCss("#" + openbox.id, "top", (openbox.y) + "px");
+      updateCss("#" + openbox.id, "width", (openbox.width) + "px");
+      updateCss("#" + openbox.id, "height", (openbox.height) + "px");
+    }
   }
 }
 
