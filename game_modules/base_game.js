@@ -197,16 +197,16 @@ function WS_distributor(wss, turnServer, resetGameFunction)
             player.updatePos(json.pos);
             this.startAnimationCard(card, json.pos.x, json.pos.y);
             for (deck of this.gameObj.decks)
+            {
+              if(deck.isInDeck(json.pos.x, json.pos.y))
               {
-                if(deck.isInDeck(json.pos.x, json.pos.y))
-                {
-                  deck.addToDeck(card);
-                }
-                else
-                {
-                  deck.removeFromDeck(card);
-                }
+                deck.addToDeck(card);
               }
+              else
+              {
+                deck.removeFromDeck(card);
+              }
+            }
             if (card.hasOwnProperty("show"))
             {
               var isInAnOpenbox = false;

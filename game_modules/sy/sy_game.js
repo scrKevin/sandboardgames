@@ -109,6 +109,9 @@ SY_Game.prototype.resetGame = function(game)
     moveBtnDeck.attachedCards.push(webcamBox)
     game.gameObj.decks.push(moveBtnDeck)
   }
+
+  var mrXDeck = new Deck("mrx-board", 0, 750, 280, 330);
+  game.gameObj.decks.push(mrXDeck);
 }
 
 module.exports = {SY_Game: SY_Game}
