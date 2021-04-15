@@ -1,0 +1,26 @@
+<% for (var i = 21; i <= 24;  i++ ) { %>
+    <div class='card tile' id='tile<%= i %>'><span class="pointsText"><%= i %></span><img src='/img/pm/1worm.png'/></div>
+<% } %>
+
+<% for (var i = 25; i <= 28;  i++ ) { %>
+    <div class='card tile' id='tile<%= i %>'><span class="pointsText"><%= i %></span><img src='/img/pm/2worms.png'/></div>
+<% } %>
+
+<% for (var i = 29; i <= 32;  i++ ) { %>
+    <div class='card tile' id='tile<%= i %>'><span class="pointsText"><%= i %></span><img src='/img/pm/3worms.png'/></div>
+<% } %>
+
+<% for (var i = 33; i <= 36;  i++ ) { %>
+    <div class='card tile' id='tile<%= i %>'><span class="pointsText"><%= i %></span><img src='/img/pm/4worms.png'/></div>
+<% } %>
+
+<div class='card deck' id='diceDeck'><button type="button" class="btn btn-primary btn-lg rollButton" style="width: 110px;">Roll</button></div>
+
+<%- include ('../../common/dice_worms', {id: "dice1", width: 100}); -%>
+<%- include ('../../common/dice_worms', {id: "dice2", width: 100}); -%>
+<%- include ('../../common/dice_worms', {id: "dice3", width: 100}); -%>
+<%- include ('../../common/dice_worms', {id: "dice4", width: 100}); -%>
+<%- include ('../../common/dice_worms', {id: "dice5", width: 100}); -%>
+<%- include ('../../common/dice_worms', {id: "dice6", width: 100}); -%>
+<%- include ('../../common/dice_worms', {id: "dice7", width: 100}); -%>
+<%- include ('../../common/dice_worms', {id: "dice8", width: 100}); -%>

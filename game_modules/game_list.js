@@ -6,6 +6,7 @@ const StartpositionsFKAR = require("./fkar/startpositions");
 const StartpositionsSTRG = require("./strg/startpositions");
 const StartpositionsSCBL = require("./scbl/startpositions");
 const StartpositionsSOC = require("./soc/startpositions");
+const StartpostionsPM = require("./pm/startpositions");
 
 let SY_Game = require("./sy/sy_game").SY_Game;
 let SH_Game = require("./sh/sh_game").SH_Game;
@@ -17,6 +18,7 @@ let FKAR_Game = require("./fkar/fkar_game").FKAR_Game;
 let STRG_Game = require("./strg/strg_game").STRG_Game;
 let SCBL_Game = require("./scbl/scbl_game").SCBL_Game;
 let SOC_Game = require("./soc/soc_game").SOC_Game;
+let PM_Game = require("./pm/pm_game").PM_Game;
 
 function ImplementedGame(name, wsLocation, GameClass, routerLocation, viewsLocation, objectToPassToView)
 {
@@ -39,4 +41,5 @@ module.exports.availableGames = {
   'strg': new ImplementedGame("Stratego", 'strg', STRG_Game, 'strg', 'strg', {playerboxStartPos: StartpositionsSTRG.playerBoxes, webcamPos: StartpositionsSTRG.webcamPos, fixedPlayers: 2}),
   'scbl': new ImplementedGame("Scrabble", 'scbl', SCBL_Game, 'scbl', 'scbl', {playerboxStartPos: StartpositionsSCBL.playerBoxes, webcamPos: StartpositionsSCBL.webcamPos, fixedPlayers: 4}),
   'soc': new ImplementedGame("Settlers of Catan", "soc", SOC_Game, "soc", "soc", {playerboxStartPos: StartpositionsSOC.playerBoxes, webcamPos: StartpositionsSOC.webcamPos, fixedPlayers:4}),
+  'pm': new ImplementedGame("Pickomino", 'pm', PM_Game, "pm", "pm", {playerboxStartPos: StartpostionsPM.playerBoxes, webcamPos: StartpostionsPM.webcamPos, fixedPlayers: 8}),
 }
