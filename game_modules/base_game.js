@@ -334,17 +334,12 @@ function WS_distributor(wss, turnServer, resetGameFunction)
         {
           if(clientI.playerId == json.fromPlayerId)
           {
-            if (clientI.peerStatus[id] == "connectionFailure")
+            if (clientI.peerStatus[id] == "connectionFailure" && clientI.initiated)
             {
               // both peers have lost connection with each other but the connection with the server is ok.
               // retry connection
-              var sendData = {
-                type: "newPeer",
-                playerId: json.fromPlayerId
-              }
-              var strToSend = JSON.stringify(sendData);
-              var binaryString = this.constructMessage(strToSend);
-              ws.send(binaryString);
+              console.log("Retrying peer connection from " + id + " to " + json.fromPlayerId);
+              clientI.sendNewPeer(id);
             }
           }
         }
