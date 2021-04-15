@@ -3206,11 +3206,44 @@ $(document).bind('mousemove', function (e) {
   clientController.mouseMove(currentXScaled, currentYScaled, cardX, cardY);
 });
 
+// $(".card").bind("mouseup", function(e){
+//   e.preventDefault();
+//   console.log("Mouseup in " + dragCardId);
+//   var cardPosition = $("#" + dragCardId).position();
+//   var cardX = Math.round(cardPosition.left * (1 / scale));
+//   var cardY = Math.round(cardPosition.top * (1 / scale));
+//   clientController.releaseCard(e.pageX * (1 / scale), e.pageY * (1 / scale), cardX, cardY);
+//   // console.log("RELEASED " + dragCardId)
+//   //updateCss("#" + dragCardId, "z-index", '50');
+//   dragCardId = null;
+//   dragCardIds = [];
+// });
 
-$( document ).on( "mouseup", function( e ) {
+function cardMouseUp(e)
+{
+  var cardPosition = $("#" + dragCardId).position();
+  var cardX = Math.round(cardPosition.left * (1 / scale));
+  var cardY = Math.round(cardPosition.top * (1 / scale));
+  clientController.releaseCard(e.pageX * (1 / scale), e.pageY * (1 / scale), cardX, cardY);
+  // console.log("RELEASED " + dragCardId)
+  //updateCss("#" + dragCardId, "z-index", '50');
   dragCardId = null;
   dragCardIds = [];
-  clientController.mouseUp();
+}
+
+$( document ).on( "mouseup", function( e ) {
+  //console.log("Mouseup outside any card. dragCardId: " + dragCardId);
+  if (dragCardId !== null)
+  {
+    // console.log("But dragCardId was not null.");
+    cardMouseUp(e);
+  }
+  else
+  {
+    dragCardId = null;
+    dragCardIds = [];
+    clientController.mouseUp();
+  }
 });
 
 $(document).on ("keydown", function (event) {
@@ -3376,6 +3409,7 @@ $( document ).ready(function() {
   
   $(".card").bind("mouseup", function(e){
     e.preventDefault();
+    console.log("Mouseup in " + dragCardId);
     var cardPosition = $("#" + dragCardId).position();
     var cardX = Math.round(cardPosition.left * (1 / scale));
     var cardY = Math.round(cardPosition.top * (1 / scale));

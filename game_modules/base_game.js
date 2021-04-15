@@ -86,7 +86,7 @@ function WS_distributor(wss, turnServer, resetGameFunction)
             });
             if (!deck.immovable)
             {
-              if (deck.isMyDeck(id, json.mouseclicked) && json.mouseclicked)
+              if (deck.isMyDeck(id, json.mouseclicked) && json.mouseclicked || json.card.release)
               {
                 var movedDeck = deck.updatePos(json.card.pos)
                 for (card of deck.attachedCards)
