@@ -4307,6 +4307,17 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId)
     }
 
   });
+  this.peers[playerId].on('close', () => {
+    console.log("closed WebcamPeer for player " + playerId)
+    try {
+      this.peers[playerId].destroy();
+    }
+    catch (error)
+    {
+      console.log(error)
+    }
+
+  });
   var sendData = {
     type: "newPeerReceived",
     playerId: playerId
@@ -4361,7 +4372,19 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
       }
       this.wsHandler.sendToWs(sendData);
     }
-  })
+  });
+
+  this.peers[fromPlayerId].on('close', () => {
+    console.log("closed WebcamPeer for player " + fromPlayerId);
+    try {
+      this.peers[fromPlayerId].destroy();
+    }
+    catch (error)
+    {
+      console.log(error)
+    }
+
+  });
 
   this.peers[fromPlayerId].signal(stp);
 }
