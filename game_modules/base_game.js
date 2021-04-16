@@ -168,13 +168,21 @@ function WS_distributor(wss, turnServer, resetGameFunction)
         });
         if (typeof(card) !== 'undefined')
         {
-          card.setLastTouchedBy(id);
+          if (card.clickedBy == -1 || card.clickedBy == id)
+          {
+            card.clickedBy = id;
 
-          this.gameObj.highestZ++;
-          card.setZ(this.gameObj.highestZ);
-          
-          this.addToChangedCardsBuffer(card.id);
-          this.broadcast();
+            this.gameObj.highestZ++;
+            card.setZ(this.gameObj.highestZ);
+            
+            this.addToChangedCardsBuffer(card.id);
+            this.broadcast();
+          }
+          else
+          {
+            // confilict with clicked cards
+            client.sendCardConflict(card.id);
+          }
         }
       }
       else if (json.type == "touchcard")

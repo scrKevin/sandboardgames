@@ -3099,6 +3099,15 @@ function InitWebSocket()
       $(document).trigger("gameObj", [gameObj, myPlayerId, scale]);
     });
 
+    clientController.on("cardConflict", (cardId) => {
+      if (dragCardId === cardId)
+      {
+        console.log("Card conflict detected for " + cardId);
+        dragCardId = null;
+        dragCardIds = [];
+      }
+    });
+
     clientController.on("newPeer", (playerId) => {
       doorbell.play();
     });
@@ -3341,36 +3350,57 @@ $( document ).ready(function() {
   })
 
   $(".card").on("mousedown", function(event){
-    dragCardId = event.currentTarget.id;
-    dragCardIds = [dragCardId];
-    if (isDeck(dragCardId))
+    var draggable = null;
+    if (isDeck(event.currentTarget.id))
     {
-      var deck = myGameObj.decks.find(function(deck){
-        return deck.id === dragCardId
+      draggable = myGameObj.decks.find(function(deck){
+        return deck.id === event.currentTarget.id;
       });
-      if (!deck.immovable)
-      {
-        for (card of deck.attachedCards)
-        {
-          dragCardIds.push(card.id);
-        }
-        for (openbox of deck.attachedOpenboxes)
-        {
-          dragCardIds.push(openbox.id);
-        }
-      }
-      else
-      {
-        dragCardIds = [];
-      }
     }
+    else
+    {
+      draggable = myGameObj.cards.find(function(card){
+        return card.id === event.currentTarget.id;
+      });
+    }
+    
+    if (draggable.clickedBy == -1 || draggable.clickedBy == myPlayerId)
+    {
+      dragCardId = event.currentTarget.id;
+      dragCardIds = [dragCardId];
+      if (isDeck(dragCardId))
+      {
+        var deck = myGameObj.decks.find(function(deck){
+          return deck.id === dragCardId
+        });
+        if (!deck.immovable)
+        {
+          for (card of deck.attachedCards)
+          {
+            dragCardIds.push(card.id);
+          }
+          for (openbox of deck.attachedOpenboxes)
+          {
+            dragCardIds.push(openbox.id);
+          }
+        }
+        else
+        {
+          dragCardIds = [];
+        }
+      }
 
-    var cardPosition = $(event.currentTarget).position();
-    var cardX = Math.round(cardPosition.left * (1 / scale));
-    var cardY = Math.round(cardPosition.top * (1 / scale));
-    clientController.clickOnCard(event.currentTarget.id, cardX, cardY);
-    // updateCss("#" + dragCardId, "z-index", highestZ + 1);
-    blockCardChange = [];
+      var cardPosition = $(event.currentTarget).position();
+      var cardX = Math.round(cardPosition.left * (1 / scale));
+      var cardY = Math.round(cardPosition.top * (1 / scale));
+      clientController.clickOnCard(event.currentTarget.id, cardX, cardY);
+      // updateCss("#" + dragCardId, "z-index", highestZ + 1);
+      blockCardChange = [];
+    }
+    else
+    {
+      console.log("Clicked draggable " + draggable.id + " is already clicked by player " + draggable.clickedBy);
+    }
   });
 
   $(".card").on("touchstart", function(event){
@@ -3409,15 +3439,18 @@ $( document ).ready(function() {
   
   $(".card").bind("mouseup", function(e){
     e.preventDefault();
-    console.log("Mouseup in " + dragCardId);
-    var cardPosition = $("#" + dragCardId).position();
-    var cardX = Math.round(cardPosition.left * (1 / scale));
-    var cardY = Math.round(cardPosition.top * (1 / scale));
-    clientController.releaseCard(e.pageX * (1 / scale), e.pageY * (1 / scale), cardX, cardY);
-    // console.log("RELEASED " + dragCardId)
-    //updateCss("#" + dragCardId, "z-index", '50');
-    dragCardId = null;
-    dragCardIds = [];
+    //console.log("Mouseup in " + dragCardId);
+    if (dragCardId !== null)
+    {
+      var cardPosition = $("#" + dragCardId).position();
+      var cardX = Math.round(cardPosition.left * (1 / scale));
+      var cardY = Math.round(cardPosition.top * (1 / scale));
+      clientController.releaseCard(e.pageX * (1 / scale), e.pageY * (1 / scale), cardX, cardY);
+      // console.log("RELEASED " + dragCardId)
+      //updateCss("#" + dragCardId, "z-index", '50');
+      dragCardId = null;
+      dragCardIds = [];
+    }
   });
 
   if ($("#drawCanvas").length) // initiate canvas if draw canvas exists
@@ -3993,6 +4026,9 @@ ClientController.prototype.initialize = function(ws, myStream)
   this.wsHandler.eventEmitter.on("playerId", (playerId) => {
     this.emit("playerId", playerId);
   });
+  this.wsHandler.eventEmitter.on("cardConflict", (cardId) => {
+    this.emit("cardConflict", cardId);
+  });
   this.wsHandler.eventEmitter.on("updateGame", (gameObj, changedCardsBuffer, newDrawCoords, init) => {
     this.emit("updateGame", gameObj, changedCardsBuffer, newDrawCoords, init);
   });
@@ -4231,12 +4267,12 @@ MouseHandler.prototype.clickOnCard = function(id, cardX, cardY)
   this.dragCardX = cardX;
   this.dragCardY = cardY;
   this.mouseclicked = true;
-  this.mouseFpsLimiter.update();
   var sendData = {
     type: "clickcard",
     card: id
   }
   this.wsHandler.sendToWs(sendData);
+  this.mouseFpsLimiter.update();
 }
 
 MouseHandler.prototype.touchCard = function(id, x, y)
@@ -4590,6 +4626,10 @@ function WsHandler(ws)
         type: "initiated"
       };
       this.sendToWs(sendData);
+    }
+    else if (json.type == "cardConflict")
+    {
+      this.eventEmitter.emit('cardConflict', json.cardId);
     }
     else if (json.type == "newPeer")
     {

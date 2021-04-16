@@ -89,6 +89,10 @@ function WsHandler(ws)
       };
       this.sendToWs(sendData);
     }
+    else if (json.type == "cardConflict")
+    {
+      this.eventEmitter.emit('cardConflict', json.cardId);
+    }
     else if (json.type == "newPeer")
     {
       if (json.playerId != this.myPlayerId)

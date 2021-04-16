@@ -64,6 +64,19 @@ Client.prototype.setGameObj = function(gameObj, turnCredentials)
   this.gameObj = gameObj;
 }
 
+Client.prototype.sendCardConflict = function(cardId)
+{
+  var sendData = {
+    type: "cardConfilict",
+    cardId: cardId
+  };
+  var strToSend = JSON.stringify(sendData);
+  var binaryString = this.constructMessage(strToSend);// pako.deflate(strToSend, { to: 'string' });
+  if (this.ws.readyState === WebSocket.OPEN) {
+    this.ws.send(binaryString);
+  }
+}
+
 Client.prototype.sendNewPeer = function (playerId)
 {
   this.newPeerQueue.push(playerId);

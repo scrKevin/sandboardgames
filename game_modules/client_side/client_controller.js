@@ -22,6 +22,9 @@ ClientController.prototype.initialize = function(ws, myStream)
   this.wsHandler.eventEmitter.on("playerId", (playerId) => {
     this.emit("playerId", playerId);
   });
+  this.wsHandler.eventEmitter.on("cardConflict", (cardId) => {
+    this.emit("cardConflict", cardId);
+  });
   this.wsHandler.eventEmitter.on("updateGame", (gameObj, changedCardsBuffer, newDrawCoords, init) => {
     this.emit("updateGame", gameObj, changedCardsBuffer, newDrawCoords, init);
   });
