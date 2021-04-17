@@ -53,6 +53,7 @@ var latestMouseX = -1;
 var latestMouseY = -1;
 var dragCardId = null;
 var dragCardIds = [];
+// var suppressNextChanges = [];
 var lastTouchedCardId = null;
 
 var highestZ;
@@ -154,7 +155,7 @@ function InitWebSocket()
         updateCards(gameObj, changedCardsBuffer);
       }
 
-      updateOpenboxes(gameObj);
+      //updateOpenboxes(gameObj);
       updateCursors(gameObj);
       updateScoreboxes(gameObj);
       updateColorSelection(gameObj);
@@ -300,6 +301,8 @@ function cardMouseUp(e)
   clientController.releaseCard(e.pageX * (1 / scale), e.pageY * (1 / scale), cardX, cardY);
   // console.log("RELEASED " + dragCardId)
   //updateCss("#" + dragCardId, "z-index", '50');
+  // i = dragCardIds.length;
+  // while(i--) suppressNextChanges[i] = dragCardIds[i];
   dragCardId = null;
   dragCardIds = [];
 }
@@ -313,6 +316,8 @@ $( document ).on( "mouseup", function( e ) {
   }
   else
   {
+    // i = dragCardIds.length;
+    // while(i--) suppressNextChanges[i] = dragCardIds[i];
     dragCardId = null;
     dragCardIds = [];
     clientController.mouseUp();
@@ -512,6 +517,8 @@ $( document ).ready(function() {
       clientController.releaseCard(e.pageX * (1 / scale), e.pageY * (1 / scale), cardX, cardY);
       // console.log("RELEASED " + dragCardId)
       //updateCss("#" + dragCardId, "z-index", '50');
+      // i = dragCardIds.length;
+      // while(i--) suppressNextChanges[i] = dragCardIds[i];
       dragCardId = null;
       dragCardIds = [];
     }
@@ -767,81 +774,91 @@ function initCards(gameObj){
   }
 }
 
+
+
 function updateCards(gameObj, changedCardsBuffer)
 {
+  var blockedCardsInDeck = [];
+  var blockedOpenboxesInDeck = [];
   for (var i = 0; i < gameObj.decks.length; i++)
   {
-    //if (gameObj.decks[i].id != dragCardId)
-    if (!dragCardIds.includes(gameObj.decks[i].id ))
+    if (!dragCardIds.includes(gameObj.decks[i].id ) && gameObj.decks[i].clickedBy != myPlayerId)
     {
       updateCss("#" + gameObj.decks[i].id, "left", gameObj.decks[i].x + "px");
       updateCss("#" + gameObj.decks[i].id, "top", gameObj.decks[i].y + "px");
     }
+    else if (gameObj.decks[i].clickedBy == myPlayerId)
+    {
+      for (card of gameObj.decks[i].attachedCards)
+      {
+        blockedCardsInDeck.push(card.id);
+      }
+      for (openbox of gameObj.decks[i].attachedOpenboxes)
+      {
+        blockedOpenboxesInDeck.push(openbox.id);
+      }
+    }
   }
   var cards = gameObj.cards.filter(function(card){
-    return changedCardsBuffer.includes(card.id);
+    return changedCardsBuffer.includes(card.id) && !blockedCardsInDeck.includes(card.id);
   });
   //changedCardsBuffer = [];
   for (card of cards)
   {
-    if (card.hasOwnProperty("varText"))
-    {
-      if ($("#" + card.id + "_textFF").html() !== card.frontface.text)
+      if (card.hasOwnProperty("varText"))
       {
-        $("#" + card.id + "_textFF").html(card.frontface.text);
-        $(document).trigger("cardTextChanged", [card.id]);
-      }
-    }
-    if (card.hasOwnProperty("rotationX") && card.hasOwnProperty("rotationY"))
-    {
-      updateCss("#" + card.id + " .threeDcontainer", "transform", "rotateX(" + card.rotationX + "deg) rotateY(" + card.rotationY + "deg)")      
-    }
-    // if(card.id != dragCardId)
-    if(!dragCardIds.includes(card.id))
-    {
-      // updateCss("#" + card.id, "z-index", String(card.z + 60));
-      updateCss("#" + card.id, "left", card.x + "px");
-      updateCss("#" + card.id, "top", card.y + "px");
-    }
-    updateCss("#" + card.id, "z-index", String(card.z));
-
-    if(!blockCardChange.includes(card.id))
-    {
-      if(card.hasOwnProperty("show") && card.isInAnOpenbox)
-      {
-        updateCardFace(card, card.show);
-      }
-      else
-      {
-        if (card.hasOwnProperty("show"))
+        if ($("#" + card.id + "_textFF").html() !== card.frontface.text)
         {
-          var cardInMyBox = cardIsInMyOwnBox(card);
-          if (cardInMyBox || card.visibleFor == myPlayerId)
+          $("#" + card.id + "_textFF").html(card.frontface.text);
+          $(document).trigger("cardTextChanged", [card.id]);
+        }
+      }
+      if (card.hasOwnProperty("rotationX") && card.hasOwnProperty("rotationY"))
+      {
+        updateCss("#" + card.id + " .threeDcontainer", "transform", "rotateX(" + card.rotationX + "deg) rotateY(" + card.rotationY + "deg)")      
+      }
+      // if(card.id != dragCardId)
+      if(!dragCardIds.includes(card.id) && card.clickedBy != myPlayerId)
+      {
+        // updateCss("#" + card.id, "z-index", String(card.z + 60));
+        updateCss("#" + card.id, "left", card.x + "px");
+        updateCss("#" + card.id, "top", card.y + "px");
+      }
+      updateCss("#" + card.id, "z-index", String(card.z));
+
+      if(!blockCardChange.includes(card.id))
+      {
+        if(card.hasOwnProperty("show") && card.isInAnOpenbox)
+        {
+          updateCardFace(card, card.show);
+        }
+        else
+        {
+          if (card.hasOwnProperty("show"))
           {
-            updateCardFace(card, "frontface");
-          }
-          else
-          {
-            if(cardIsInInspectorBox(card))
+            var cardInMyBox = cardIsInMyOwnBox(card);
+            if (cardInMyBox || card.visibleFor == myPlayerId)
             {
-              updateCardFace(card, "altFrontface");
+              updateCardFace(card, "frontface");
             }
             else
             {
-              updateCardFace(card, card.show);
+              if(cardIsInInspectorBox(card))
+              {
+                updateCardFace(card, "altFrontface");
+              }
+              else
+              {
+                updateCardFace(card, card.show);
+              }
             }
           }
         }
       }
-    }
   }
-}
-
-function updateOpenboxes(gameObj)
-{
   for (openbox of gameObj.openboxes)
   {
-    if(!dragCardIds.includes(openbox.id))
+    if(!dragCardIds.includes(openbox.id) && !blockedOpenboxesInDeck.includes(openbox.id))
     {
       updateCss("#" + openbox.id, "left", (openbox.x) + "px");
       updateCss("#" + openbox.id, "top", (openbox.y) + "px");
@@ -850,6 +867,11 @@ function updateOpenboxes(gameObj)
     }
   }
 }
+
+// function updateOpenboxes(gameObj)
+// {
+
+// }
 
 function updateCursors (gameObj)
 {

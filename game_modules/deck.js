@@ -24,18 +24,18 @@ function Deck(id, x, y, width, height){
   this.immovable = false;
   this.clickedBy = -1;
   this.fairMatrix = [
-    {x: 1, y: 1},
-    {x: 1, y: 3},
-    {x: 2, y: 1},
-    {x: 2, y: 2},
-    {x: 2, y: 3},
-    {x: 2, y: 4},
-    {x: 3, y: 1},
-    {x: 3, y: 3},
-    {x: 4, y: 1},
-    {x: 4, y: 2},
-    {x: 4, y: 3},
-    {x: 4, y: 4},
+    {x: 1, y: 1, r: 3},
+    {x: 1, y: 3, r: 3},
+    {x: 2, y: 1, r: 2},
+    {x: 2, y: 2, r: 1},
+    {x: 2, y: 3, r: 5},
+    {x: 2, y: 4, r: 6},
+    {x: 3, y: 1, r: 4},
+    {x: 3, y: 3, r: 4},
+    {x: 4, y: 1, r: 5},
+    {x: 4, y: 2, r: 6},
+    {x: 4, y: 3, r: 2},
+    {x: 4, y: 4, r: 1},
   ];
 }
 
@@ -84,12 +84,16 @@ Deck.prototype.rollDeck = function()
   for(var i = 0; i < this.attachedCards.length; i++)
   {
     var r1 = this.getRandomIntInclusive(0, 11);
+    //console.log("D" + i + " - R1:" + r1, " face: " + this.fairMatrix[r1].r);
     var r2 = this.getRandomIntInclusive(0, 5);
     var r3 = this.getRandomIntInclusive(0, 5);
     var rx = this.fairMatrix[r1].x;
     var ry = this.fairMatrix[r1].y;
     this.attachedCards[i].setRotationX((rx * 90) + (360 * r2));
     this.attachedCards[i].setRotationY((ry * 90) + (360 * r3));
+
+    // this.attachedCards[i].setRotationX((rx * 90));
+    // this.attachedCards[i].setRotationY((ry * 90));
   }
 }
 
