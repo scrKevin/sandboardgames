@@ -1,0 +1,290 @@
+<!-- views/partials/head.ejs -->
+<meta charset="UTF-8">
+<!-- <meta name="viewport" content="width=device-width,user-scalable=no"> -->
+<title>Munchkin Sandboard</title>
+
+<!-- Bootstrap CSS -->
+<link href="/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="/css/common.css" rel="stylesheet" type="text/css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js" integrity="sha256-pasqAKBDmFT4eHoN2ndd6lN370kFiGUFyTiUHWhU7k8=" crossorigin="anonymous"></script>
+<script src='/js/bootstrap.min.js'></script>
+<script src="/js/mk/mk.js"></script>
+<script src="/js/bundle.js"></script>
+
+<style>
+
+body
+{
+  background-color: #000000;
+  
+}
+
+.scaleplane
+{
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  transform-origin: 0 0;
+  background-image: url("/img/mk/background_tile.png");
+  background-repeat: repeat;
+}
+
+.battleArena
+{
+  position: absolute;
+  top: 0px;
+  left: 632px;
+}
+
+.inventory
+{
+  z-index: 100000;
+  position: absolute;
+  top: 540px;
+  left: 480px;
+}
+
+.number
+{
+    background-color: #f4a460;
+    font-size: 30px;
+    font-weight: bold;
+    width: 50px;
+    height: 50px;
+    border-radius: 25px;
+    border: 3px solid black;
+    text-align: center;
+    line-height: 44px;
+    color: black;
+}
+
+.cursor
+{
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  border: 1px solid black;
+  z-index: 1000;
+  display: none;
+}
+
+.playerbox
+{
+  position: absolute;
+  z-index: 1;
+  display: none;
+}
+
+.webcambox
+{
+  position: relative;
+  padding: 8px;
+  border-radius: 6px;
+  background-color: #cccccc;
+  border: 1px solid black;
+  -webkit-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+  -moz-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+  box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+}
+
+.webcamContainer
+{
+  transform-origin: 50% 0
+}
+
+/* .webcamContainer video
+{
+  height: 240px;
+}
+
+.webcam
+{
+  height: 240px;
+} */
+
+.webcamContainer video
+{
+  height: 180px;
+}
+
+.webcam
+{
+  height: 180px;
+}
+
+.card
+{
+  position: absolute;
+  z-index: 0;
+  transform-origin: 0 0;
+}
+
+.resource img
+{
+  width: 65px;
+}
+
+.development img
+{
+  width: 90px;
+}
+
+.deck
+{
+  background-color: rgba(128, 128, 128, 0.535);
+  width: 152px;
+  height: 264px;
+}
+
+.resourceDeck
+{
+  width: 78px;
+  height: 182px;
+}
+
+.developmentDeck
+{
+  width: 100px;
+  height: 222px;
+}
+
+.playcard
+{
+  transform-origin: 0 0;
+  transform: scale(0.65);
+}
+
+.tile
+{
+  width: 68px;
+  height: 68px;
+  background-color: #ffffff;
+  padding: 5px;
+  font-size: 35px;
+  font-family: "Arial", sans;
+  font-weight: bold;
+  text-align: center;
+  border-radius: 12px;
+}
+
+.moveBtn
+{
+  z-index: 2000;
+  padding: 8px;
+  border: 1px solid black;
+  border-radius: 6px;
+  background-color: white;
+  top: -5px;
+  -webkit-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+  -moz-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+  box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+}
+
+.gamecard
+{
+  position: absolute;
+  padding-left: 32px;
+}
+
+.openbox
+{
+  position: fixed;
+  /*border: 1px solid #77ff77;*/
+}
+
+.playerbox
+{
+  position: absolute;
+  border: 3px solid white;
+  opacity: 0.6;
+  width: 240px;
+  height: 90px;
+}
+
+#scorebox0
+{
+  top: 175px;
+  left: 250px;
+}
+
+#scorebox1
+{
+  top: 175px;
+  left: 1850px;
+}
+
+#scorebox2
+{
+  top: 795px;
+  left: 250px;
+}
+
+#scorebox3
+{
+  top: 795px;
+  left: 1850px;
+}
+
+.points
+{
+  font-size: 15px;
+  display:inline-block;
+  position:relative; 
+  left:2px; 
+  top: 8px;
+}
+
+.touchbox
+{
+  background-color: #CCCCCC;
+  opacity: 0.5;
+  border: 1px solid orange;
+  border-radius: 11px;
+  width: 68px;
+  height: 68px;
+  z-index: 2;
+}
+
+#diceDeck
+{
+  width: 260px;
+  height: 170px;
+  background-color: transparent;
+  border: 2px solid black;
+}
+
+#dice1 .threeDcontainer
+{
+    transition: transform 3s;
+}
+
+#dice2 .threeDcontainer
+{
+    transition: transform 3.5s;
+}
+
+#closedbox0
+{
+  position: fixed;
+  border: 2px solid #ff0000;
+}
+
+.sharedPlayerbox
+{
+  display: none;
+  background-color: #00ffff;
+  z-index: 100000;
+  position: absolute;
+  top: 540px;
+  left: 480px;
+  width: 1440px;
+  height: 540px;
+}
+
+
+</style>

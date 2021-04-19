@@ -116,6 +116,17 @@ function WS_distributor(wss, turnServer, resetGameFunction)
             if((card.isMyCard(id, json.mouseclicked) && json.mouseclicked) || json.card.release)
             {
               card.updatePos(json.card.pos);
+              if (this.gameObj.hasOwnProperty("sharedPlayerbox"))
+              {
+                if(this.gameObj.sharedPlayerbox.isInOpenBox(card.x, card.y))
+                {
+                  card.ownedBy = id;
+                }
+                else
+                {
+                  card.ownedBy = -1;
+                }
+              }
               for (deck of this.gameObj.decks)
               {
                 if(deck.isInDeck(json.pos.x, json.pos.y))

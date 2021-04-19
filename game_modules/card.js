@@ -10,6 +10,7 @@ function Card(id, x, y){
   this.clickedBy = -1;
   this.visibleFor = -1;
   this.fixedZ = false;
+  this.ownedBy = -1;
 }
 
 Card.prototype.setLastTouchedBy = function(playerId)

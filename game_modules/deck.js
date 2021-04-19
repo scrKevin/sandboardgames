@@ -37,6 +37,7 @@ function Deck(id, x, y, width, height){
     {x: 4, y: 3, r: 2},
     {x: 4, y: 4, r: 1},
   ];
+  this.scale = 1;
 }
 
 Deck.prototype.getRandomFace = function(max, min){
@@ -116,6 +117,7 @@ Deck.prototype.removeFromDeck = function(card){
     //console.log("remove " + card.id + " from " + this.id)
     this.attachedCards.splice(removeIndexCard, 1);
     card.attachedToDeck = false;
+    card.scale = 1;
   }
 }
 
@@ -127,6 +129,7 @@ Deck.prototype.addToDeck = function(card){
     //console.log("add " + card.id + " to " + this.id)
     this.attachedCards.push(card);
     card.attachedToDeck = true;
+    card.scale = this.scale;
   }
 }
 

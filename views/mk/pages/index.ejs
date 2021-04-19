@@ -1,0 +1,17 @@
+<html>
+  <head>
+    <%- include ("../partials/head") %>
+  </head>
+  <body>
+    <%- include ('../../common/welcomeModal'); -%>
+    <%- include ('../../common/resetModal'); -%>
+    <div class="scaleplane">
+      <img class='battleArena' src='/img/mk/battle_arena.png'/>
+      <img class='inventory' src='/img/mk/inventory.png'/>
+      <%- include ('../partials/playerboxes', {playerboxStartPos: playerboxStartPos}); -%>
+      <%- include ('../../common/webcams', {webcamPos: webcamPos, fixedPlayers:fixedPlayers}); -%>
+      <%- include ('../partials/decks') %>
+      <%- include ('../../common/cursors'); -%>
+    </div>
+  </body>
+</html>

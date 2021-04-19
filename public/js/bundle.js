@@ -2989,6 +2989,7 @@ var latestMouseX = -1;
 var latestMouseY = -1;
 var dragCardId = null;
 var dragCardIds = [];
+var inspectingCardId = null;
 // var suppressNextChanges = [];
 var lastTouchedCardId = null;
 
@@ -3033,6 +3034,7 @@ function addWebcam(stream, playerId, mirrored, muted)
   video.play();
   updateCss("#webcam" + playerId, "display", "block");
   updateCss("#player" + playerId + "box", "display", "block");
+  updateCss("#scaledProjectionBox" + playerId, "display", "block");
   updateCss(".pieceFor_" + playerId, "display", "block");
   updateCss("#player" + playerId + "NameText", "display", "initial");
   updateCss("#player" + playerId + "Name", "display", "initial");
@@ -3118,10 +3120,12 @@ function InitWebSocket()
       updateCss("#webcam" + playerId, "display", "none");
       updateCss("#cursor" + playerId, "display", "none");
       updateCss("#player" + playerId + "box", "display", "none");
+      updateCss("#scaledProjectionBox" + playerId, "display", "none");
       updateCss(".pieceFor_" + playerId, "display", "none");
       updateCss("#player" + playerId + "NameText", "display", "none");
       updateCss("#player" + playerId + "Name", "display", "none");
       updateCss("#player" + playerId + "box", "background-color", "#FFFFFF00");
+      updateCss("#scaledProjectionBox" + playerId, "background-color", "#FFFFFF00");
       updateHtml("#player" + playerId + "NameText", "")
     });
 
@@ -3245,6 +3249,12 @@ function cardMouseUp(e)
 
 $( document ).on( "mouseup", function( e ) {
   //console.log("Mouseup outside any card. dragCardId: " + dragCardId);
+  if (inspectingCardId !== null)
+  {
+    updateCss("#" + inspectingCardId, "transform", "scale(" + myGameObj.projectionBoxScale + ")");
+    updateCss("#" + inspectingCardId, "z-index", "100000");
+    inspectingCardId = null;
+  }
   if (dragCardId !== null)
   {
     // console.log("But dragCardId was not null.");
@@ -3368,11 +3378,12 @@ $( document ).ready(function() {
         return card.id === event.currentTarget.id;
       });
     }
-    
+
     if (draggable.clickedBy == -1 || draggable.clickedBy == myPlayerId)
     {
       dragCardId = event.currentTarget.id;
       dragCardIds = [dragCardId];
+      var canEdit = true;
       if (isDeck(dragCardId))
       {
         var deck = myGameObj.decks.find(function(deck){
@@ -3394,13 +3405,28 @@ $( document ).ready(function() {
           dragCardIds = [];
         }
       }
+      else
+      {
+        if (draggable.ownedBy !== myPlayerId && draggable.ownedBy !== -1)
+        {
+          inspectingCardId = event.currentTarget.id;
+          updateCss("#" + inspectingCardId, 'transform', "scale(1)");
+          updateCss("#" + inspectingCardId, "z-index", "1000000");
+          canEdit = false;
+          dragCardId = null;
+          dragCardIds = [];
+        }
+      }
 
-      var cardPosition = $(event.currentTarget).position();
-      var cardX = Math.round(cardPosition.left * (1 / scale));
-      var cardY = Math.round(cardPosition.top * (1 / scale));
-      clientController.clickOnCard(event.currentTarget.id, cardX, cardY);
-      // updateCss("#" + dragCardId, "z-index", highestZ + 1);
-      blockCardChange = [];
+      if (canEdit)
+      {
+        var cardPosition = $(event.currentTarget).position();
+        var cardX = Math.round(cardPosition.left * (1 / scale));
+        var cardY = Math.round(cardPosition.top * (1 / scale));
+        clientController.clickOnCard(event.currentTarget.id, cardX, cardY);
+        // updateCss("#" + dragCardId, "z-index", highestZ + 1);
+        blockCardChange = [];
+      }
     }
     else
     {
@@ -3584,11 +3610,13 @@ function updateCardFace(card, faceType)
 {
   if (faceType == "frontface")
   {
-    $("#" + card.id + " .threeDcontainer").css('transform', 'translateX(100%) rotateY(180deg)');
+    updateCss("#" + card.id + " .threeDcontainer", 'transform', 'translateX(100%) rotateY(180deg)')
+    //$("#" + card.id + " .threeDcontainer").css('transform', 'translateX(100%) rotateY(180deg)');
   }
   else if(faceType == 'backface')
   {
-    $("#" + card.id + " .threeDcontainer").css('transform', 'rotateY(0deg)');
+    updateCss("#" + card.id + " .threeDcontainer", 'transform', 'rotateY(0deg)')
+    //$("#" + card.id + " .threeDcontainer").css('transform', 'rotateY(0deg)');
     if ($("#" + card.id + "BFimg").attr("src") !== card.backface)
     {
       $("#" + card.id + "BFimg").attr("src", card.backface);
@@ -3677,6 +3705,7 @@ function init3dCard(card)
 }
 
 function initCards(gameObj){
+  adaptScale();
   for (var i = 0; i < gameObj.decks.length; i++)
   {
     updateCss("#" + gameObj.decks[i].id, "left", gameObj.decks[i].x + "px");
@@ -3684,25 +3713,55 @@ function initCards(gameObj){
   }
   for (var i = 0; i < gameObj.cards.length; i++)
   {
-    updateCss("#" + gameObj.cards[i].id, "z-index", String(gameObj.cards[i].z));
-    updateCss("#" + gameObj.cards[i].id, "left", gameObj.cards[i].x + "px");
-    updateCss("#" + gameObj.cards[i].id, "top", gameObj.cards[i].y + "px");
+    var additionalZ = 0;
+    if (gameObj.cards[i].id == dragCardId)
+    {
+      additionalZ += 100000;
+    }
+    var projected = false;
+    
+    if(gameObj.cards[i].ownedBy == myPlayerId)
+    {
+      additionalZ += 100000;
+      updateCardFace(gameObj.cards[i], "frontface");
+    }
+    else if (gameObj.cards[i].ownedBy !== -1)
+    {
+      if (gameObj.hasOwnProperty("projectionBoxScale"))
+      {
+        projectCardInScalebox(gameObj.cards[i], gameObj.projectionBoxScale, gameObj.sharedPlayerbox.x, gameObj.sharedPlayerbox.y);
+        projected = true;
+      }
+    }
+    updateCss("#" + gameObj.cards[i].id, "z-index", String(gameObj.cards[i].z + additionalZ));
+    if (!projected)
+    {
+      updateCss("#" + gameObj.cards[i].id, "left", gameObj.cards[i].x + "px");
+      updateCss("#" + gameObj.cards[i].id, "top", gameObj.cards[i].y + "px");
+    }
+    if (gameObj.cards[i].hasOwnProperty("scale") && !projected)
+    {
+      updateCss("#" + gameObj.cards[i].id, "transform", "scale(" + gameObj.cards[i].scale + ")");
+    }
     if (gameObj.cards[i].hasOwnProperty("show"))
     {
       init3dCard(gameObj.cards[i]);
-      if (cardIsInMyOwnBox(gameObj.cards[i]) || gameObj.cards[i].visibleFor == myPlayerId)
+      if (gameObj.cards[i].ownedBy != myPlayerId)
       {
-        updateCardFace(gameObj.cards[i], "frontface");
-      }
-      else
-      {
-        if(cardIsInInspectorBox(gameObj.cards[i]))
+        if (cardIsInMyOwnBox(gameObj.cards[i]) || gameObj.cards[i].visibleFor == myPlayerId)
         {
-          updateCardFace(gameObj.cards[i], "altFrontface");
+          updateCardFace(gameObj.cards[i], "frontface");
         }
         else
         {
-          updateCardFace(gameObj.cards[i], gameObj.cards[i].show);
+          if(cardIsInInspectorBox(gameObj.cards[i]))
+          {
+            updateCardFace(gameObj.cards[i], "altFrontface");
+          }
+          else
+          {
+            updateCardFace(gameObj.cards[i], gameObj.cards[i].show);
+          }
         }
       }
     }
@@ -3710,6 +3769,20 @@ function initCards(gameObj){
   }
 }
 
+function projectCardInScalebox(card, boxScale, refX, refY)
+{
+  // var boxX = $("#scaledProjectionBox" + card.ownedBy).position().left * (1 / scale);
+  // var boxY = $("#scaledProjectionBox" + card.ownedBy).position().top * (1 / scale);
+  var boxX = myGameObj.projectionBoxes[card.ownedBy].x;// * (1 / scale);
+  var boxY = myGameObj.projectionBoxes[card.ownedBy].y;// * (1 / scale);
+
+  var newX = boxX + ((card.x - refX) * boxScale);
+  var newY = boxY + ((card.y - refY) * boxScale);
+
+  updateCss("#" + card.id, "left", newX + "px");
+  updateCss("#" + card.id, "top", newY + "px");
+  updateCss("#" + card.id, "transform", "scale(" + boxScale + ")");
+}
 
 
 function updateCards(gameObj, changedCardsBuffer)
@@ -3741,56 +3814,79 @@ function updateCards(gameObj, changedCardsBuffer)
   //changedCardsBuffer = [];
   for (card of cards)
   {
-      if (card.hasOwnProperty("varText"))
+    if (card.hasOwnProperty("varText"))
+    {
+      if ($("#" + card.id + "_textFF").html() !== card.frontface.text)
       {
-        if ($("#" + card.id + "_textFF").html() !== card.frontface.text)
-        {
-          $("#" + card.id + "_textFF").html(card.frontface.text);
-          $(document).trigger("cardTextChanged", [card.id]);
-        }
+        $("#" + card.id + "_textFF").html(card.frontface.text);
+        $(document).trigger("cardTextChanged", [card.id]);
       }
-      if (card.hasOwnProperty("rotationX") && card.hasOwnProperty("rotationY"))
+    }
+    if (card.hasOwnProperty("rotationX") && card.hasOwnProperty("rotationY"))
+    {
+      updateCss("#" + card.id + " .threeDcontainer", "transform", "rotateX(" + card.rotationX + "deg) rotateY(" + card.rotationY + "deg)")      
+    }
+    // if(card.id != dragCardId)
+    if(!dragCardIds.includes(card.id) && card.clickedBy != myPlayerId && card.ownedBy == -1)
+    {
+      // updateCss("#" + card.id, "z-index", String(card.z + 60));
+      updateCss("#" + card.id, "left", card.x + "px");
+      updateCss("#" + card.id, "top", card.y + "px");
+    }
+    var additionalZ = 0;
+    if(card.id == dragCardId)
+    {
+      additionalZ += 100000;
+    }
+    var projected = false;
+    if (card.ownedBy == myPlayerId)
+    {
+      updateCardFace(card, "frontface");
+      additionalZ += 100000;
+    }
+    else if (card.ownedBy !== -1)
+    {
+      if (gameObj.hasOwnProperty("projectionBoxScale"))
       {
-        updateCss("#" + card.id + " .threeDcontainer", "transform", "rotateX(" + card.rotationX + "deg) rotateY(" + card.rotationY + "deg)")      
+        projectCardInScalebox(card, gameObj.projectionBoxScale, gameObj.sharedPlayerbox.x, gameObj.sharedPlayerbox.y);
+        projected = true;
       }
-      // if(card.id != dragCardId)
-      if(!dragCardIds.includes(card.id) && card.clickedBy != myPlayerId)
-      {
-        // updateCss("#" + card.id, "z-index", String(card.z + 60));
-        updateCss("#" + card.id, "left", card.x + "px");
-        updateCss("#" + card.id, "top", card.y + "px");
-      }
-      updateCss("#" + card.id, "z-index", String(card.z));
+    }
+    updateCss("#" + card.id, "z-index", String(card.z + additionalZ));
+    if (card.hasOwnProperty("scale") && !projected)
+    {
+      updateCss("#" + card.id, "transform", "scale(" + card.scale + ")");
+    }
 
-      if(!blockCardChange.includes(card.id))
+    if(!blockCardChange.includes(card.id) && card.ownedBy != myPlayerId)
+    {
+      if(card.hasOwnProperty("show") && card.isInAnOpenbox)
       {
-        if(card.hasOwnProperty("show") && card.isInAnOpenbox)
+        updateCardFace(card, card.show);
+      }
+      else
+      {
+        if (card.hasOwnProperty("show"))
         {
-          updateCardFace(card, card.show);
-        }
-        else
-        {
-          if (card.hasOwnProperty("show"))
+          var cardInMyBox = cardIsInMyOwnBox(card);
+          if (cardInMyBox || card.visibleFor == myPlayerId)
           {
-            var cardInMyBox = cardIsInMyOwnBox(card);
-            if (cardInMyBox || card.visibleFor == myPlayerId)
+            updateCardFace(card, "frontface");
+          }
+          else
+          {
+            if(cardIsInInspectorBox(card))
             {
-              updateCardFace(card, "frontface");
+              updateCardFace(card, "altFrontface");
             }
             else
             {
-              if(cardIsInInspectorBox(card))
-              {
-                updateCardFace(card, "altFrontface");
-              }
-              else
-              {
-                updateCardFace(card, card.show);
-              }
+              updateCardFace(card, card.show);
             }
           }
         }
       }
+    }
   }
   for (openbox of gameObj.openboxes)
   {
@@ -3815,6 +3911,7 @@ function updateCursors (gameObj)
   for (player of gameObj.players){
     updateCss("#cursor" + playerIndex, "background-color", player.color);
     updateCss("#player" + player.id + "box", "background-color", player.color);
+    updateCss("#scaledProjectionBox" + player.id, "background-color", player.color);
     updateCss(".pieceFor_" + player.id + " .pieceImg", "filter", filterMap[player.color] + cssFilterBorder);
     updateHtml("#player" + player.id + "NameText", player.name)
     if(player.id != myPlayerId)

@@ -1,0 +1,11 @@
+<div class='card deck' id='doorDiscardDeck'><button type="button" class="btn btn-primary btn-lg shuffleButton" style="width: 78px;" value='20'>Shuffle</button></div>
+<div class='card deck' id='treasureDiscardDeck'><button type="button" class="btn btn-primary btn-lg shuffleButton" style="width: 78px;" value='20'>Shuffle</button></div>
+<div class='card deck' id='doorDeck'><button type="button" class="btn btn-primary btn-lg shuffleButton" style="width: 78px;" value='20'>Shuffle</button></div>
+<div class='card deck' id='treasureDeck'><button type="button" class="btn btn-primary btn-lg shuffleButton" style="width: 78px;" value='20'>Shuffle</button></div>
+<% for (var i = 0; i < 96; i++) { -%>
+    <div class='card door' id='door<%= i %>'><img src='/img/mk/cards/door_bf.png'></div>
+<% } -%>
+<% for (var i = 0; i < 74; i++) { -%>
+    <div class='card treasure' id='treasure<%= i %>'><img src='/img/mk/cards/treasure_bf.png'></div>
+<% } -%>
+<div class='sharedPlayerbox'></div>
