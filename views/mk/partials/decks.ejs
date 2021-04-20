@@ -9,3 +9,5 @@
     <div class='card treasure' id='treasure<%= i %>'><img src='/img/mk/cards/treasure_bf.png'></div>
 <% } -%>
 <div class='sharedPlayerbox'></div>
+<div class='card deck' id='diceDeck'><button type="button" class="btn btn-primary btn-lg rollButton" style="width: 110px;">Roll</button></div>
+<%- include ('../../common/dice', {id: "dice1", width: 50}); -%>

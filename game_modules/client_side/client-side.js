@@ -102,6 +102,7 @@ function addWebcam(stream, playerId, mirrored, muted)
   updateCss(".pieceFor_" + playerId, "display", "block");
   updateCss("#player" + playerId + "NameText", "display", "initial");
   updateCss("#player" + playerId + "Name", "display", "initial");
+  $(document).trigger("addWebcam", [playerId, mirrored, muted]);
 }
 
 var gameInitialized = false;
@@ -190,7 +191,8 @@ function InitWebSocket()
       updateCss("#player" + playerId + "Name", "display", "none");
       updateCss("#player" + playerId + "box", "background-color", "#FFFFFF00");
       updateCss("#scaledProjectionBox" + playerId, "background-color", "#FFFFFF00");
-      updateHtml("#player" + playerId + "NameText", "")
+      updateHtml("#player" + playerId + "NameText", "");
+      $(document).trigger("leftPeer", [playerId]);
     });
 
     clientController.on("stream", (playerId, stream) => {
@@ -421,6 +423,7 @@ $( document ).ready(function() {
   $(".inspectDeckButton").on('click', inspectDeck);
 
   $(".scoreboxButton").on('click', scoreboxButton);
+  $(".scoreboxResetButton").on('click', scoreboxResetButton);
   $(".mic").on('click', toggleMic);
 
   $('#name').keyup(function(){
@@ -1151,7 +1154,13 @@ function scoreboxButton(e){
   {
     scoreMinSound.play();
   }
-  clientController.editScorebox(Number(e.currentTarget.parentElement.attributes['value'].value), addValue)
+  //clientController.editScorebox(Number(e.currentTarget.parentElement.attributes['value'].value), addValue)
+  clientController.editScorebox(e.currentTarget.parentElement.attributes['value'].value, addValue)
+}
+
+function scoreboxResetButton(e)
+{
+  clientController.resetScorebox(e.currentTarget.parentElement.attributes['value'].value);
 }
 
 function checkEnterIsAllowed()

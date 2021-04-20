@@ -16,6 +16,14 @@ function toggleVisible(selector, shouldBeVisible)
   }
 }
 
+function updateCss(selector, property, value)
+{
+  if ($(selector).css(property) !== value)
+  {
+    $(selector).css(property, value);
+  }
+}
+
 $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
 
   var shouldBeVisibleArray = [];
@@ -34,4 +42,12 @@ $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
     toggleVisible("#webcambox" + index, shouldBeVisible);
   });
 
+});
+
+$(document).on("addWebcam", function(e, playerId, mirrored, muted){
+  updateCss("#scorebox" + playerId, "display", "block");
+});
+
+$(document).on("leftPeer", function(e, playerId){
+  updateCss("#scorebox" + playerId, "display", "none");
 });

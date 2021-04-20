@@ -294,6 +294,17 @@ function WS_distributor(wss, turnServer, resetGameFunction)
         }
         this.broadcast();
       }
+      else if (json.type == "resetScorebox")
+      {
+        for (scorebox of this.gameObj.scoreboxes)
+        {
+          if(scorebox.id == json.id)
+          {
+            scorebox.points = 0;
+          }
+        }
+        this.broadcast();
+      }
       else if (json.type == "color")
       {
         player.updateColor(json.color)

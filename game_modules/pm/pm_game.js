@@ -39,6 +39,17 @@ PM_Game.prototype.resetGame = function(game)
       game.gameObj.cards.push(new Card("tile" + i, startX + ((i - 21) * 80), startY))
   }
 
+  for (var i = 6; i < 20; i++)
+  {
+    var startPosX = 1920;
+    var startPosY = 20 + (35 * i);
+    var moveBtnDeck = new Deck('webcamMoveBtn' + i, startPosX, startPosY, 32, 32)
+    var webcamBox = new Card('webcambox' + i, startPosX, startPosY)
+    webcamBox.attachedToDeck = true;
+    game.gameObj.cards.push(webcamBox)
+    moveBtnDeck.attachedCards.push(webcamBox)
+    game.gameObj.decks.push(moveBtnDeck)
+  }
 
 }
 

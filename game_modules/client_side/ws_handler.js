@@ -261,6 +261,15 @@ WsHandler.prototype.editScorebox = function(id, add)
   this.sendToWs(sendData);
 }
 
+WsHandler.prototype.resetScorebox = function(id, add)
+{
+  sendData = {
+    type: "resetScorebox",
+    id: id
+  }
+  this.sendToWs(sendData);
+}
+
 WsHandler.prototype.devToolsState = function(opened)
 {
   sendData = {

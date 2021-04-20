@@ -154,6 +154,11 @@ ClientController.prototype.editScorebox = function(id, add)
   this.init && this.wsHandler.editScorebox(id, add);
 }
 
+ClientController.prototype.resetScorebox = function(id)
+{
+  this.init && this.wsHandler.resetScorebox(id);
+}
+
 ClientController.prototype.devToolsState = function(opened)
 {
   this.init && this.wsHandler.devToolsState(opened);

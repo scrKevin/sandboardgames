@@ -15,6 +15,8 @@
 
 <style>
 
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
 body
 {
   background-color: #000000;
@@ -206,28 +208,93 @@ body
   height: 90px;
 }
 
-#scorebox0
+.scorebox
 {
-  top: 175px;
-  left: 250px;
+  font-family: 'VT323', monospace;
 }
 
-#scorebox1
+#scoreboxlevel0
 {
-  top: 175px;
-  left: 1850px;
+  top: 0px;
+  left: 240px;
 }
 
-#scorebox2
+#scoreboxbonus0
 {
-  top: 795px;
-  left: 250px;
+  top: 0px;
+  left: 360px;
 }
 
-#scorebox3
+#scoreboxlevel1
 {
-  top: 795px;
-  left: 1850px;
+  top: 900px;
+  left: 240px;
+}
+
+#scoreboxbonus1
+{
+  top: 900px;
+  left: 360px;
+}
+
+#scoreboxlevel2
+{
+  top: 360px;
+  left: 240px;
+}
+
+#scoreboxbonus2
+{
+  top: 360px;
+  left: 360px;
+}
+
+#scoreboxlevel3
+{
+  top: 540px;
+  left: 240px;
+}
+
+#scoreboxbonus3
+{
+  top: 540px;
+  left: 360px;
+}
+
+#scoreboxlevel4
+{
+  top: 180px;
+  left: 240px;
+}
+
+#scoreboxbonus4
+{
+  top: 180px;
+  left: 360px;
+}
+
+#scoreboxlevel5
+{
+  top: 720px;
+  left: 240px;
+}
+
+#scoreboxbonus5
+{
+  top: 720px;
+  left: 360px;
+}
+
+#scoreboxmonster
+{
+  top: 0px;
+  left: 632px;
+}
+
+#scoreboxplayer
+{
+  top: 0px;
+  left: 1496px;
 }
 
 .points
@@ -252,10 +319,11 @@ body
 
 #diceDeck
 {
-  width: 260px;
+  width: 120px;
   height: 170px;
   background-color: transparent;
   border: 2px solid black;
+  z-index: 3000000;
 }
 
 #dice1 .threeDcontainer

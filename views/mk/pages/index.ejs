@@ -6,11 +6,20 @@
     <%- include ('../../common/welcomeModal'); -%>
     <%- include ('../../common/resetModal'); -%>
     <div class="scaleplane">
+      <div style="position: absolute; top: 1080px; left: 0px; z-index: -100; opacity: 0; height: 170px;"></div>
       <img class='battleArena' src='/img/mk/battle_arena.png'/>
       <img class='inventory' src='/img/mk/inventory.png'/>
       <%- include ('../partials/playerboxes', {playerboxStartPos: playerboxStartPos}); -%>
       <%- include ('../../common/webcams', {webcamPos: webcamPos, fixedPlayers:fixedPlayers}); -%>
       <%- include ('../partials/decks') %>
+      <%  for (var i = 0; i < fixedPlayers; i++) { %>
+          <% var id = i; -%>
+            <%- include('../../common/horizontalScorebox', {scoreboxId: 'level' + id}); %>
+            <%- include('../../common/horizontalScorebox', {scoreboxId: 'bonus' + id}); %>
+      <%  } %>
+      <%  var scoreboxValues = [10, 5, 3, 1]; %>
+      <%- include('../../common/resettableScorebox', {scoreboxId: "monster", scoreboxValues: scoreboxValues}); %>
+      <%- include('../../common/resettableScorebox', {scoreboxId: "player", scoreboxValues: scoreboxValues}); %>
       <%- include ('../../common/cursors'); -%>
     </div>
   </body>

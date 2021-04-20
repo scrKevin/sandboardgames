@@ -33,6 +33,28 @@ MK_Game.prototype.resetGame = function(game)
 
   game.gameObj.highestZ = 10000;
 
+  var diceDeck = new Deck("diceDeck", 1920 - 120 - 152, 540 - 170, 120, 170);
+  diceDeck.setImmovable();
+  game.gameObj.decks.push(diceDeck);
+
+  var dice1 = new Card("dice1", diceDeck.x + 30, diceDeck.y + 70);
+  dice1.rotationX = 0;
+  dice1.rotationY = 0;
+  game.gameObj.cards.push(dice1);
+
+  diceDeck.attachedCards.push(dice1);
+
+  for (var i = 0; i < 6; i++)
+  {
+    var levelScorebox = new Scorebox("level" + i);
+    levelScorebox.points = 1;
+    game.gameObj.scoreboxes.push(levelScorebox);
+    game.gameObj.scoreboxes.push(new Scorebox("bonus" + i));
+  }
+
+  game.gameObj.scoreboxes.push(new Scorebox("monster"));
+  game.gameObj.scoreboxes.push(new Scorebox("player"));
+
   var startX = 480;
   var startY = 0;
   var doorDeck = new Deck("doorDeck", startX, startY, 152, 264);
@@ -79,6 +101,18 @@ MK_Game.prototype.resetGame = function(game)
 
   game.gameObj.openboxes.push(new Openbox('openbox0', 480+152, 0, 1920 - (480 + (152*2)), 540))
   game.gameObj.openboxes.push(new Openbox('openbox1', 480+910, 540, 530, 540))
+
+  for (var i = 6; i < 20; i++)
+  {
+    var startPosX = 1920;
+    var startPosY = 20 + (35 * i);
+    var moveBtnDeck = new Deck('webcamMoveBtn' + i, startPosX, startPosY, 32, 32)
+    var webcamBox = new Card('webcambox' + i, startPosX, startPosY)
+    webcamBox.attachedToDeck = true;
+    game.gameObj.cards.push(webcamBox)
+    moveBtnDeck.attachedCards.push(webcamBox)
+    game.gameObj.decks.push(moveBtnDeck)
+  }
 
 }
 
