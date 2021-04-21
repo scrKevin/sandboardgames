@@ -1,0 +1,22 @@
+<html>
+  <head>
+    <%- include ("../partials/head") %>
+  </head>
+  <body>
+    <%- include ('../../common/welcomeModal'); -%>
+    <%- include ('../../common/resetModal'); -%>
+    <div class="scaleplane">
+      <img class="cardOpenbox" src="/img/dx/openbox.svg"/>
+      <img class="playerVault" src="/img/dx/playerbox.svg"/>
+      <%- include ('../partials/playerboxes', {playerboxStartPos: playerboxStartPos}); -%>
+      <%- include ('../../common/webcams', {webcamPos: webcamPos, fixedPlayers:fixedPlayers}); -%>
+      <%- include ('../partials/decks') %>
+      <%  var scoreboxValues = [1];
+          for (var i = 0; i < fixedPlayers; i++) { 
+            var id = i; -%>
+            <%- include('../../common/scorebox', {scoreboxId: id, scoreboxValues: scoreboxValues}); %>
+      <%  } -%>
+      <%- include ('../../common/cursors'); -%>
+    </div>
+  </body>
+</html>

@@ -980,6 +980,7 @@ function updateCursors (gameObj)
     updateCss("#player" + player.id + "box", "background-color", player.color);
     updateCss("#scaledProjectionBox" + player.id, "background-color", player.color);
     updateCss(".pieceFor_" + player.id + " .pieceImg", "filter", filterMap[player.color] + cssFilterBorder);
+    $(document).trigger("pieceColor", [player.id, filterMap[player.color]]);
     updateHtml("#player" + player.id + "NameText", player.name)
     if(player.id != myPlayerId)
     {

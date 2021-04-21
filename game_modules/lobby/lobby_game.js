@@ -6,10 +6,17 @@ let Openbox = require('../openbox').Openbox;
 
 let Game = require('../base_game').Game;
 
-var games = ['sh', 'sy', 'cah', 'rmk', 'ctd', 'fkar', 'strg', 'scbl', 'soc', 'pm', 'mk']
+//var games = ['sh', 'sy', 'cah', 'rmk', 'ctd', 'fkar', 'strg', 'scbl', 'soc', 'pm', 'mk']
+var games = [];
 
 function Lobby_Game(wss, turnServer){
   this.game = new Game(wss, turnServer, this.resetGame);
+  this.gamesList = [];
+}
+
+function setGamesList(newGamesList)
+{
+  games = newGamesList;
 }
 
 Lobby_Game.prototype.resetGame = function(game)
@@ -48,4 +55,4 @@ Lobby_Game.prototype.resetGame = function(game)
 
 }
 
-module.exports = {Lobby_Game: Lobby_Game}
+module.exports = {Lobby_Game: Lobby_Game, setGamesList: setGamesList};

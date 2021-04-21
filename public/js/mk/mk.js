@@ -47,9 +47,13 @@ $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
 $(document).on("addWebcam", function(e, playerId, mirrored, muted){
   updateCss("#scoreboxlevel" + playerId, "display", "block");
   updateCss("#scoreboxbonus" + playerId, "display", "block");
+  updateCss("#levelText" + playerId, "display", "block");
+  updateCss("#bonusText" + playerId, "display", "block");
 });
 
 $(document).on("leftPeer", function(e, playerId){
   updateCss("#scoreboxlevel" + playerId, "display", "none");
   updateCss("#scoreboxbonus" + playerId, "display", "none");
+  updateCss("#levelText" + playerId, "display", "none");
+  updateCss("#bonusText" + playerId, "display", "none");
 });

@@ -1,4 +1,4 @@
-<div class="scorebox" id="scorebox<%= scoreboxId %>" style="background-color: #CCCCCC; padding: 5px; position: absolute; z-index: 3; border-radius: 5px; display: none;" value="<%= scoreboxId %>">
+<div class="scorebox" id="scorebox<%= scoreboxId %>" style="background-color: #CCCCCC; padding: 5px; position: absolute; z-index: 3000000; border-radius: 5px; display: none;" value="<%= scoreboxId %>">
   <% for (scoreboxValue of scoreboxValues) { -%>
     <button type="button" class="btn btn-primary scoreboxButton" id="scorebox<%= scoreboxId %>_plus_<%= scoreboxValue %>" value="+<%= scoreboxValue %>" style="width: 60px; font-size: 18px;">+<%= scoreboxValue %></button>
   <% } -%>

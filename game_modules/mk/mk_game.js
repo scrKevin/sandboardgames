@@ -37,7 +37,7 @@ MK_Game.prototype.resetGame = function(game)
   diceDeck.setImmovable();
   game.gameObj.decks.push(diceDeck);
 
-  var dice1 = new Card("dice1", diceDeck.x + 30, diceDeck.y + 70);
+  var dice1 = new Card("dice1", diceDeck.x + 35, diceDeck.y + 80);
   dice1.rotationX = 0;
   dice1.rotationY = 0;
   game.gameObj.cards.push(dice1);

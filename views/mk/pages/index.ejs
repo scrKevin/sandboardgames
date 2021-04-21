@@ -9,11 +9,15 @@
       <div style="position: absolute; top: 1080px; left: 0px; z-index: -100; opacity: 0; height: 170px;"></div>
       <img class='battleArena' src='/img/mk/battle_arena.png'/>
       <img class='inventory' src='/img/mk/inventory.png'/>
+      <div class="scoreboxExtraText" id="monsterExtraText">MONSTER</div>
+      <div class="scoreboxExtraText" id="playerExtraText">PLAYER</div>
       <%- include ('../partials/playerboxes', {playerboxStartPos: playerboxStartPos}); -%>
       <%- include ('../../common/webcams', {webcamPos: webcamPos, fixedPlayers:fixedPlayers}); -%>
       <%- include ('../partials/decks') %>
       <%  for (var i = 0; i < fixedPlayers; i++) { %>
           <% var id = i; -%>
+            <div class="levelText" id="levelText<%= i %>" style="display: none;">LEVEL:</div>
+            <div class="levelText" id="bonusText<%= i %>" style="display: none;">BONUS:</div>
             <%- include('../../common/horizontalScorebox', {scoreboxId: 'level' + id}); %>
             <%- include('../../common/horizontalScorebox', {scoreboxId: 'bonus' + id}); %>
       <%  } %>

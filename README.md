@@ -63,9 +63,6 @@ Requirements for a new game (detailed instructions below):
 2. A javascript file in `sandboardgames/public/js/[new game name]` that defines some specific client-side settings for this game and has some specific function overrides (if needed).
 3. A folder in the `sandboardgames/views` directory that holds the HTML layout (EJS templating is supported).
 4. Add your game and created objects to `sandboardgames/game_modules/game_list.js`.
-5. Add an icon/image of your game to `sandboardgames/public/img/[new game name]`.
-6. Add your game icon to the Lobby view in `sandboardgames/views/lobby/partials/games.ejs`.
-7. Add your game name into the games array of the lobby_game.js file in `sandboardgames/game_modules/lobby/lobby_game.js`. Yes, the Lobby is also a game ;).
 
 ### Detailed instructions:
 #### Step 1:
@@ -339,109 +336,4 @@ module.exports.availableGames = {
   'strg': new ImplementedGame("Stratego", 'strg', STRG_Game, 'strg', 'strg', {playerboxStartPos: StartpositionsSTRG.playerBoxes, webcamPos: StartpositionsSTRG.webcamPos, fixedPlayers: 2}),
   'scbl': new ImplementedGame("Scrabble", 'scbl', SCBL_Game, 'scbl', 'scbl', {playerboxStartPos: StartpositionsSCBL.playerBoxes, webcamPos: StartpositionsSCBL.webcamPos, fixedPlayers: 4}),
 }
-```
-
-#### Step 5:
-To add an icon for your game into the Lobby:
-- Create a folder in the `sandboardgames/public/img` directory for your own game. You can also use this folder for other image assets for your game.
-- Add an icon (image) for your game.
-
-#### Step 6:
-Add a reference for your game icon in the Lobby layout file `sandboardgames/views/lobby/partials/games.ejs`. See example below:
-```html
-<div class="gamecard" id='gamecard0'>
-	<a href='sh'><img src='/img/sh/logo.png'/></a>
-</div>
-<div class="card moveBtn" id="gamecardMoveBtn0"><img src="/img/lobby/move.png"/></div>
-
-<div class="gamecard" id='gamecard1'>
-	<a href='sy'><img src='/img/sy/scotland-yard.svg'/></a>
-</div>
-<div class="card moveBtn" id="gamecardMoveBtn1"><img src="/img/lobby/move.png"/></div>
-
-<div class="gamecard" id='gamecard2'>
-  <a href='cah'><img src='/img/cah/cah.png'/></a>
-</div>
-<div class="card moveBtn" id="gamecardMoveBtn2"><img src="/img/lobby/move.png"/></div>
-
-<div class="gamecard" id='gamecard3'>
-  <a href='rmk'><img src='/img/rmk/rummikub.svg'/></a>
-</div>
-<div class="card moveBtn" id="gamecardMoveBtn3"><img src="/img/lobby/move.png"/></div>
-
-<div class="gamecard" id='gamecard4'>
-  <a href='ctd'><img src='/img/ctd/citadels.svg'/></a>
-</div>
-<div class="card moveBtn" id="gamecardMoveBtn4"><img src="/img/lobby/move.png"/></div>
-
-<div class="gamecard" id='gamecard5'>
-  <a href='fkar'><img src='/img/fkar/fake_artist.svg'/></a>
-</div>
-<div class="card moveBtn" id="gamecardMoveBtn5"><img src="/img/lobby/move.png"/></div>
-
-<div class="gamecard" id='gamecard6'>
-  <a href='strg'><img src='/img/strg/stratego.svg'/></a>
-</div>
-<div class="card moveBtn" id="gamecardMoveBtn6"><img src="/img/lobby/move.png"/></div>
-
-<div class="gamecard" id='gamecard7'>
-  <a href='scbl'><img src='/img/scbl/scrabble.svg'/></a>
-</div>
-<div class="card moveBtn" id="gamecardMoveBtn7"><img src="/img/lobby/move.png"/></div>
-```
-Be sure to increment the id of 'gamecard[n]' and 'gamecardMoveBtn[n]. Edit the href attribute to the abbreviation of your game and edit the src attribute of the img. 
-
-#### Step 7:
-One line of code in the `sandboardgames/game_modules/lobby/lobby_game.js` file needs to be updated, see example below.
-```javascript
-let Deck = require('../deck').Deck;
-let Card = require('../card').Card;
-let Openbox = require('../openbox').Openbox;
-
-// var Startpositions = require("./startpositions")
-
-let Game = require('../base_game').Game;
-
-// Add the abbreviated name of your game here.
-var games = ['sh', 'sy', 'cah', 'rmk', 'ctd', 'fkar', 'strg', 'scbl']
-
-function Lobby_Game(wss){
-  this.game = new Game(wss, this.resetGame);
-}
-
-Lobby_Game.prototype.resetGame = function(game)
-{
-  game.gameObj.cards = [];
-  game.gameObj.decks = [];
-  game.gameObj.openboxes = [];
-  game.gameObj.scoreboxes = [];
-
-  for (var i = 0; i < 5; i++)
-  {
-    for (var j = 0; j < 4; j++)
-    {
-      var startPosX = j * 300;
-      var startPosY = i * 45;
-      var moveBtnDeck = new Deck('webcamMoveBtn' + ((i * 4) + j), startPosX, startPosY, 32, 32)
-      var webcamBox = new Card('webcambox' + ((i * 4) + j), startPosX, startPosY)
-      game.gameObj.cards.push(webcamBox)
-      moveBtnDeck.attachedCards.push(webcamBox)
-      game.gameObj.decks.push(moveBtnDeck)
-    }
-  }
-
-  for (var i = 0; i < games.length; i++)
-  {
-    var startPosX = 1500;
-    var startPosY = i * 60;
-    var gameMoveBtnDeck = new Deck('gamecardMoveBtn' + i, startPosX, startPosY, 32, 32)
-    var gameBox = new Card('gamecard' + i, startPosX, startPosY)
-    game.gameObj.cards.push(gameBox)
-    gameMoveBtnDeck.attachedCards.push(gameBox)
-    game.gameObj.decks.push(gameMoveBtnDeck)
-  }
-
-}
-
-module.exports = {Lobby_Game: Lobby_Game}
 ```
