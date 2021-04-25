@@ -316,7 +316,7 @@ function WS_distributor(wss, turnServer, resetGameFunction)
       }
       else if (json.type == "initiatorReady")
       {
-        client.newPeerInitated();
+        //client.newPeerInitated();
         for (clientI of this.clients)
         {
           if (clientI.playerId == json.playerId)
@@ -355,6 +355,7 @@ function WS_distributor(wss, turnServer, resetGameFunction)
       }
       else if (json.type == "streamReceived")
       {
+        client.newPeerInitated();
         client.peerStatus[json.fromPlayerId] = "streamReceived";
       }
       else if (json.type == "connectionFailure")
