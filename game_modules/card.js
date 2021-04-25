@@ -18,6 +18,11 @@ Card.prototype.setLastTouchedBy = function(playerId)
 	this.lastTouchedBy = playerId;
 }
 
+Card.prototype.setCardValue = function(cardValue)
+{
+  this.cardValue = cardValue;
+}
+
 Card.prototype.setZ = function(z)
 {
   if (!this.fixedZ)

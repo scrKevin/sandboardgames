@@ -1,0 +1,123 @@
+<%  for (var i in board) { 
+    var orientation = '';
+    var width = 89;
+    var height = 139;
+    var top = 1080 - height;
+    var left = 1920 - 420 - 139;
+    var colorBarWidth = 89;
+    var colorBarHeight = 40;
+    var colorBarTop = -3;
+    var colorBarLeft = -3;
+    var textTop = 40;
+    var textLeft = 0;
+    var textWidth = width - 6;
+    if (i <= 9){
+      orientation = 'top';
+      left = left - (89 * i);
+    }
+    else if (i <= 19)
+    {
+      orientation = 'right';
+      width = 139;
+      height = 89;
+      colorBarWidth = 40;
+      colorBarHeight = 89;
+      colorBarLeft = width - colorBarWidth - 3;
+      textTop = 0;
+      textWidth = width - colorBarWidth - 6;
+      left = 420;
+      top = 1080 - 139 - (89 * (i - 10));
+    }
+    else if (i <= 20)
+    {
+      orientation = 'right';
+      width = 139;
+      height = 139;
+      textWidth = width - colorBarWidth - 6;
+      left = 420;
+      top = 0;
+    }
+    else if (i <= 30)
+    {
+      orientation = 'bottom';
+      colorBarTop = height - colorBarHeight - 3;
+      textTop = 0;
+      top = 0;
+      left = 420 + 139 + (89 * (i - 21))
+    }
+    else if (i <= 39)
+    {
+      orientation = 'left';
+      width = 139;
+      height = 89;
+      colorBarWidth = 40;
+      colorBarHeight = 89;
+      textTop = 0;
+      textLeft = colorBarWidth;
+      textWidth = width - colorBarWidth - 6;
+      left = 1920 - 420 - 139;
+      top = 139 + (89 * (i - 31));
+    }
+    if (board[i].type == 'property'){ -%>
+      
+      <%- include('./property', {data: board[i], 
+        orientation: orientation, 
+        width: width, 
+        height: height, 
+        left: left,
+        top: top,
+        colorBarWidth: colorBarWidth, 
+        colorBarHeight: colorBarHeight,
+        colorBarLeft: colorBarLeft,
+        colorBarTop: colorBarTop,
+        textTop: textTop,
+        textLeft: textLeft,
+        textWidth: textWidth}
+        ); -%>
+    
+    <%  } else if (board[i].type == "start") { -%>
+      <%- include ('./image', {imgSrc: "/img/mp/go.png", left: left, top: top}); -%>
+    <%  } else if (board[i].type == "communityChest") { 
+      if (orientation == 'top'){-%>
+        <%- include ('./image', {imgSrc: "/img/mp/communityChest.png", left: left, top: top}); -%>
+      <% } else if (orientation == 'right'){ -%>
+        <%- include ('./image', {imgSrc: "/img/mp/communityChestLeft.png", left: left, top: top}); -%>
+      <% } else if (orientation == 'left'){ -%>
+        <%- include ('./image', {imgSrc: "/img/mp/communityChestRight.png", left: left, top: top}); -%>
+      <% }  -%>
+    <% } else if (board[i].type == "incomeTax") { -%>
+      <%- include ('./image', {imgSrc: "/img/mp/incomeTax.png", left: left, top: top}); -%>
+    <%  } else if (board[i].type == "station") { 
+      if (orientation == 'top'){-%>
+        <%- include ('./image', {imgSrc: "/img/mp/stationSouth.png", left: left, top: top}); -%>
+      <% } else if (orientation == 'right'){ -%>
+        <%- include ('./image', {imgSrc: "/img/mp/stationWest.png", left: left, top: top}); -%>
+      <% } else if (orientation == 'bottom'){ -%>
+        <%- include ('./image', {imgSrc: "/img/mp/stationNorth.png", left: left, top: top}); -%>
+      <% } else if (orientation == 'left'){ -%>
+        <%- include ('./image', {imgSrc: "/img/mp/stationEast.png", left: left, top: top}); -%>
+      <% }  -%>
+    <% } else if (board[i].type == "chance") { 
+      if (orientation == 'top'){-%>
+        <%- include ('./image', {imgSrc: "/img/mp/chanceBottom.png", left: left, top: top}); -%>
+      <% } else if (orientation == 'bottom'){ -%>
+        <%- include ('./image', {imgSrc: "/img/mp/chanceBottom.png", left: left, top: top}); -%>
+      <% } else if (orientation == 'left'){ -%>
+        <%- include ('./image', {imgSrc: "/img/mp/chanceLeft.png", left: left, top: top}); -%>
+      <% }  -%>
+    <% } else if (board[i].type == "prison") { -%>
+      <%- include ('./image', {imgSrc: "/img/mp/prison.png", left: left, top: top}); -%>
+    <%  } else if (board[i].type == "company") { 
+      if (orientation == 'right'){-%>
+        <%- include ('./image', {imgSrc: "/img/mp/electric.png", left: left, top: top}); -%>
+      <% } else if (orientation == 'bottom'){ -%>
+        <%- include ('./image', {imgSrc: "/img/mp/water.png", left: left, top: top}); -%>
+      <% }  -%>
+    <% } else if (board[i].type == "freeParking") { -%>
+      <%- include ('./image', {imgSrc: "/img/mp/freeParking.png", left: left, top: top}); -%>
+    <%  } else if (board[i].type == "goToPrison") { -%>
+      <%- include ('./image', {imgSrc: "/img/mp/toPrison.png", left: left, top: top}); -%>
+    <%  } else if (board[i].type == "extraTax") { -%>
+      <%- include ('./image', {imgSrc: "/img/mp/extraTax.png", left: left, top: top}); -%>
+    <%  } -%>
+<%  } -%>

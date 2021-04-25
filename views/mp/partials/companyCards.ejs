@@ -1,0 +1,15 @@
+<%  var id = 0; for (var i in board) { if (board[i].type == 'company'){-%>
+    <div class="propertyCard card" id="company<%= id; %>">
+        <div class="header" style="background-color: #FFFFFF; text-align: center; border-radius:5px;padding:5px; display:inline-block; width:100%;">
+            <span style="display: inline-block; font-size: 12px; font-weight: lighter;">EIGENDOMSBEWIJS</span><br>
+            <span><%= board[i].companyName; %></span><br>
+        </div><br>
+        <table class='propertyTable'>
+            <tr style="border-top: 3px solid black;"><td colspan=2>HUUR: <%= board[i].rent[0]; %>x het aantal ogen van de worp.</td></tr>
+            <tr><td colspan=2 style="white-space: pre-wrap;"> </td></tr>
+            <tr><td colspan=2>Indien ook <%= board[i].otherCompany; %> in bezit, <%= board[i].rent[1]; %>x het aantal ogen van de worp.</td></tr>
+            <tr><td colspan=2 style="white-space: pre-wrap;"> </td></tr>
+            <tr><td>Hypotheekwaarde</td><td style="text-align: right;">ƒ <%= board[i].mortgageValue; %>,--</td></tr>
+        </table>
+    </div>
+<%  id++;}} -%>

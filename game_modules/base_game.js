@@ -131,11 +131,11 @@ function WS_distributor(wss, turnServer, resetGameFunction)
               {
                 if(deck.isInDeck(json.pos.x, json.pos.y))
                 {
-                  deck.addToDeck(card);
+                  deck.addToDeck(card, id);
                 }
                 else
                 {
-                  deck.removeFromDeck(card);
+                  deck.removeFromDeck(card, id);
                 }
               }
             }
@@ -219,11 +219,11 @@ function WS_distributor(wss, turnServer, resetGameFunction)
             {
               if(deck.isInDeck(json.pos.x, json.pos.y))
               {
-                deck.addToDeck(card);
+                deck.addToDeck(card, id);
               }
               else
               {
-                deck.removeFromDeck(card);
+                deck.removeFromDeck(card, id);
               }
             }
             if (card.hasOwnProperty("show"))

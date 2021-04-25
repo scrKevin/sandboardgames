@@ -9,6 +9,7 @@ const StartpositionsSOC = require("./soc/startpositions");
 const StartpositionsPM = require("./pm/startpositions");
 const StartpositionsMK = require("./mk/startpositions");
 const StartpositionsDX = require("./dx/startpositions");
+const StartpositionsMP = require("./mp/startpositions");
 
 let SY_Game = require("./sy/sy_game").SY_Game;
 let SH_Game = require("./sh/sh_game").SH_Game;
@@ -22,6 +23,7 @@ let SOC_Game = require("./soc/soc_game").SOC_Game;
 let PM_Game = require("./pm/pm_game").PM_Game;
 let MK_Game = require("./mk/mk_game").MK_Game;
 let DX_Game = require("./dx/dx_game").DX_Game;
+let MP_Game = require("./mp/mp_game").MP_Game;
 
 function ImplementedGame(name, wsLocation, GameClass, routerLocation, viewsLocation, iconLocation, nOfPlayers, objectToPassToView)
 {
@@ -47,7 +49,8 @@ let availableGames = {
   'soc': new ImplementedGame("Settlers of Catan", "soc", SOC_Game, "soc", "soc", 'soc/settlersOfCatan.svg', "2-4", {playerboxStartPos: StartpositionsSOC.playerBoxes, webcamPos: StartpositionsSOC.webcamPos, fixedPlayers:4}),
   'pm': new ImplementedGame("Pickomino", 'pm', PM_Game, "pm", "pm", 'pm/pickomino.svg', "2-8", {playerboxStartPos: StartpositionsPM.playerBoxes, webcamPos: StartpositionsPM.webcamPos, fixedPlayers: 8}),
   'mk': new ImplementedGame("Munchkin", 'mk', MK_Game, 'mk', 'mk', 'mk/munckin_lobby_icon.svg', "3-6", {playerboxStartPos: StartpositionsMK.playerBoxes, webcamPos: StartpositionsMK.webcamPos, fixedPlayers: 6}),
-  'dx': new ImplementedGame("Dixit", "dx", DX_Game, "dx", "dx", "dx/dixit_lobby_icon.svg", "3-6", {playerboxStartPos: StartpositionsDX.playerBoxes, webcamPos: StartpositionsDX.webcamPos, fixedPlayers: 6})
+  'dx': new ImplementedGame("Dixit", "dx", DX_Game, "dx", "dx", "dx/dixit_lobby_icon.svg", "3-6", {playerboxStartPos: StartpositionsDX.playerBoxes, webcamPos: StartpositionsDX.webcamPos, fixedPlayers: 6}),
+  'mp': new ImplementedGame("Monopoly", "mp", MP_Game, "mp", "mp", "mp/monopoly_lobby_icon.svg", "2-8", {playerboxStartPos: StartpositionsMP.playerBoxes, webcamPos: StartpositionsMP.webcamPos, fixedPlayers: 8, board: StartpositionsMP.board})
 }
 
 let gamesList = [];

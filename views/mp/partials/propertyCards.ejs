@@ -1,0 +1,22 @@
+<%  var id = 0; for (var i in board) { if (board[i].type == 'property'){-%>
+    <div class="propertyCard card" id="property<%= id; %>">
+        <div class="header" style="background-color: <%= board[i].color; %>; text-align: center; border-radius:5px;padding:5px; display:inline-block; width:100%;">
+            <span style="display: inline-block; font-size: 12px; font-weight: lighter;">EIGENDOMSBEWIJS</span><br>
+            <span><%= board[i].street; %></span><br>
+            <span style="font-size: 13px;"><%= board[i].town; %></span>
+        </div><br>
+        <table class='propertyTable'>
+            <tr style="border-top: 3px solid black;"><td>HUUR</td><td colspan=2>ONBEBOUWD</td><td style="text-align: right;">ƒ <%= board[i].rent[0]; %>,--</td></tr>
+            <tr><td>„</td><td>MET</td><td>1 HUIS</td><td style="text-align: right;">ƒ <%= board[i].rent[1]; %>,--</td></tr>
+            <tr><td>„</td><td>„</td><td>2 HUIZEN</td><td style="text-align: right;">ƒ <%= board[i].rent[2]; %>,--</td></tr>
+            <tr><td>„</td><td>„</td><td>3 HUIZEN</td><td style="text-align: right;">ƒ <%= board[i].rent[3]; %>,--</td></tr>
+            <tr><td>„</td><td>„</td><td>4 HUIZEN</td><td style="text-align: right;">ƒ <%= board[i].rent[4]; %>,--</td></tr>
+            <tr style="border-bottom: 3px solid black;"><td>„</td><td>„</td><td>HOTEL</td><td style="text-align: right;">ƒ <%= board[i].rent[5]; %>,--</td></tr>
+            <tr style="border-bottom: 3px solid black; font-size: 12px;"><td colspan=4>Wanneer een speler alle straten van een kleurgroep (stad) bezit, wordt de huur voor „onbebouwd" verdubbeld.</td></tr>
+            <tr><td>PRIJS</td><td>VAN</td><td>EEN HUIS</td><td style="text-align: right;">ƒ <%= board[i].housePrice; %>,--</td></tr>
+            <tr><td>„</td><td>„</td><td style="white-space: pre-wrap;">„     HOTEL</td><td style="text-align: right;">ƒ <%= board[i].housePrice; %>,--</td></tr>
+            <tr><td></td><td></td><td colspan=2 style="text-align: right; font-size: 12px;">PLUS 4 HUIZEN</td></tr>
+            <tr><td colspan=3 style="font-size: 13px;">Hypotheekwaarde GROND</td><td style="text-align: right;">ƒ <%= board[i].mortgageValue; %>,--</td></tr>
+        </table>
+    </div>
+<%  id++;}} -%>

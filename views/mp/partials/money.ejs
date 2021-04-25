@@ -1,0 +1,41 @@
+<%  var index = 0; for (var p = 0; p < fixedPlayers; p++) {
+    for (var i = 0; i < 4; i++){ -%>
+        <div class="card" style="display: none;" id="m5_<%= p; %>_<%= i; %>"><img src="/img/mp/5g.png"/></div>
+        <% index++-%>
+<%  } for (var i = 0; i < 5; i++){ -%>
+    <div class="card" style="display: none;" id="m25_<%= p; %>_<%= i; %>"><img src="/img/mp/25g.png"/></div>
+    <% index++-%>
+<%  } for (var i = 0; i < 2; i++){ -%>
+    <div class="card" style="display: none;" id="m50_<%= p; %>_<%= i; %>"><img src="/img/mp/50g.png"/></div>
+    <% index++-%>
+<%  } for (var i = 0; i < 4; i++){ -%>
+    <div class="card" style="display: none;" id="m250_<%= p; %>_<%= i; %>"><img src="/img/mp/250g.png"/></div>
+    <% index++-%>
+<%  } for (var i = 0; i < 2; i++){ -%>
+    <div class="card" style="display: none;" id="m100_<%= p; %>_<%= i; %>"><img src="/img/mp/100g.png"/></div>
+    <% index++-%>
+<%  } for (var i = 0; i < 5; i++){ -%>
+    <div class="card" style="display: none;" id="m10_<%= p; %>_<%= i; %>"><img src="/img/mp/10g.png"/></div>
+    <% index++-%>
+<%  } for (var i = 0; i < 5; i++){ -%>
+    <div class="card" style="display: none;" id="m1_<%= p; %>_<%= i; %>"><img src="/img/mp/1g.png"/></div>
+    <% index++-%>
+<%  } } -%>
+
+<%  for (var i = 0; i < 100; i++){ -%>
+    <div class="card" id="m5_<%= i; %>"><img src="/img/mp/5g.png"/></div>
+<%  } for (var i = 0; i < 50; i++){ -%>
+    <div class="card" id="m25_<%= i; %>"><img src="/img/mp/25g.png"/></div>
+<%  } for (var i = 0; i < 50; i++){ -%>
+    <div class="card" id="m50_<%= i; %>"><img src="/img/mp/50g.png"/></div>
+<%  } for (var i = 0; i < 20; i++){ -%>
+    <div class="card" id="m250_<%= i; %>"><img src="/img/mp/250g.png"/></div>
+<%  } for (var i = 0; i < 75; i++){ -%>
+    <div class="card" id="m100_<%= i; %>"><img src="/img/mp/100g.png"/></div>
+<%  } for (var i = 0; i < 75; i++){ -%>
+    <div class="card" id="m10_<%= i; %>"><img src="/img/mp/10g.png"/></div>
+<%  } for (var i = 0; i < 50; i++){ -%>
+    <div class="card" id="m1_<%= i; %>"><img src="/img/mp/1g.png"/></div>
+<%  } for (var i = 0; i < 10; i++){ -%>
+    <div class="card" id="m1000_<%= i; %>"><img src="/img/mp/1000g.png"/></div>
+<%  } -%>

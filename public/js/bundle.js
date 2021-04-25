@@ -3746,6 +3746,10 @@ function initCards(gameObj){
     {
       updateCss("#" + gameObj.cards[i].id, "transform", "scale(" + gameObj.cards[i].scale + ")");
     }
+    else if(!projected)
+    {
+      updateCss("#" + gameObj.cards[i].id, "transform", "scale(1)");
+    }
     if (gameObj.cards[i].hasOwnProperty("show"))
     {
       init3dCard(gameObj.cards[i]);
@@ -3794,6 +3798,10 @@ function updateCards(gameObj, changedCardsBuffer)
   var blockedOpenboxesInDeck = [];
   for (var i = 0; i < gameObj.decks.length; i++)
   {
+    if (gameObj.decks[i].wallet)
+    {
+      updateHtml("#walletScorebox" + gameObj.decks[i].ownedBy + "_text", gameObj.decks[i].walletValue);
+    }
     if (!dragCardIds.includes(gameObj.decks[i].id ) && gameObj.decks[i].clickedBy != myPlayerId)
     {
       updateCss("#" + gameObj.decks[i].id, "left", gameObj.decks[i].x + "px");
@@ -3859,6 +3867,10 @@ function updateCards(gameObj, changedCardsBuffer)
     if (card.hasOwnProperty("scale") && !projected)
     {
       updateCss("#" + card.id, "transform", "scale(" + card.scale + ")");
+    }
+    else if(!projected)
+    {
+      updateCss("#" + card.id, "transform", "scale(1)");
     }
 
     if(!blockCardChange.includes(card.id) && card.ownedBy != myPlayerId)
@@ -4528,7 +4540,7 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId)
 
   this.peers[playerId].on('signal', (data) => {
     console.log("initiator ready - peer for player " + playerId)
-    console.log(data);
+    //console.log(data);
     var sendData = {
       type: "initiatorReady",
       playerId: playerId,
@@ -4549,7 +4561,7 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId)
 
   this.peers[playerId].on('error', err => {
     console.log("error in initWebcamPeer for player " + playerId)
-    console.log(err.code);
+    console.log(err);
     if (err.code == "ERR_CONNECTION_FAILURE")
     {
       try {
@@ -4588,6 +4600,7 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId)
 
 WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
 {
+  console.log("peer connected from player " + fromPlayerId)
   var peerOptions = {
     initiator: false,
     trickle: false,
@@ -4607,6 +4620,7 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
 
   this.peers[fromPlayerId].on('signal', data => {
     console.log("got peer signal from player " + fromPlayerId)
+    //console.log(data);
     var sendData = {
       type: "acceptPeer",
       fromPlayerId: fromPlayerId,
@@ -4616,7 +4630,8 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
   });
 
   this.peers[fromPlayerId].on('error', err => {
-    console.log("error in peerConnected")
+    console.log("error in peerConnected from " + fromPlayerId)
+    console.log(err);
     if (err.code == "ERR_CONNECTION_FAILURE")
     {
       try {
@@ -4644,7 +4659,7 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
     {
       console.log(error)
     }
-
+    delete this.peers[fromPlayerId];
   });
 
   this.peers[fromPlayerId].signal(stp);
@@ -4652,6 +4667,7 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
 
 WebcamHandler.prototype.peerAccepted = function(fromPlayerId, stp)
 {
+  console.log("peer accepted from player " + fromPlayerId);
   this.peers[fromPlayerId].signal(stp);
 }
 
@@ -4662,7 +4678,7 @@ WebcamHandler.prototype.leftPeer = function(playerId)
   }
   catch (error)
   {
-    //console.log(error)
+    console.log(error)
   }
   delete this.peers[playerId]
 }

@@ -46,7 +46,7 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId)
 
   this.peers[playerId].on('signal', (data) => {
     console.log("initiator ready - peer for player " + playerId)
-    console.log(data);
+    //console.log(data);
     var sendData = {
       type: "initiatorReady",
       playerId: playerId,
@@ -67,7 +67,7 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId)
 
   this.peers[playerId].on('error', err => {
     console.log("error in initWebcamPeer for player " + playerId)
-    console.log(err.code);
+    console.log(err);
     if (err.code == "ERR_CONNECTION_FAILURE")
     {
       try {
@@ -106,6 +106,7 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId)
 
 WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
 {
+  console.log("peer connected from player " + fromPlayerId)
   var peerOptions = {
     initiator: false,
     trickle: false,
@@ -125,6 +126,7 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
 
   this.peers[fromPlayerId].on('signal', data => {
     console.log("got peer signal from player " + fromPlayerId)
+    //console.log(data);
     var sendData = {
       type: "acceptPeer",
       fromPlayerId: fromPlayerId,
@@ -134,7 +136,8 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
   });
 
   this.peers[fromPlayerId].on('error', err => {
-    console.log("error in peerConnected")
+    console.log("error in peerConnected from " + fromPlayerId)
+    console.log(err);
     if (err.code == "ERR_CONNECTION_FAILURE")
     {
       try {
@@ -162,7 +165,7 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
     {
       console.log(error)
     }
-
+    delete this.peers[fromPlayerId];
   });
 
   this.peers[fromPlayerId].signal(stp);
@@ -170,6 +173,7 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
 
 WebcamHandler.prototype.peerAccepted = function(fromPlayerId, stp)
 {
+  console.log("peer accepted from player " + fromPlayerId);
   this.peers[fromPlayerId].signal(stp);
 }
 
@@ -180,7 +184,7 @@ WebcamHandler.prototype.leftPeer = function(playerId)
   }
   catch (error)
   {
-    //console.log(error)
+    console.log(error)
   }
   delete this.peers[playerId]
 }

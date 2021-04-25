@@ -1,0 +1,328 @@
+<!-- views/partials/head.ejs -->
+<meta charset="UTF-8">
+<!-- <meta name="viewport" content="width=device-width,user-scalable=no"> -->
+<title>Monopoly Sandboard</title>
+
+<!-- Bootstrap CSS -->
+<link href="/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="/css/common.css" rel="stylesheet" type="text/css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js" integrity="sha256-pasqAKBDmFT4eHoN2ndd6lN370kFiGUFyTiUHWhU7k8=" crossorigin="anonymous"></script>
+<script src='/js/bootstrap.min.js'></script>
+<script src="/js/mp/mp.js"></script>
+<script src="/js/bundle.js"></script>
+
+<style>
+
+@import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
+
+body
+{
+  background-color: #040013;
+  font-family: 'Anton', sans-serif;
+  background-image: url('/img/mp/cloth.png');
+  background-repeat: repeat;
+}
+
+.scaleplane
+{
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  transform-origin: 0 0;
+}
+
+
+.number
+{
+    background-color: #f4a460;
+    font-size: 30px;
+    font-weight: bold;
+    width: 50px;
+    height: 50px;
+    border-radius: 25px;
+    border: 3px solid black;
+    text-align: center;
+    line-height: 44px;
+    color: black;
+}
+
+.cursor
+{
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  border: 1px solid black;
+  z-index: 1000;
+  display: none;
+}
+
+.playerbox
+{
+  position: absolute;
+  z-index: 1;
+  display: none;
+}
+
+.bankBox
+{
+  z-index: -100000;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+}
+
+.streetName
+{
+    font-size: 16px;
+    display: inline-block;
+    width: 100%;
+    justify-content: space-evenly;
+}
+
+.townName
+{
+    font-size: 14px;
+}
+
+.value
+{
+    font-size: 15px;
+}
+
+.propertyCard
+{
+    color:black;
+    background-color: white;
+    width: 189px;
+    border: 3px solid black;
+    border-radius: 10px;
+    font-size: 17px;
+}
+
+.propertyTable
+{
+    width: 100%;
+    position: relative;
+    font-size: 14px;
+    color: black;
+}
+
+.propertyTable td
+{
+    padding-left: 2px;
+    padding-right: 2px;;
+}
+
+.tile
+{
+    color: black;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    border: 3px solid rgb(0, 0, 0);
+}
+
+.propertyColorbar
+{
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    border: 3px solid rgb(0, 0, 0);
+}
+}
+
+.webcambox
+{
+  position: relative;
+  padding: 8px;
+  border-radius: 6px;
+  background-color: #cccccc;
+  border: 1px solid black;
+  -webkit-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+  -moz-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+  box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+}
+
+.webcamContainer
+{
+  transform-origin: 50% 0
+}
+
+#walletScorebox0
+{
+  top: 288px;
+  left: 559px;
+}
+
+#walletScorebox1
+{
+  top: 890px;
+  left: 1095px;
+}
+
+#walletScorebox2
+{
+  top: 288px;
+  left: 1095px;
+}
+
+#walletScorebox3
+{
+  top: 890px;
+  left: 559px;
+}
+
+#walletScorebox4
+{
+  top: 488px;
+  left: 559px;
+}
+
+#walletScorebox5
+{
+  top: 690px;
+  left: 1095px;
+}
+
+#walletScorebox6
+{
+  top: 488px;
+  left: 1095px;
+}
+
+#walletScorebox7
+{
+  top: 690px;
+  left: 559px;
+}
+
+
+
+.webcamContainer video
+{
+  height: 180px;
+}
+
+.webcam
+{
+  height: 180px;
+}
+
+.card
+{
+  position: absolute;
+  z-index: 0;
+  transform-origin: 0 0;
+  box-shadow: 5px 5px;
+}
+
+.deck
+{
+  background-color: rgba(128, 128, 128, 0.535);
+  width: 134px;
+  height: 236px;
+}
+
+.ccd
+{
+  width: 205px;
+  height: 182px;
+}
+
+#voteDeck
+{
+  width: 462px;
+}
+
+.playerVault
+{
+  z-index: 100000;
+  position: absolute;
+  top: 0px;
+  left: 1500px;
+}
+
+.cardOpenbox
+{
+  position: absolute;
+  top: 236px;
+  left: 320px;
+}
+
+.moveBtn
+{
+  z-index: 2000;
+  padding: 8px;
+  border: 1px solid black;
+  border-radius: 6px;
+  background-color: white;
+  top: -5px;
+  -webkit-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+  -moz-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+  box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+}
+
+
+.openbox
+{
+  position: fixed;
+  /*border: 1px solid #77ff77;*/
+}
+
+.playerbox
+{
+  position: absolute;
+  border: 3px solid white;
+  opacity: 0.6;
+  width: 78px;
+  height: 200px;
+}
+
+.points
+{
+  font-size: 15px;
+  display:inline-block;
+  position:relative; 
+  left:2px; 
+  top: 8px;
+}
+
+.touchbox
+{
+  background-color: #CCCCCC;
+  opacity: 0.5;
+  border: 1px solid orange;
+  border-radius: 11px;
+  width: 68px;
+  height: 68px;
+  z-index: 2;
+}
+
+.sharedPlayerbox
+{
+  display: none;
+  background-color: #00ffff;
+  z-index: 100000;
+  position: absolute;
+  top: 0px;
+  left: 1500px;
+  width: 420px;
+  height: 1080px;
+}
+
+.playcard
+{
+  width: 200px;
+  height: 100px;
+  padding: 10px;
+  border-radius: 11px;
+  text-align: center;
+}
+
+
+</style>

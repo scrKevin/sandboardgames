@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <%- include ("../partials/head") %>
+  </head>
+  <body>
+    <%- include ('../../common/welcomeModal'); -%>
+    <%- include ('../../common/resetModal'); -%>
+    <div class="scaleplane">
+      <%- include ('../partials/board', {board: board}); -%>
+      <img class="bankBox" src="/img/mp/openbox.png"/>
+      <img class="playerVault" src="/img/mp/playerBox.png"/>
+      <%- include ('../partials/playerboxes', {playerboxStartPos: playerboxStartPos}); -%>
+      <%- include ('../../common/webcams', {webcamPos: webcamPos, fixedPlayers:fixedPlayers}); -%>
+      <%- include ('../partials/decks') %>
+      <%- include ('../partials/propertyCards', {board: board}) %>
+      <%- include ('../partials/stationCards', {board: board}) %>
+      <%- include ('../partials/companyCards', {board: board}) %>
+      <%- include ('../partials/money') %>
+      <%  for (var i = 0; i < fixedPlayers; i++) { 
+            var id = i; -%>
+            <%- include('../../common/walletScorebox', {scoreboxId: id}); %>
+      <%  } -%>
+      <%- include ('../../common/cursors'); -%>
+    </div>
+  </body>
+</html>

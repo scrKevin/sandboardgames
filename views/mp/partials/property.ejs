@@ -1,0 +1,8 @@
+<div class="propertyTile tile", style="position: absolute; left: <%= left; %>; top: <%= top; %>; text-align: center; background-color: #cce3c7; width: <%= width %>px; height: <%= height %>">
+    <div class="propertyColorbar" style="position: absolute; top: <%= colorBarTop; %>; left: <%= colorBarLeft; %>;background-color: <%= data.color; %>; width: <%= colorBarWidth; %>px; height: <%= colorBarHeight; %>px"></div>
+    <div class="propertyText" style="position: relative; top: <%= textTop; %>px; left: <%= textLeft; %>px; width: <%= textWidth; %>px;">
+        <span class="streetName"><%= data.street %></span><br>
+        <span class="townName"><%= data.town %></span><br>
+        <span class="value">ƒ <%= data.value %>,--</span>
+    </div>
+</div>

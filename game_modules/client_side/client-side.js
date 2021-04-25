@@ -810,6 +810,10 @@ function initCards(gameObj){
     {
       updateCss("#" + gameObj.cards[i].id, "transform", "scale(" + gameObj.cards[i].scale + ")");
     }
+    else if(!projected)
+    {
+      updateCss("#" + gameObj.cards[i].id, "transform", "scale(1)");
+    }
     if (gameObj.cards[i].hasOwnProperty("show"))
     {
       init3dCard(gameObj.cards[i]);
@@ -858,6 +862,10 @@ function updateCards(gameObj, changedCardsBuffer)
   var blockedOpenboxesInDeck = [];
   for (var i = 0; i < gameObj.decks.length; i++)
   {
+    if (gameObj.decks[i].wallet)
+    {
+      updateHtml("#walletScorebox" + gameObj.decks[i].ownedBy + "_text", gameObj.decks[i].walletValue);
+    }
     if (!dragCardIds.includes(gameObj.decks[i].id ) && gameObj.decks[i].clickedBy != myPlayerId)
     {
       updateCss("#" + gameObj.decks[i].id, "left", gameObj.decks[i].x + "px");
@@ -923,6 +931,10 @@ function updateCards(gameObj, changedCardsBuffer)
     if (card.hasOwnProperty("scale") && !projected)
     {
       updateCss("#" + card.id, "transform", "scale(" + card.scale + ")");
+    }
+    else if(!projected)
+    {
+      updateCss("#" + card.id, "transform", "scale(1)");
     }
 
     if(!blockCardChange.includes(card.id) && card.ownedBy != myPlayerId)

@@ -1,0 +1,4 @@
+<div class='card deck ccd' id='communityChestDeck'><button type="button" class="btn btn-primary btn-lg shuffleButton" style="width: 78px;" value='5'>Shuffle</button></div>
+<% for (var i = 0; i < 9; i++) { -%>
+    <%- include ('../../common/textCard', {id: "cc" + i, cardFaceClass: "playcard", textClass: "", secTextClass:""}); -%>
+<% } -%>

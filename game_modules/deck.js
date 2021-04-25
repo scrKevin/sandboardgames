@@ -38,6 +38,12 @@ function Deck(id, x, y, width, height){
     {x: 4, y: 4, r: 1},
   ];
   this.scale = 1;
+  this.wallet = false;
+  this.walletValue = 0;
+}
+
+Deck.prototype.setOwnership = function(playerId){
+  this.ownedBy = playerId;
 }
 
 Deck.prototype.getRandomFace = function(max, min){
@@ -109,8 +115,15 @@ Deck.prototype.isInDeck = function(x, y){
   }
 }
 
-Deck.prototype.removeFromDeck = function(card){
-  
+Deck.prototype.removeFromDeck = function(card, playerId){
+
+  if (this.hasOwnProperty("ownedBy"))
+  {
+    if(playerId != this.ownedBy)
+    {
+      return;
+    }
+  }
   var removeIndexCard = this.attachedCards.map(function(item) { return item.id }).indexOf(card.id);
   if (removeIndexCard != -1)
   {
@@ -118,11 +131,23 @@ Deck.prototype.removeFromDeck = function(card){
     this.attachedCards.splice(removeIndexCard, 1);
     card.attachedToDeck = false;
     card.scale = 1;
+    if (card.hasOwnProperty("cardValue"))
+    {
+      this.walletValue -= card.cardValue;
+      //console.log(this.walletValue);
+    }
   }
 }
 
-Deck.prototype.addToDeck = function(card){
+Deck.prototype.addToDeck = function(card, playerId){
   
+  if (this.hasOwnProperty("ownedBy"))
+  {
+    if(playerId != this.ownedBy)
+    {
+      return;
+    }
+  }
   var allowedToAdd = this.attachedCards.map(function(item) { return item.id }).indexOf(card.id);
   if (allowedToAdd == -1)
   {
@@ -130,6 +155,11 @@ Deck.prototype.addToDeck = function(card){
     this.attachedCards.push(card);
     card.attachedToDeck = true;
     card.scale = this.scale;
+    if (card.hasOwnProperty("cardValue"))
+    {
+      this.walletValue += card.cardValue;
+      //console.log(this.walletValue);
+    }
   }
 }
 
