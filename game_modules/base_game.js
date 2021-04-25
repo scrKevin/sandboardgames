@@ -58,6 +58,18 @@ function WS_distributor(wss, turnServer, resetGameFunction)
         player.updateName(json.name)
         this.broadcast();
       }
+      else if (json.type == "requestId")
+      {
+        console.log(id + " is requesting id");
+        client.setGameObj(this.gameObj, {username: turnUsername, pass: turnPass});
+        // this.broadcastNewPeer(id, ws);
+      }
+      else if (json.type == "initiated")
+      {
+        client.initiated = true;
+        console.log("player " + id + " initiated.")
+        this.broadcastNewPeer(client, id, ws);
+      }
       else if(json.type == "varText")
       {
         for (card of this.gameObj.cards)
@@ -355,11 +367,35 @@ function WS_distributor(wss, turnServer, resetGameFunction)
       }
       else if (json.type == "streamReceived")
       {
-        client.newPeerInitated();
+        setTimeout(function(){
+          try{
+            client.newPeerInitiated();
+          }
+          catch(error){
+            console.log("error: " + error);
+          }
+          
+        }, 500);
         client.peerStatus[json.fromPlayerId] = "streamReceived";
+      }
+      else if (json.type == "readyForNewPeer")
+      {
+        client.acceptPeerState = "idle";
+        console.log(id + " is ready to accept new peers.");
+        for(clientI of this.clients)
+        {
+          if(clientI.playerId != id)
+          {
+            if(clientI.newPeerState == "idle" && clientI.initiated)
+            {
+              clientI.processNewPeerQueue();
+            }
+          }
+        }
       }
       else if (json.type == "connectionFailure")
       {
+        console.log("connection failure reported by " + id + ", with " + json.fromPlayerId);
         client.peerStatus[json.fromPlayerId] = "connectionFailure";
         for(clientI of this.clients)
         {
@@ -370,21 +406,10 @@ function WS_distributor(wss, turnServer, resetGameFunction)
               // both peers have lost connection with each other but the connection with the server is ok.
               // retry connection
               console.log("Retrying peer connection from " + id + " to " + json.fromPlayerId);
-              clientI.sendNewPeer(id);
+              clientI.sendNewPeer(client);
             }
           }
         }
-      }
-      else if (json.type == "requestId")
-      {
-        client.setGameObj(this.gameObj, {username: turnUsername, pass: turnPass});
-        // this.broadcastNewPeer(id, ws);
-      }
-      else if (json.type == "initiated")
-      {
-        client.initiated = true;
-        console.log("player " + id + " initiated.")
-        this.broadcastNewPeer(id, ws);
       }
       else if (json.type == "reset")
       {
@@ -602,13 +627,13 @@ WS_distributor.prototype.broadcastLeftPeer = function (playerId)
 //   }
 // }
 
-WS_distributor.prototype.broadcastNewPeer = function (playerId, newWs){
+WS_distributor.prototype.broadcastNewPeer = function (client, playerId, newWs){
   for (clientI of this.clients)
   {
     if (clientI.playerId != playerId && clientI.initiated)
     {
       clientI.peerStatus[playerId] = "newPeerSent";
-      clientI.sendNewPeer(playerId);
+      clientI.sendNewPeer(client);
     }
   }
 }

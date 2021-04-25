@@ -4614,8 +4614,12 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
   this.peers[fromPlayerId] = new SimplePeer(peerOptions);
 
   this.peers[fromPlayerId].on('stream', stream => {
-    console.log("got stream for player " + fromPlayerId)
-    this.emit("stream", fromPlayerId, stream)
+    console.log("got stream for player " + fromPlayerId);
+    this.emit("stream", fromPlayerId, stream);
+    var sendData = {
+      type: "readyForNewPeer",
+    }
+    this.wsHandler.sendToWs(sendData);
   });
 
   this.peers[fromPlayerId].on('signal', data => {
@@ -4846,6 +4850,7 @@ WsHandler.prototype.constructMessage = function (data)
 
 WsHandler.prototype.requestPlayerId = function()
 {
+  console.log("requesting Player ID.")
   var sendData = {
     type: "requestId"
   }
@@ -4885,6 +4890,7 @@ WsHandler.prototype.sendToWs = function(data)
   // console.log(data)
   if (this.ws != null && this.ws.readyState === this.ws.constructor.OPEN)
   {
+    //console.log(data)
     this.ws.send(this.constructMessage(data));
   }
 }

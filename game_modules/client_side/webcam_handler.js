@@ -120,8 +120,12 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
   this.peers[fromPlayerId] = new SimplePeer(peerOptions);
 
   this.peers[fromPlayerId].on('stream', stream => {
-    console.log("got stream for player " + fromPlayerId)
-    this.emit("stream", fromPlayerId, stream)
+    console.log("got stream for player " + fromPlayerId);
+    this.emit("stream", fromPlayerId, stream);
+    var sendData = {
+      type: "readyForNewPeer",
+    }
+    this.wsHandler.sendToWs(sendData);
   });
 
   this.peers[fromPlayerId].on('signal', data => {

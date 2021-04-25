@@ -19,6 +19,7 @@ function Client(playerId, ws)
   this.peerStatus = {};
   this.newPeerTimeouts = {};
   this.newPeerState = "idle";
+  this.acceptPeerState = "idle";
   this.newPeerQueue = [];
   this.playerId = playerId;
   this.ws = ws;
@@ -77,22 +78,23 @@ Client.prototype.sendCardConflict = function(cardId)
   }
 }
 
-Client.prototype.sendNewPeer = function (playerId)
+Client.prototype.sendNewPeer = function (otherClient)
 {
-  this.newPeerQueue.push(playerId);
+  this.newPeerQueue.push(otherClient);
   if (this.newPeerState == "idle")
   {
+    //console.log(this.playerId + " is processing peer " + otherClient.playerId);
     this.processNewPeerQueue();
   }
   else
   {
-    console.log("Queued newPeer of " + playerId + " for " + this.playerId)
+    console.log("Queued newPeer of " + otherClient.playerId + " for " + this.playerId)
   }
 }
 
-Client.prototype.newPeerInitated = function()
+Client.prototype.newPeerInitiated = function()
 {
-  console.log("Last newPeer request for " + this.playerId + " was initiated.")
+  console.log("Stream received by " + this.playerId)
   this.newPeerState = 'idle';
   this.processNewPeerQueue();
 }
@@ -101,25 +103,35 @@ Client.prototype.processNewPeerQueue = function()
 {
   if (this.newPeerQueue.length > 0)
   {
-    newPlayerId = this.newPeerQueue.shift();
-    this.newPeerState = 'waitingForInitiator';
-    var sendData = {
-      type: "newPeer",
-      playerId: newPlayerId
-    }
-    var strToSend = JSON.stringify(sendData);
-    var binaryString = this.constructMessage(strToSend);
-    if (this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(binaryString);
-      console.log("SENT newPeer of " + newPlayerId + " to " + this.playerId);
-    }
-    else
+    for (var i = 0; i < this.newPeerQueue.length; i++)
     {
-      console.log("ERROR in sending newPeer of " + newPlayerId + " to " + this.playerId + ". ws.readyState not OPEN.");
+      if (this.newPeerQueue[i].acceptPeerState == "idle")
+      {
+        var otherClient = this.newPeerQueue.splice(i, 1)[0];
+        newPlayerId = otherClient.playerId;
+        otherClient.acceptPeerState = 'busy';
+        this.newPeerState = 'waitingForInitiator';
+        var sendData = {
+          type: "newPeer",
+          playerId: newPlayerId
+        }
+        var strToSend = JSON.stringify(sendData);
+        var binaryString = this.constructMessage(strToSend);
+        if (this.ws.readyState === WebSocket.OPEN) {
+          this.ws.send(binaryString);
+          console.log("SENT newPeer of " + newPlayerId + " to " + this.playerId);
+        }
+        else
+        {
+          console.log("ERROR in sending newPeer of " + newPlayerId + " to " + this.playerId + ". ws.readyState not OPEN.");
+        }
+        this.newPeerTimeouts[newPlayerId] = setTimeout(function(){
+          console.log("newPeer for " + newPlayerId + " TIMEOUT")
+          //this.sendNewPeer(newPlayerId);
+        }, 10000);
+        continue;
+      }
     }
-    this.newPeerTimeouts[newPlayerId] = setTimeout(function(){
-      this.sendNewPeer(newPlayerId);
-    }, 5000);
   }
   else
   {

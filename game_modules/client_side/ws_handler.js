@@ -158,6 +158,7 @@ WsHandler.prototype.constructMessage = function (data)
 
 WsHandler.prototype.requestPlayerId = function()
 {
+  console.log("requesting Player ID.")
   var sendData = {
     type: "requestId"
   }
@@ -197,6 +198,7 @@ WsHandler.prototype.sendToWs = function(data)
   // console.log(data)
   if (this.ws != null && this.ws.readyState === this.ws.constructor.OPEN)
   {
+    //console.log(data)
     this.ws.send(this.constructMessage(data));
   }
 }
