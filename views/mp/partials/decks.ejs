@@ -1,4 +1,23 @@
 <div class='card deck ccd' id='communityChestDeck'><button type="button" class="btn btn-primary btn-lg shuffleButton" style="width: 78px;" value='5'>Shuffle</button></div>
-<% for (var i = 0; i < 9; i++) { -%>
+<div class='card deck ccd' id='communityChestDiscardDeck'><button type="button" class="btn btn-primary btn-lg shuffleButton" style="width: 78px;" value='5'>Shuffle</button></div>
+<% for (var i = 0; i < 16; i++) { -%>
     <%- include ('../../common/textCard', {id: "cc" + i, cardFaceClass: "playcard", textClass: "", secTextClass:""}); -%>
+<% } -%>
+
+<div class='card deck ccd' id='chanceDeck'><button type="button" class="btn btn-primary btn-lg shuffleButton" style="width: 78px;" value='5'>Shuffle</button></div>
+<div class='card deck ccd' id='chanceDiscardDeck'><button type="button" class="btn btn-primary btn-lg shuffleButton" style="width: 78px;" value='5'>Shuffle</button></div>
+<% for (var i = 0; i < 16; i++) { -%>
+    <%- include ('../../common/textCard', {id: "c" + i, cardFaceClass: "playcard", textClass: "", secTextClass:""}); -%>
+<% } -%>
+<div class='card deck' id='diceDeck'><button type="button" class="btn btn-primary btn-lg rollButton" style="width: 110px;">Roll</button></div>
+<%- include ('../../common/dice', {id: "dice1", width: 75}); -%>
+<%- include ('../../common/dice', {id: "dice2", width: 75}); -%>
+<% for (var p = 0; p < 8; p++) { -%>
+    <div class='card pieceFor_<%= p %> pion' id='pion_<%= p %>' style="display: none;"><img class="pieceImg" src='/img/mp/tophat.png'></div>
+<% } -%>
+<% for (var i = 0; i < 32; i++) { -%>
+    <div class="card house" id="house<%= i; %>"></div>
+<% } -%>
+<% for (var i = 0; i < 12; i++) { -%>
+    <div class="card hotel" id="hotel<%= i; %>"></div>
 <% } -%>

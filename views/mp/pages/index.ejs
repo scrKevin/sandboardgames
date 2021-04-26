@@ -19,7 +19,8 @@
       <%  for (var i = 0; i < fixedPlayers; i++) { 
             var id = i; -%>
             <%- include('../../common/walletScorebox', {scoreboxId: id}); %>
-      <%  } -%>
+      <%  } var scoreboxValues = [1, 10, 100]; -%>
+      <%- include('../../common/resettableScorebox', {scoreboxId: "auction", scoreboxValues: scoreboxValues}); %>
       <%- include ('../../common/cursors'); -%>
     </div>
   </body>

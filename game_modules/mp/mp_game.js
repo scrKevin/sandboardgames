@@ -35,6 +35,27 @@ MP_Game.prototype.resetGame = function(game)
 
   game.gameObj.highestZ = 10000;
 
+  for (var p = 0; p < 8; p++)
+  {
+    game.gameObj.cards.push(new Card("pion_" + p, 1920-420-139 + (p*8), 1080 - 100));
+  }
+
+  game.gameObj.scoreboxes.push(new Scorebox("auction"));
+  var diceDeck = new Deck("diceDeck", 266, 384, 134, 236);
+  game.gameObj.decks.push(diceDeck);
+
+  var dice1 = new Card("dice1", diceDeck.x + 20, diceDeck.y + 60);
+  dice1.rotationX = 0;
+  dice1.rotationY = 0;
+  game.gameObj.cards.push(dice1);
+  var dice2 = new Card("dice2", diceDeck.x + 20, diceDeck.y + 60+85);
+  dice2.rotationX = 0;
+  dice2.rotationY = 0;
+  game.gameObj.cards.push(dice2);
+
+  diceDeck.attachedCards.push(dice1);
+  diceDeck.attachedCards.push(dice2);
+
   var index = 0;
   for (p = 0; p < 8; p++)
   {
@@ -212,6 +233,17 @@ MP_Game.prototype.resetGame = function(game)
   }
   game.gameObj.decks.push(bankDeck);
 
+  for (var i = 0; i < 32; i++)
+  {
+    var m5 = new Card("house" + i, 40, bankDeck.y - 30);
+    game.gameObj.cards.push(m5);
+  }
+
+  for (var i = 0; i < 12; i++)
+  {
+    var m5 = new Card("hotel" + i, 80, bankDeck.y - 30);
+    game.gameObj.cards.push(m5);
+  }
 
   var townSequence = [2, 3, 3, 3, 3, 3, 3, 2];
   var index = 0;
@@ -271,7 +303,7 @@ MP_Game.prototype.resetGame = function(game)
   {
     var communityChestCard = new Card('cc' + i, startDeckX + 5, startDeckY + 80);
     communityChestCard.faceType = 'text';
-    communityChestCard.backface = {color: "#000000", backgroundcolor: "#FFFFFF", text: "ALGEMEEN FONDS"}
+    communityChestCard.backface = {color: "#000000", backgroundcolor: "#02a4dc", text: "ALGEMEEN FONDS"}
     communityChestCard.frontface = {color: "#000000", backgroundcolor: "#FFFFFF", text: communityChestObj[i]}
     communityChestCard.show = 'backface';
     communityChestDeck.attachedCards.push(communityChestCard);
@@ -281,6 +313,45 @@ MP_Game.prototype.resetGame = function(game)
   game.gameObj.decks.push(communityChestDeck);
   game.gameObj.decks.push(communityChestDiscardDeck);
 
+  var chanceObj = {
+    0: "Boete voor te snel rijden ƒ 15",
+    1: "Betaal schoolgeld ƒ 150",
+    2: "Ga verder naar Barteljorisstraat. Indien u langs 'Start' komt, ontvangt u ƒ 200",
+    3: "Reis naar station 'West' en indien u langs 'Start' komt, ontvangt u ƒ 200",
+    4: "Ga verder naar 'Start'",
+    5: "Ga drie plaatsen terug",
+    6: "Ga direct naar de gevangenis. Ga niet langs 'Start'. U ontvangt geen ƒ 200",
+    7: "Ga verder naar de Heerestraat. Indien u langs 'Start' komt ontvangt u ƒ 200",
+    8: "De bank betaalt u ƒ 50 dividend",
+    9: "Verlaat de gevangenis zonder te betalen",
+    10: "Repareer uw huizen. Betaal voor elk huis ƒ 25, betaal voor elk hotel ƒ 100",
+    11: "U wordt aangeslagen voor straatgeld. ƒ 40 per huis, ƒ 115 per hotel",
+    12: "Uw bouwverzekering vervalt, u ontvangt ƒ 150",
+    13: "Aangehouden wegens dronkenschap ƒ 20 boete",
+    14: "Ga verder naar Kalverstraat",
+    15: "U hebt een kruiswoordpuzzel gewonnen en ontvangt ƒ 100"
+  }
+
+  var startDeckX = 0;
+  var startDeckY = 192;
+  var chanceDeck = new Deck('chanceDeck', startDeckX, startDeckY, 205, 182);
+  chanceDeck.setImmovable();
+  var chanceDiscardDeck = new Deck('chanceDiscardDeck', startDeckX + 210, startDeckY, 205, 182);
+  chanceDiscardDeck.setImmovable();
+
+  for (i in chanceObj)
+  {
+    var chanceCard = new Card('c' + i, startDeckX + 5, startDeckY + 80);
+    chanceCard.faceType = 'text';
+    chanceCard.backface = {color: "#000000", backgroundcolor: "#c31676", text: "KANS"}
+    chanceCard.frontface = {color: "#000000", backgroundcolor: "#FFFFFF", text: chanceObj[i]}
+    chanceCard.show = 'backface';
+    chanceDeck.attachedCards.push(chanceCard);
+    game.gameObj.cards.push(chanceCard);
+  }
+
+  game.gameObj.decks.push(chanceDeck);
+  game.gameObj.decks.push(chanceDiscardDeck);
 
   game.gameObj.openboxes.push(new Openbox("ob1", 420, 0, 1080, 1080));
 
