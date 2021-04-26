@@ -264,6 +264,8 @@ MP_Game.prototype.resetGame = function(game)
   var startDeckY = 0;
   var communityChestDeck = new Deck('communityChestDeck', startDeckX, startDeckY, 205, 182);
   communityChestDeck.setImmovable();
+  var communityChestDiscardDeck = new Deck('communityChestDiscardDeck', startDeckX + 210, startDeckY, 205, 182);
+  communityChestDiscardDeck.setImmovable();
 
   for (i in communityChestObj)
   {
@@ -277,6 +279,7 @@ MP_Game.prototype.resetGame = function(game)
   }
 
   game.gameObj.decks.push(communityChestDeck);
+  game.gameObj.decks.push(communityChestDiscardDeck);
 
 
   game.gameObj.openboxes.push(new Openbox("ob1", 420, 0, 1080, 1080));

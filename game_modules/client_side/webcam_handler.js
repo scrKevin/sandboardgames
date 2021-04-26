@@ -65,27 +65,27 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId)
     this.wsHandler.sendToWs(sendData);
   });
 
-  // this.peers[playerId].on('error', err => {
-  //   console.log("error in initWebcamPeer for player " + playerId)
-  //   console.log(err);
-  //   if (err.code == "ERR_CONNECTION_FAILURE")
-  //   {
-  //     try {
-  //       this.peers[playerId].destroy();
-  //     }
-  //     catch (error)
-  //     {
-  //       console.log(error)
-  //     }
-  //     delete this.peers[playerId]
-  //     var sendData = {
-  //       type: "connectionFailure",
-  //       fromPlayerId: playerId
-  //     }
-  //     this.wsHandler.sendToWs(sendData);
-  //   }
+  this.peers[playerId].on('error', err => {
+    console.log("error in initWebcamPeer for player " + playerId)
+    console.log(err);
+    if (err.code == "ERR_CONNECTION_FAILURE")
+    {
+      try {
+        this.peers[playerId].destroy();
+      }
+      catch (error)
+      {
+        console.log(error)
+      }
+      delete this.peers[playerId]
+      var sendData = {
+        type: "connectionFailure",
+        fromPlayerId: playerId
+      }
+      this.wsHandler.sendToWs(sendData);
+    }
 
-  // });
+  });
   this.peers[playerId].on('close', () => {
     console.log("closed WebcamPeer for player " + playerId)
     try {
@@ -139,26 +139,26 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
     this.wsHandler.sendToWs(sendData);
   });
 
-  // this.peers[fromPlayerId].on('error', err => {
-  //   console.log("error in peerConnected from " + fromPlayerId)
-  //   console.log(err);
-  //   if (err.code == "ERR_CONNECTION_FAILURE")
-  //   {
-  //     try {
-  //       this.peers[fromPlayerId].destroy();
-  //     }
-  //     catch (error)
-  //     {
-  //       console.log(error)
-  //     }
-  //     delete this.peers[fromPlayerId]
-  //     var sendData = {
-  //       type: "connectionFailure",
-  //       fromPlayerId: fromPlayerId
-  //     }
-  //     this.wsHandler.sendToWs(sendData);
-  //   }
-  // });
+  this.peers[fromPlayerId].on('error', err => {
+    console.log("error in peerConnected from " + fromPlayerId)
+    console.log(err);
+    if (err.code == "ERR_CONNECTION_FAILURE")
+    {
+      try {
+        this.peers[fromPlayerId].destroy();
+      }
+      catch (error)
+      {
+        console.log(error)
+      }
+      delete this.peers[fromPlayerId]
+      var sendData = {
+        type: "connectionFailure",
+        fromPlayerId: fromPlayerId
+      }
+      this.wsHandler.sendToWs(sendData);
+    }
+  });
 
   this.peers[fromPlayerId].on('close', () => {
     console.log("closed WebcamPeer for player " + fromPlayerId);

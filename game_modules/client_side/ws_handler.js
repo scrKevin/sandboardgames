@@ -128,8 +128,14 @@ function WsHandler(ws)
   }.bind(this);
   this.ws.onclose = function()
   { 
+    console.error("WebSocket closed");
     this.eventEmitter.emit("wsClosed")
   }.bind(this);
+  this.ws.onerror = function(e)
+  {
+    console.error("WebSocket error observed:", e);
+    this.eventEmitter.emit("wsClosed");
+  }
 }
 
 WsHandler.prototype.deconstructMessage = function (data)

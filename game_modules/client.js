@@ -3,8 +3,9 @@ let FpsLimiter = require('./fps_limiter').FpsLimiter;
 let diff_match_patch = require('diff-match-patch')
 var pako = require('pako');
 
-function Client(playerId, ws)
+function Client(playerId, ws, distributor)
 {
+  this.distributor = distributor;
   this.initiated = false;
   this.useZip = false;
   this.gameObj = null;
@@ -20,6 +21,7 @@ function Client(playerId, ws)
   this.newPeerTimeouts = {};
   this.newPeerState = "idle";
   this.acceptPeerState = "idle";
+  this.acceptPeerTimeout = null;
   this.newPeerQueue = [];
   this.playerId = playerId;
   this.ws = ws;
@@ -92,24 +94,42 @@ Client.prototype.sendNewPeer = function (otherClient)
   }
 }
 
-Client.prototype.newPeerInitiated = function()
+Client.prototype.newPeerInitiated = function(fromPlayerId)
 {
-  console.log("Stream received by " + this.playerId)
+  clearTimeout(this.newPeerTimeouts[fromPlayerId]);
+  delete this.newPeerTimeouts[fromPlayerId];
+  console.log(this.playerId + " cleard timeout for " + fromPlayerId);
+  console.log("Stream from " + fromPlayerId + " received by " + this.playerId)
   this.newPeerState = 'idle';
   this.processNewPeerQueue();
 }
 
+// Client.prototype.onNewPeerTimeout = function()
+// {
+//   //console.log("newPeer for " + newPlayerId + " TIMEOUT")
+//   this.peerStatus = 'idle';
+//   this.processNewPeerQueue();
+// }
+
 Client.prototype.processNewPeerQueue = function()
 {
+  //this.clearTimeouts();
   if (this.newPeerQueue.length > 0)
   {
+    var found = false;
     for (var i = 0; i < this.newPeerQueue.length; i++)
     {
       if (this.newPeerQueue[i].acceptPeerState == "idle")
       {
+        found = true;
         var otherClient = this.newPeerQueue.splice(i, 1)[0];
         newPlayerId = otherClient.playerId;
         otherClient.acceptPeerState = 'busy';
+        otherClient.acceptPeerTimeout = setTimeout(function(){
+          console.log("acceptPeerTimeout for " + otherClient.playerId + " to " + this.playerId);
+          otherClient.acceptPeerState = 'idle';
+          this.distributor.allClientsProcessNewPeerQueue();
+        }.bind(this), 10000);
         this.newPeerState = 'waitingForInitiator';
         var sendData = {
           type: "newPeer",
@@ -126,30 +146,38 @@ Client.prototype.processNewPeerQueue = function()
           console.log("ERROR in sending newPeer of " + newPlayerId + " to " + this.playerId + ". ws.readyState not OPEN.");
         }
         this.newPeerTimeouts[newPlayerId] = setTimeout(function(){
-          console.log("newPeer for " + newPlayerId + " TIMEOUT")
-          //this.sendNewPeer(newPlayerId);
-        }, 10000);
-        continue;
+          console.log(this.playerId + ": newPeer for " + newPlayerId + " TIMEOUT")
+          this.peerStatus = 'idle';
+          this.processNewPeerQueue();
+        }.bind(this), 10000);
+        break;
       }
+    }
+    if (!found)
+    {
+      console.log("no peers ready for " + this.playerId);
     }
   }
   else
   {
     this.newPeerState = 'idle';
-    console.log("All newPeer requests for " + this.playerId + " initiated.")
+    console.log("All newPeer requests for " + this.playerId + " finished.")
   }
 }
 
 Client.prototype.newPeerConfirmed = function(playerId)
 {
-  clearTimeout(this.newPeerTimeouts[playerId]);
+  // clearTimeout(this.newPeerTimeouts[playerId]);
+  // delete this.newPeerTimeouts[playerid];
   console.log("newPeer " + playerId + " received by " + this.playerId);
 }
 
 Client.prototype.clearTimeouts = function()
 {
   for (p in this.newPeerTimeouts){
+    console.log(this.playerId + " removed newPeerTimeout for " + p);
     clearTimeout(this.newPeerTimeouts[p]);
+    delete this.newPeerTimeouts[p];
   }
 }
 

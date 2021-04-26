@@ -46,7 +46,7 @@ function WS_distributor(wss, turnServer, resetGameFunction)
     var turnPass = crypto.randomBytes(20).toString('hex');
     this.turnServer.addUser(turnUsername, turnPass);
     console.log("added turnCredentials for player " + id + ": u:" + turnUsername + " p:" + turnPass);
-    var client = new Client(id, ws);
+    var client = new Client(id, ws, this);
 
     this.clients.push(client);
     this.gameObj.players.push(player);
@@ -369,7 +369,7 @@ function WS_distributor(wss, turnServer, resetGameFunction)
       {
         setTimeout(function(){
           try{
-            client.newPeerInitiated();
+            client.newPeerInitiated(json.fromPlayerId);
           }
           catch(error){
             console.log("error: " + error);
@@ -381,17 +381,13 @@ function WS_distributor(wss, turnServer, resetGameFunction)
       else if (json.type == "readyForNewPeer")
       {
         client.acceptPeerState = "idle";
-        console.log(id + " is ready to accept new peers.");
-        for(clientI of this.clients)
+        if (client.acceptPeerTimeout != null)
         {
-          if(clientI.playerId != id)
-          {
-            if(clientI.newPeerState == "idle" && clientI.initiated)
-            {
-              clientI.processNewPeerQueue();
-            }
-          }
+          console.log(id + " removed acceptPeerTimeout");
+          clearTimeout(client.acceptPeerTimeout);
         }
+        console.log(id + " is ready to accept new peers.");
+        this.allClientsProcessNewPeerQueue();
       }
       else if (json.type == "connectionFailure")
       {
@@ -630,11 +626,29 @@ WS_distributor.prototype.broadcastLeftPeer = function (playerId)
 WS_distributor.prototype.broadcastNewPeer = function (client, playerId, newWs){
   for (clientI of this.clients)
   {
-    if (clientI.playerId != playerId && clientI.initiated)
+    if (clientI.playerId != playerId)
     {
-      clientI.peerStatus[playerId] = "newPeerSent";
-      clientI.sendNewPeer(client);
+      if(clientI.initiated)
+      {
+        clientI.peerStatus[playerId] = "newPeerSent";
+        clientI.sendNewPeer(client);
+      }
+      
     }
+  }
+}
+
+WS_distributor.prototype.allClientsProcessNewPeerQueue = function()
+{
+  for(clientI of this.clients)
+  {
+  // if(clientI.playerId != id)
+  // {
+    if(clientI.newPeerState == "idle" && clientI.initiated)
+    {
+      clientI.processNewPeerQueue();
+    }
+  // }
   }
 }
 

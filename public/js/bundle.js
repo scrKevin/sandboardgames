@@ -2990,6 +2990,7 @@ var latestMouseY = -1;
 var dragCardId = null;
 var dragCardIds = [];
 var inspectingCardId = null;
+var formerInspectingCardZ = "1";
 // var suppressNextChanges = [];
 var lastTouchedCardId = null;
 
@@ -3117,18 +3118,19 @@ function InitWebSocket()
     });
 
     clientController.on("leftPeer", (playerId) => {
-      $("#webcam" + playerId).html("");
-      updateCss("#webcam" + playerId, "display", "none");
-      updateCss("#cursor" + playerId, "display", "none");
-      updateCss("#player" + playerId + "box", "display", "none");
-      updateCss("#scaledProjectionBox" + playerId, "display", "none");
-      updateCss(".pieceFor_" + playerId, "display", "none");
-      updateCss("#player" + playerId + "NameText", "display", "none");
-      updateCss("#player" + playerId + "Name", "display", "none");
-      updateCss("#player" + playerId + "box", "background-color", "#FFFFFF00");
-      updateCss("#scaledProjectionBox" + playerId, "background-color", "#FFFFFF00");
-      updateHtml("#player" + playerId + "NameText", "");
-      $(document).trigger("leftPeer", [playerId]);
+      removePlayer(playerId);
+      // $("#webcam" + playerId).html("");
+      // updateCss("#webcam" + playerId, "display", "none");
+      // updateCss("#cursor" + playerId, "display", "none");
+      // updateCss("#player" + playerId + "box", "display", "none");
+      // updateCss("#scaledProjectionBox" + playerId, "display", "none");
+      // updateCss(".pieceFor_" + playerId, "display", "none");
+      // updateCss("#player" + playerId + "NameText", "display", "none");
+      // updateCss("#player" + playerId + "Name", "display", "none");
+      // updateCss("#player" + playerId + "box", "background-color", "#FFFFFF00");
+      // updateCss("#scaledProjectionBox" + playerId, "background-color", "#FFFFFF00");
+      // updateHtml("#player" + playerId + "NameText", "");
+      // $(document).trigger("leftPeer", [playerId]);
     });
 
     clientController.on("stream", (playerId, stream) => {
@@ -3136,6 +3138,13 @@ function InitWebSocket()
     });
 
     clientController.on("wsClosed", () => {
+      myGameObj = null;
+      myPlayerId = -1;
+      gameInitialized = false;
+      for (var i = 0; i < 20; i++)
+      {
+        removePlayer(i);
+      }
       clientController.removeAllListeners();
       setTimeout(function(){InitWebSocket();}, 2000);
     });
@@ -3170,6 +3179,22 @@ function InitWebSocket()
      // The browser doesn't support WebSocket
      alert("WebSocket NOT supported by your Browser!");
   }
+}
+
+function removePlayer(playerId)
+{
+  $("#webcam" + playerId).html("");
+  updateCss("#webcam" + playerId, "display", "none");
+  updateCss("#cursor" + playerId, "display", "none");
+  updateCss("#player" + playerId + "box", "display", "none");
+  updateCss("#scaledProjectionBox" + playerId, "display", "none");
+  updateCss(".pieceFor_" + playerId, "display", "none");
+  updateCss("#player" + playerId + "NameText", "display", "none");
+  updateCss("#player" + playerId + "Name", "display", "none");
+  updateCss("#player" + playerId + "box", "background-color", "#FFFFFF00");
+  updateCss("#scaledProjectionBox" + playerId, "background-color", "#FFFFFF00");
+  updateHtml("#player" + playerId + "NameText", "");
+  $(document).trigger("leftPeer", [playerId]);
 }
 
 
@@ -3254,8 +3279,10 @@ $( document ).on( "mouseup", function( e ) {
   if (inspectingCardId !== null)
   {
     updateCss("#" + inspectingCardId, "transform", "scale(" + myGameObj.projectionBoxScale + ")");
-    updateCss("#" + inspectingCardId, "z-index", "100000");
+    //updateCss("#" + inspectingCardId, "z-index", "100000");
+    updateCss("#" + inspectingCardId, "z-index", formerInspectingCardZ);
     inspectingCardId = null;
+    formerInspectingCardZ = "1";
   }
   if (dragCardId !== null)
   {
@@ -3413,6 +3440,7 @@ $( document ).ready(function() {
         if (draggable.ownedBy !== myPlayerId && draggable.ownedBy !== -1)
         {
           inspectingCardId = event.currentTarget.id;
+          formerInspectingCardZ = $("#" + inspectingCardId).css("z-index");
           updateCss("#" + inspectingCardId, 'transform', "scale(1)");
           updateCss("#" + inspectingCardId, "z-index", "1000000");
           canEdit = false;
@@ -4559,27 +4587,27 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId)
     this.wsHandler.sendToWs(sendData);
   });
 
-  // this.peers[playerId].on('error', err => {
-  //   console.log("error in initWebcamPeer for player " + playerId)
-  //   console.log(err);
-  //   if (err.code == "ERR_CONNECTION_FAILURE")
-  //   {
-  //     try {
-  //       this.peers[playerId].destroy();
-  //     }
-  //     catch (error)
-  //     {
-  //       console.log(error)
-  //     }
-  //     delete this.peers[playerId]
-  //     var sendData = {
-  //       type: "connectionFailure",
-  //       fromPlayerId: playerId
-  //     }
-  //     this.wsHandler.sendToWs(sendData);
-  //   }
+  this.peers[playerId].on('error', err => {
+    console.log("error in initWebcamPeer for player " + playerId)
+    console.log(err);
+    if (err.code == "ERR_CONNECTION_FAILURE")
+    {
+      try {
+        this.peers[playerId].destroy();
+      }
+      catch (error)
+      {
+        console.log(error)
+      }
+      delete this.peers[playerId]
+      var sendData = {
+        type: "connectionFailure",
+        fromPlayerId: playerId
+      }
+      this.wsHandler.sendToWs(sendData);
+    }
 
-  // });
+  });
   this.peers[playerId].on('close', () => {
     console.log("closed WebcamPeer for player " + playerId)
     try {
@@ -4633,26 +4661,26 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
     this.wsHandler.sendToWs(sendData);
   });
 
-  // this.peers[fromPlayerId].on('error', err => {
-  //   console.log("error in peerConnected from " + fromPlayerId)
-  //   console.log(err);
-  //   if (err.code == "ERR_CONNECTION_FAILURE")
-  //   {
-  //     try {
-  //       this.peers[fromPlayerId].destroy();
-  //     }
-  //     catch (error)
-  //     {
-  //       console.log(error)
-  //     }
-  //     delete this.peers[fromPlayerId]
-  //     var sendData = {
-  //       type: "connectionFailure",
-  //       fromPlayerId: fromPlayerId
-  //     }
-  //     this.wsHandler.sendToWs(sendData);
-  //   }
-  // });
+  this.peers[fromPlayerId].on('error', err => {
+    console.log("error in peerConnected from " + fromPlayerId)
+    console.log(err);
+    if (err.code == "ERR_CONNECTION_FAILURE")
+    {
+      try {
+        this.peers[fromPlayerId].destroy();
+      }
+      catch (error)
+      {
+        console.log(error)
+      }
+      delete this.peers[fromPlayerId]
+      var sendData = {
+        type: "connectionFailure",
+        fromPlayerId: fromPlayerId
+      }
+      this.wsHandler.sendToWs(sendData);
+    }
+  });
 
   this.peers[fromPlayerId].on('close', () => {
     console.log("closed WebcamPeer for player " + fromPlayerId);
@@ -4820,8 +4848,14 @@ function WsHandler(ws)
   }.bind(this);
   this.ws.onclose = function()
   { 
+    console.error("WebSocket closed");
     this.eventEmitter.emit("wsClosed")
   }.bind(this);
+  this.ws.onerror = function(e)
+  {
+    console.error("WebSocket error observed:", e);
+    this.eventEmitter.emit("wsClosed");
+  }
 }
 
 WsHandler.prototype.deconstructMessage = function (data)
