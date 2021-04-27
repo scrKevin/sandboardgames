@@ -1,0 +1,18 @@
+<div class='teamplane' id="blueplane"></div>
+<div class='teamplane' id="redplane"></div>
+
+<div class='card deck' id='cardDeck'><button type="button" class="btn btn-primary btn-lg inspectDeckButton" style="width: 140px;">SPYMASTER</button></div>
+
+<% for (var i = 0; i < 5; i++) { for (var j = 0; j < 5; j++) {-%>
+    <%- include ('../../common/textCard', {id: "textCard" + String(i) + String(j), cardFaceClass: "playcard", textClass: "", secTextClass:""}); -%>
+<% }} -%>
+
+<% var i = 0;for (var team = 1; team <= 2; team++) { for (var amount = 0; amount < 5; amount++){ for (var type = 1; type <= 2; type++){-%>
+    <div class="card" id="spy<%= team; %><%= amount; %><%= type; %>"><img src="/img/cn/spy<%= team; %><%= type; %>.png"></div>
+<% i++; } } } -%>
+
+<% var i = 0;for (var amount = 0; amount < 4; amount++) { for (var type = 1; type <= 2; type++){-%>
+    <div class="card" id="innocent<%= amount; %><%= type; %>"><img src="/img/cn/innocent<%= type; %>.png"></div>
+<% i++; } } -%>
+
+<div class="card" id="assassin"><img src="/img/cn/assassin.png"></div>

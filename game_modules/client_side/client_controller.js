@@ -31,9 +31,9 @@ ClientController.prototype.initialize = function(ws, myStream)
   this.wsHandler.eventEmitter.on("turnCredentials", (turnCredentials) => {
     this.webcamHandler.turnCredentials(turnCredentials);
   });
-  this.wsHandler.eventEmitter.on("newPeer", (playerId) => {
+  this.wsHandler.eventEmitter.on("newPeer", (playerId, wasReset) => {
     this.webcamHandler.initWebcamPeer(playerId);
-    this.emit("newPeer", playerId);
+    this.emit("newPeer", playerId, wasReset);
   });
   this.wsHandler.eventEmitter.on("leftPeer", (playerId) => {
     this.webcamHandler.leftPeer(playerId);
@@ -129,6 +129,11 @@ ClientController.prototype.resetGame = function()
   this.init && this.wsHandler.resetGame();
 }
 
+ClientController.prototype.resetWebcam = function()
+{
+  this.init && this.wsHandler.resetWebcam();
+}
+
 ClientController.prototype.takeSnapshot = function()
 {
   this.init && this.wsHandler.takeSnapshot();
@@ -164,5 +169,14 @@ ClientController.prototype.devToolsState = function(opened)
   this.init && this.wsHandler.devToolsState(opened);
 }
 
+ClientController.prototype.reportPatched = function()
+{
+  this.init && this.wsHandler.reportPatched();
+}
+
+ClientController.prototype.reportInitiated = function()
+{
+  this.init && this.wsHandler.reportInitiated();
+}
 
 module.exports = {ClientController: ClientController}

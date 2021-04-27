@@ -1,10 +1,11 @@
 let FpsLimiter = require('../fps_limiter').FpsLimiter;
+var getPreferredMs = require('../fps_limiter').getPreferredMs;
 
 function MouseHandler(wsHandler)
 {
   this.wsHandler = wsHandler;
 
-  this.mouseFpsLimiter = new FpsLimiter(5);
+  this.mouseFpsLimiter = new FpsLimiter(0.5);
   this.mouseFpsLimiter.on("update", () => {
     this.sendMouseMove()
   });
@@ -108,12 +109,12 @@ MouseHandler.prototype.touchTouchbox = function(x, y)
 
 MouseHandler.prototype.adjustLatency = function(latency)
 {
-  var ms = latency * 1.5;
-  if (ms > 3000)
-  {
-    ms = 3000;
-  }
-  this.mouseFpsLimiter.setMs(ms)
+  var ms = latency * 5;
+  // if (ms > 3000)
+  // {
+  //   ms = 3000;
+  // }
+  this.mouseFpsLimiter.setMs(ms);
 }
 
 module.exports = {MouseHandler: MouseHandler}

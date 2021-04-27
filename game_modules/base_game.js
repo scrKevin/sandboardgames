@@ -58,6 +58,14 @@ function WS_distributor(wss, turnServer, resetGameFunction)
         player.updateName(json.name)
         this.broadcast();
       }
+      else if (json.type == "p")
+      {
+        client.reportPatched();
+        if (json.echo)
+        {
+          client.echo();
+        }
+      }
       else if (json.type == "requestId")
       {
         console.log(id + " is requesting id");
@@ -67,6 +75,7 @@ function WS_distributor(wss, turnServer, resetGameFunction)
       else if (json.type == "initiated")
       {
         client.initiated = true;
+        client.reportPatched();
         console.log("player " + id + " initiated.")
         this.broadcastNewPeer(client, id, ws);
       }
@@ -204,6 +213,7 @@ function WS_distributor(wss, turnServer, resetGameFunction)
           else
           {
             // confilict with clicked cards
+            console.log("card confilict with " + card.clickedBy + " (first) and " + id + " (second)")
             client.sendCardConflict(card.id);
           }
         }
@@ -380,6 +390,7 @@ function WS_distributor(wss, turnServer, resetGameFunction)
       }
       else if (json.type == "readyForNewPeer")
       {
+        client.peerStatus[json.fromPlayerId] = "streamReceived";
         client.acceptPeerState = "idle";
         if (client.acceptPeerTimeout != null)
         {
@@ -397,6 +408,7 @@ function WS_distributor(wss, turnServer, resetGameFunction)
         {
           if(clientI.playerId == json.fromPlayerId)
           {
+            console.log("Found match")
             if (clientI.peerStatus[id] == "connectionFailure" && clientI.initiated)
             {
               // both peers have lost connection with each other but the connection with the server is ok.
@@ -417,6 +429,16 @@ function WS_distributor(wss, turnServer, resetGameFunction)
         this.broadcastReset();
         this.broadcast();
       }
+      else if (json.type == "resetWebcam")
+      {
+        client.isReset = true;
+        this.broadcastLeftPeer(id);
+        // for (clientI of this.clients)
+        // {
+        //   clientI.peerStatus[id] == 'reset';
+        // }
+        this.broadcastNewPeer(client, id, ws);
+      }
       else if (json.type == "takeSnapshot")
       {
         this.snapshot = JSON.stringify(this.gameObj);
@@ -436,19 +458,19 @@ function WS_distributor(wss, turnServer, resetGameFunction)
       else if (json.type == "draw")
       {
         player.addDrawCoordinates(json.coords);
-        for(client of this.clients)
+        for(clientI of this.clients)
         {
-          client.addDrawCoordinates(id, json.coords);
+          clientI.addDrawCoordinates(id, json.coords);
         }
       }
       else if (json.type == "devToolsState")
       {
         this.broadcastDevToolsState(id, json.opened);
       }
-      else if (json.type == "echo")
-      {
-        client.echo();
-      }
+      // else if (json.type == "echo")
+      // {
+      //   client.echo();
+      // }
       
     });
     
@@ -597,7 +619,8 @@ WS_distributor.prototype.broadcastLeftPeer = function (playerId)
   {
     if (clientI.playerId != playerId)
     {
-      delete clientI.peerStatus[playerId];
+      //delete clientI.peerStatus[playerId];
+      clientI.peerStatus[playerId] = 'left';
     }
   }
   var sendData = {
@@ -606,11 +629,19 @@ WS_distributor.prototype.broadcastLeftPeer = function (playerId)
   }
   var strToSend = JSON.stringify(sendData);
   var binaryString = this.constructMessage(strToSend);
-  this.wss.clients.forEach(function each(client) {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(binaryString);
+  for (clientI of this.clients)
+  {
+    if (clientI.playerId != playerId)
+    {
+      //delete clientI.peerStatus[playerId];
+      clientI.sendBinaryString(binaryString);
     }
-  });
+  }
+  // this.wss.clients.forEach(function each(client) {
+  //   if (client.readyState === WebSocket.OPEN && client.playerId != playerId) {
+  //     client.send(binaryString);
+  //   }
+  // });
 }
 
 // WS_distributor.prototype.newPeerReceived = function (playerId, forPlayerId){
@@ -628,7 +659,8 @@ WS_distributor.prototype.broadcastNewPeer = function (client, playerId, newWs){
   {
     if (clientI.playerId != playerId)
     {
-      if(clientI.initiated)
+      // console.log("clientI.peerStatus[" + playerId + "] = " + clientI.peerStatus[playerId])
+      if(clientI.initiated)// && clientI.peerStatus[playerId] != "streamReceived" && clientI.peerStatus[playerId] != "peerAccepted")
       {
         clientI.peerStatus[playerId] = "newPeerSent";
         clientI.sendNewPeer(client);

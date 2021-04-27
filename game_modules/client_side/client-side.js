@@ -1,11 +1,14 @@
 let ClientController = require("./client_controller").ClientController;
+var getPreferredMs = require('../fps_limiter').getPreferredMs;
 require("./devtools-detect");
 
 var clientController = new ClientController()
+var welcomeModalshown = false;
 var myGameObj = null;
 var scale = 1;
 
 var myStream = null;
+var myLatency = 5000;
 
 var myPlayerId = -1;
 
@@ -66,6 +69,15 @@ var devToolsOpenedTimes = {};
 
 function addWebcam(stream, playerId, mirrored, muted)
 {
+  // if (!welcomeModalshown)
+  // {
+  //   welcomeModalshown = true;
+  //     $('#welcomeModal').modal({
+  //       show: true,
+  //       backdrop: 'static',
+  //       keyboard: false
+  //       });
+  // }
   var video = document.createElement('video');
   $("#webcam" + playerId).html(video)
   if (mirrored)
@@ -152,7 +164,8 @@ function InitWebSocket()
       if(init)
       {
         initCards(gameObj)
-        console.log("reset or init")
+        console.log("reset or init");
+        
       }
       else
       {
@@ -163,13 +176,25 @@ function InitWebSocket()
       updateCursors(gameObj);
       updateScoreboxes(gameObj);
       updateColorSelection(gameObj);
-
+      if (!welcomeModalshown)
+      {
+        clientController.reportPatched();
+        welcomeModalshown = true;
+        setTimeout(() => {
+          $('#welcomeModal').modal({
+            show: true,
+            backdrop: 'static',
+            keyboard: false
+            });
+        }, 5000);
+        
+      }
 
       $(document).trigger("gameObj", [gameObj, myPlayerId, scale]);
     });
 
     clientController.on("cardConflict", (cardId) => {
-      if (dragCardId === cardId)
+      if (dragCardId == cardId)
       {
         console.log("Card conflict detected for " + cardId);
         dragCardId = null;
@@ -177,8 +202,11 @@ function InitWebSocket()
       }
     });
 
-    clientController.on("newPeer", (playerId) => {
-      doorbell.play();
+    clientController.on("newPeer", (playerId, wasReset) => {
+      if (!wasReset)
+      {
+        doorbell.play();
+      }
     });
 
     clientController.on("leftPeer", (playerId) => {
@@ -235,7 +263,41 @@ function InitWebSocket()
       }
     });
     clientController.on("latency", (latency, playerId) => {
+      console.log("my current latency: " + latency);
+      // if (!welcomeModalshown)
+      // {
+      //   welcomeModalshown = true;
+      //   $('#welcomeModal').modal({
+      //     show: true,
+      //     backdrop: 'static',
+      //     keyboard: false
+      //     });
+      // }
+      myLatency = latency;
       $("#latency" + playerId).html("Latency: " + latency + "ms");
+      if (latency < 100)
+      {
+        updateCss(".cursor", "transition", "all " + getPreferredMs(latency) * 2.5 + "ms linear");
+        updateCss(".cursor", "transition-property", "top, left");
+        updateCss(".card", "transition", "all " + getPreferredMs(latency) * 2.5 + "ms linear");
+        updateCss(".card", "transition-property", "top, left");
+        updateCss(".moveable", "transition", "all " + getPreferredMs(latency) * 2.5 + "ms linear");
+        updateCss(".moveable", "transition-property", "top, left");
+      }
+      else
+      {
+        updateCss(".cursor", "transition", "none");
+        updateCss(".cursor", "transition-property", "none");
+        updateCss(".card", "transition", "none");
+        updateCss(".card", "transition-property", "none");
+        updateCss(".moveable", "transition", "none");
+        updateCss(".moveable", "transition-property", "none");
+      }
+      updateCss("#" + dragCardId, "transition-property", "none");
+      for (dci of dragCardIds)
+      {
+        updateCss("#" + dci, "transition-property", "none");
+      }
     });
   }
   else
@@ -334,6 +396,18 @@ function cardMouseUp(e)
   //updateCss("#" + dragCardId, "z-index", '50');
   // i = dragCardIds.length;
   // while(i--) suppressNextChanges[i] = dragCardIds[i];
+  if (myLatency < 100)
+  {
+    updateCss("#" + dragCardId, "transition-property", "top, left");
+  }
+  for (dci of dragCardIds)
+  {
+    //console.log(dci)
+    if (myLatency < 100)
+    {
+      updateCss("#" + dci, "transition-property", "top, left");
+    }
+  }
   dragCardId = null;
   dragCardIds = [];
 }
@@ -352,6 +426,7 @@ $( document ).on( "mouseup", function( e ) {
   {
     // console.log("But dragCardId was not null.");
     cardMouseUp(e);
+    
   }
   else
   {
@@ -366,6 +441,10 @@ $( document ).on( "mouseup", function( e ) {
 $(document).on ("keydown", function (event) {
   if (event.ctrlKey && event.key === "q") { 
     $('#resetModal').modal();
+  }
+  else if (event.ctrlKey && event.key === "z") { 
+  event.preventDefault();
+    $('#resetWebcamModal').modal();
   }
 });
 
@@ -442,6 +521,7 @@ $( document ).ready(function() {
   $(".cursor").off();
   $('#enterGameBtn').attr('disabled',true);
   $('#enterGameBtn').on('click', enterGame);
+  $("#resetWebcamBtn").on('click', resetWebcam);
   $('#resetGameBtn').on('click', resetGame);
   $('#takeSnapshotBtn').on('click', takeSnapshot);
   $('#recoverSnapshotBtn').on('click', recoverSnapshot);
@@ -520,6 +600,12 @@ $( document ).ready(function() {
         var cardY = Math.round(cardPosition.top * (1 / scale));
         clientController.clickOnCard(event.currentTarget.id, cardX, cardY);
         // updateCss("#" + dragCardId, "z-index", highestZ + 1);
+        updateCss("#" + dragCardId, "transition-property", "none");
+        for (dci of dragCardIds)
+        {
+          //console.log(dci)
+          updateCss("#" + dci, "transition-property", "none");
+        }
         blockCardChange = [];
       }
     }
@@ -576,6 +662,18 @@ $( document ).ready(function() {
       //updateCss("#" + dragCardId, "z-index", '50');
       // i = dragCardIds.length;
       // while(i--) suppressNextChanges[i] = dragCardIds[i];
+      if (myLatency < 100)
+      {
+        updateCss("#" + dragCardId, "transition-property", "top, left");
+      }
+      for (dci of dragCardIds)
+      {
+        //console.log(dci)
+        if(myLatency < 100)
+        {
+          updateCss("#" + dci, "transition-property", "top, left");
+        }
+      }
       dragCardId = null;
       dragCardIds = [];
     }
@@ -603,15 +701,17 @@ $( document ).ready(function() {
                               max: 240,
                               ideal: 120
                           }
-                      }, audio: true})
+                      }, audio: {
+                        echoCancellation: true
+                      }})
     .then(function(stream) {
       myStream = stream;
       InitWebSocket();
-      $('#welcomeModal').modal({
-                          show: true,
-                          backdrop: 'static',
-                          keyboard: false
-                          });
+      // $('#welcomeModal').modal({
+      //                     show: true,
+      //                     backdrop: 'static',
+      //                     keyboard: false
+      //                     });
   });
   //   navigator.mediaDevices.getUserMedia({video: true, audio: true})
   // .then(function(stream) {
@@ -1221,6 +1321,12 @@ function resetGame()
 {
   clientController.resetGame();
   $('#resetModal').modal('hide');
+}
+
+function resetWebcam()
+{
+  clientController.resetWebcam();
+  $('#resetWebcamModal').modal('hide');
 }
 
 function takeSnapshot()

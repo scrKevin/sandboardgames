@@ -2707,6 +2707,7 @@ process.umask = function() { return 0; };
 
 },{}],7:[function(require,module,exports){
 let FpsLimiter = require('../fps_limiter').FpsLimiter;
+var getPreferredMs = require('../fps_limiter').getPreferredMs;
 
 function CanvasHandler() {
   this.canvas = null;
@@ -2727,7 +2728,7 @@ function CanvasHandler() {
 
   this.lastDrawCoordinates = [];
 
-  this.canvasFpsLimiter = new FpsLimiter(5);
+  this.canvasFpsLimiter = new FpsLimiter(0.5);
   this.canvasFpsLimiter.on("update", () => {
     this.sendDrawCoordinates()
   });
@@ -2911,11 +2912,13 @@ CanvasHandler.prototype.sendDrawCoordinates = function(){
 
 CanvasHandler.prototype.adjustLatency = function(latency)
 {
-  var ms = latency * 1.5;
-  if (ms > 3000)
-  {
-    ms = 3000;
-  }
+  
+  var ms = latency * 5;
+  //console.log(ms);
+  // if (ms > 3000)
+  // {
+  //   ms = 3000;
+  // }
   this.canvasFpsLimiter.setMs(ms);
 }
 
@@ -2935,13 +2938,16 @@ function getPlayer(gameObj, playerId)
 module.exports = {CanvasHandler: CanvasHandler}
 },{"../fps_limiter":14}],8:[function(require,module,exports){
 let ClientController = require("./client_controller").ClientController;
+var getPreferredMs = require('../fps_limiter').getPreferredMs;
 require("./devtools-detect");
 
 var clientController = new ClientController()
+var welcomeModalshown = false;
 var myGameObj = null;
 var scale = 1;
 
 var myStream = null;
+var myLatency = 5000;
 
 var myPlayerId = -1;
 
@@ -3002,6 +3008,15 @@ var devToolsOpenedTimes = {};
 
 function addWebcam(stream, playerId, mirrored, muted)
 {
+  // if (!welcomeModalshown)
+  // {
+  //   welcomeModalshown = true;
+  //     $('#welcomeModal').modal({
+  //       show: true,
+  //       backdrop: 'static',
+  //       keyboard: false
+  //       });
+  // }
   var video = document.createElement('video');
   $("#webcam" + playerId).html(video)
   if (mirrored)
@@ -3088,7 +3103,8 @@ function InitWebSocket()
       if(init)
       {
         initCards(gameObj)
-        console.log("reset or init")
+        console.log("reset or init");
+        
       }
       else
       {
@@ -3099,13 +3115,25 @@ function InitWebSocket()
       updateCursors(gameObj);
       updateScoreboxes(gameObj);
       updateColorSelection(gameObj);
-
+      if (!welcomeModalshown)
+      {
+        clientController.reportPatched();
+        welcomeModalshown = true;
+        setTimeout(() => {
+          $('#welcomeModal').modal({
+            show: true,
+            backdrop: 'static',
+            keyboard: false
+            });
+        }, 5000);
+        
+      }
 
       $(document).trigger("gameObj", [gameObj, myPlayerId, scale]);
     });
 
     clientController.on("cardConflict", (cardId) => {
-      if (dragCardId === cardId)
+      if (dragCardId == cardId)
       {
         console.log("Card conflict detected for " + cardId);
         dragCardId = null;
@@ -3113,8 +3141,11 @@ function InitWebSocket()
       }
     });
 
-    clientController.on("newPeer", (playerId) => {
-      doorbell.play();
+    clientController.on("newPeer", (playerId, wasReset) => {
+      if (!wasReset)
+      {
+        doorbell.play();
+      }
     });
 
     clientController.on("leftPeer", (playerId) => {
@@ -3171,7 +3202,41 @@ function InitWebSocket()
       }
     });
     clientController.on("latency", (latency, playerId) => {
+      console.log("my current latency: " + latency);
+      // if (!welcomeModalshown)
+      // {
+      //   welcomeModalshown = true;
+      //   $('#welcomeModal').modal({
+      //     show: true,
+      //     backdrop: 'static',
+      //     keyboard: false
+      //     });
+      // }
+      myLatency = latency;
       $("#latency" + playerId).html("Latency: " + latency + "ms");
+      if (latency < 100)
+      {
+        updateCss(".cursor", "transition", "all " + getPreferredMs(latency) * 2.5 + "ms linear");
+        updateCss(".cursor", "transition-property", "top, left");
+        updateCss(".card", "transition", "all " + getPreferredMs(latency) * 2.5 + "ms linear");
+        updateCss(".card", "transition-property", "top, left");
+        updateCss(".moveable", "transition", "all " + getPreferredMs(latency) * 2.5 + "ms linear");
+        updateCss(".moveable", "transition-property", "top, left");
+      }
+      else
+      {
+        updateCss(".cursor", "transition", "none");
+        updateCss(".cursor", "transition-property", "none");
+        updateCss(".card", "transition", "none");
+        updateCss(".card", "transition-property", "none");
+        updateCss(".moveable", "transition", "none");
+        updateCss(".moveable", "transition-property", "none");
+      }
+      updateCss("#" + dragCardId, "transition-property", "none");
+      for (dci of dragCardIds)
+      {
+        updateCss("#" + dci, "transition-property", "none");
+      }
     });
   }
   else
@@ -3270,6 +3335,18 @@ function cardMouseUp(e)
   //updateCss("#" + dragCardId, "z-index", '50');
   // i = dragCardIds.length;
   // while(i--) suppressNextChanges[i] = dragCardIds[i];
+  if (myLatency < 100)
+  {
+    updateCss("#" + dragCardId, "transition-property", "top, left");
+  }
+  for (dci of dragCardIds)
+  {
+    //console.log(dci)
+    if (myLatency < 100)
+    {
+      updateCss("#" + dci, "transition-property", "top, left");
+    }
+  }
   dragCardId = null;
   dragCardIds = [];
 }
@@ -3288,6 +3365,7 @@ $( document ).on( "mouseup", function( e ) {
   {
     // console.log("But dragCardId was not null.");
     cardMouseUp(e);
+    
   }
   else
   {
@@ -3302,6 +3380,10 @@ $( document ).on( "mouseup", function( e ) {
 $(document).on ("keydown", function (event) {
   if (event.ctrlKey && event.key === "q") { 
     $('#resetModal').modal();
+  }
+  else if (event.ctrlKey && event.key === "z") { 
+  event.preventDefault();
+    $('#resetWebcamModal').modal();
   }
 });
 
@@ -3378,6 +3460,7 @@ $( document ).ready(function() {
   $(".cursor").off();
   $('#enterGameBtn').attr('disabled',true);
   $('#enterGameBtn').on('click', enterGame);
+  $("#resetWebcamBtn").on('click', resetWebcam);
   $('#resetGameBtn').on('click', resetGame);
   $('#takeSnapshotBtn').on('click', takeSnapshot);
   $('#recoverSnapshotBtn').on('click', recoverSnapshot);
@@ -3456,6 +3539,12 @@ $( document ).ready(function() {
         var cardY = Math.round(cardPosition.top * (1 / scale));
         clientController.clickOnCard(event.currentTarget.id, cardX, cardY);
         // updateCss("#" + dragCardId, "z-index", highestZ + 1);
+        updateCss("#" + dragCardId, "transition-property", "none");
+        for (dci of dragCardIds)
+        {
+          //console.log(dci)
+          updateCss("#" + dci, "transition-property", "none");
+        }
         blockCardChange = [];
       }
     }
@@ -3512,6 +3601,18 @@ $( document ).ready(function() {
       //updateCss("#" + dragCardId, "z-index", '50');
       // i = dragCardIds.length;
       // while(i--) suppressNextChanges[i] = dragCardIds[i];
+      if (myLatency < 100)
+      {
+        updateCss("#" + dragCardId, "transition-property", "top, left");
+      }
+      for (dci of dragCardIds)
+      {
+        //console.log(dci)
+        if(myLatency < 100)
+        {
+          updateCss("#" + dci, "transition-property", "top, left");
+        }
+      }
       dragCardId = null;
       dragCardIds = [];
     }
@@ -3539,15 +3640,17 @@ $( document ).ready(function() {
                               max: 240,
                               ideal: 120
                           }
-                      }, audio: true})
+                      }, audio: {
+                        echoCancellation: true
+                      }})
     .then(function(stream) {
       myStream = stream;
       InitWebSocket();
-      $('#welcomeModal').modal({
-                          show: true,
-                          backdrop: 'static',
-                          keyboard: false
-                          });
+      // $('#welcomeModal').modal({
+      //                     show: true,
+      //                     backdrop: 'static',
+      //                     keyboard: false
+      //                     });
   });
   //   navigator.mediaDevices.getUserMedia({video: true, audio: true})
   // .then(function(stream) {
@@ -4159,6 +4262,12 @@ function resetGame()
   $('#resetModal').modal('hide');
 }
 
+function resetWebcam()
+{
+  clientController.resetWebcam();
+  $('#resetWebcamModal').modal('hide');
+}
+
 function takeSnapshot()
 {
   clientController.takeSnapshot();
@@ -4170,7 +4279,7 @@ function recoverSnapshot()
   clientController.recoverSnapshot();
   $('#resetModal').modal('hide');
 }
-},{"./client_controller":9,"./devtools-detect":10}],9:[function(require,module,exports){
+},{"../fps_limiter":14,"./client_controller":9,"./devtools-detect":10}],9:[function(require,module,exports){
 let WsHandler = require("./ws_handler").WsHandler;
 let WebcamHandler = require("./webcam_handler").WebcamHandler;
 let MouseHandler = require("./mouse_handler").MouseHandler;
@@ -4204,9 +4313,9 @@ ClientController.prototype.initialize = function(ws, myStream)
   this.wsHandler.eventEmitter.on("turnCredentials", (turnCredentials) => {
     this.webcamHandler.turnCredentials(turnCredentials);
   });
-  this.wsHandler.eventEmitter.on("newPeer", (playerId) => {
+  this.wsHandler.eventEmitter.on("newPeer", (playerId, wasReset) => {
     this.webcamHandler.initWebcamPeer(playerId);
-    this.emit("newPeer", playerId);
+    this.emit("newPeer", playerId, wasReset);
   });
   this.wsHandler.eventEmitter.on("leftPeer", (playerId) => {
     this.webcamHandler.leftPeer(playerId);
@@ -4302,6 +4411,11 @@ ClientController.prototype.resetGame = function()
   this.init && this.wsHandler.resetGame();
 }
 
+ClientController.prototype.resetWebcam = function()
+{
+  this.init && this.wsHandler.resetWebcam();
+}
+
 ClientController.prototype.takeSnapshot = function()
 {
   this.init && this.wsHandler.takeSnapshot();
@@ -4337,6 +4451,15 @@ ClientController.prototype.devToolsState = function(opened)
   this.init && this.wsHandler.devToolsState(opened);
 }
 
+ClientController.prototype.reportPatched = function()
+{
+  this.init && this.wsHandler.reportPatched();
+}
+
+ClientController.prototype.reportInitiated = function()
+{
+  this.init && this.wsHandler.reportInitiated();
+}
 
 module.exports = {ClientController: ClientController}
 },{"./canvas_handler":7,"./mouse_handler":11,"./webcam_handler":12,"./ws_handler":13,"events":4}],10:[function(require,module,exports){
@@ -4400,12 +4523,13 @@ MIT License
 
 },{}],11:[function(require,module,exports){
 let FpsLimiter = require('../fps_limiter').FpsLimiter;
+var getPreferredMs = require('../fps_limiter').getPreferredMs;
 
 function MouseHandler(wsHandler)
 {
   this.wsHandler = wsHandler;
 
-  this.mouseFpsLimiter = new FpsLimiter(5);
+  this.mouseFpsLimiter = new FpsLimiter(0.5);
   this.mouseFpsLimiter.on("update", () => {
     this.sendMouseMove()
   });
@@ -4509,12 +4633,12 @@ MouseHandler.prototype.touchTouchbox = function(x, y)
 
 MouseHandler.prototype.adjustLatency = function(latency)
 {
-  var ms = latency * 1.5;
-  if (ms > 3000)
-  {
-    ms = 3000;
-  }
-  this.mouseFpsLimiter.setMs(ms)
+  var ms = latency * 5;
+  // if (ms > 3000)
+  // {
+  //   ms = 3000;
+  // }
+  this.mouseFpsLimiter.setMs(ms);
 }
 
 module.exports = {MouseHandler: MouseHandler}
@@ -4646,6 +4770,7 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
     this.emit("stream", fromPlayerId, stream);
     var sendData = {
       type: "readyForNewPeer",
+      fromPlayerId: fromPlayerId
     }
     this.wsHandler.sendToWs(sendData);
   });
@@ -4747,12 +4872,13 @@ function WsHandler(ws)
   {
     // console.log(evt.data)
     var json = JSON.parse(this.deconstructMessage(evt.data));
+    //console.log(json);
     if(json.type == "patches")
     {
       // console.log(json.ms);
       this.lastGameObj = this.dmp.patch_apply(this.dmp.patch_fromText(json.patches), this.lastGameObj)[0];
-      try
-      {
+      // try
+      // {
         for (changedCard of json.changedCards)
         {
           this.addToChangedCardsBuffer(changedCard);
@@ -4781,21 +4907,26 @@ function WsHandler(ws)
         this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, json.newDrawCoords, false);
         this.changedCardsBuffer = [];
         // }
+      // }
+      // catch (err)
+      // {
+      //   console.log(err);
+      //   //console.log(this.lastGameObj)
+      //   this.requestPlayerId();
+      // }
+      // if(json.echo)
+      // {
+      //   //console.log("sending echo")
+      //   var sendData = {
+      //     type: "echo"
+      //   };
+      //   this.sendToWs(sendData);
+      // }
+      var sendData = {
+        type: "p",
+        echo: json.echo
       }
-      catch (err)
-      {
-        console.log(err);
-        //console.log(this.lastGameObj)
-        this.requestPlayerId();
-      }
-      if(json.echo)
-      {
-        //console.log("sending echo")
-        var sendData = {
-          type: "echo"
-        };
-        this.sendToWs(sendData);
-      }
+      this.sendToWs(sendData);
     }
     else if (json.type == "playerId")
     {
@@ -4817,7 +4948,7 @@ function WsHandler(ws)
     {
       if (json.playerId != this.myPlayerId)
       {
-        this.eventEmitter.emit("newPeer", json.playerId)
+        this.eventEmitter.emit("newPeer", json.playerId, json.wasReset)
       }
     }
     else if (json.type == "leftPeer")
@@ -4945,6 +5076,14 @@ WsHandler.prototype.resetGame = function()
   this.sendToWs(sendData);
 }
 
+WsHandler.prototype.resetWebcam = function()
+{
+  var sendData = {
+    type: "resetWebcam"
+  }
+  this.sendToWs(sendData);
+}
+
 WsHandler.prototype.takeSnapshot = function()
 {
   var sendData = {
@@ -5007,6 +5146,35 @@ WsHandler.prototype.devToolsState = function(opened)
   this.sendToWs(sendData);
 }
 
+WsHandler.prototype.reportPatched = function(init)
+{
+  // if (init)
+  // {
+  //   // var sendData = {
+  //   //   type: "initiated"
+  //   // };
+  // }
+  // else{
+  //   var sendData = {
+  //     type: "p",
+  //   }
+  // }
+
+  var sendData = {
+    type: "p",
+    echo: false
+  }
+  this.sendToWs(sendData);
+}
+
+WsHandler.prototype.reportInitiated = function()
+{
+  var sendData = {
+    type: "initiated"
+  };
+  this.sendToWs(sendData);
+}
+
 module.exports = {WsHandler: WsHandler}
 },{"../fps_limiter":14,"diff-match-patch":15,"events":4,"pako":18}],14:[function(require,module,exports){
 var EventEmitter = require('events').EventEmitter;
@@ -5042,26 +5210,21 @@ FpsLimiter.prototype.update = function()
 
 FpsLimiter.prototype.setFps = function(fps)
 {
-  this.ms = Math.round(1000 / fps);
-  if (this.ms < 40)
-  {
-    this.ms = 40;
-  }
+  this.ms = getPreferredMs(Math.round(1000 / fps));
 }
 
 FpsLimiter.prototype.setMs = function(ms)
 {
-  if (ms < 40)
-  {
-    this.ms = 40;
-  }
-  else
-  {
-    this.ms = ms;
-  }
+  this.ms = getPreferredMs(ms);
 }
 
-module.exports = {FpsLimiter: FpsLimiter}
+getPreferredMs = function(ms){
+  if (ms < 250) return 250;
+  
+  return ms;
+}
+
+module.exports = {FpsLimiter: FpsLimiter, getPreferredMs: getPreferredMs}
 },{"events":4}],15:[function(require,module,exports){
 /**
  * Diff Match and Patch

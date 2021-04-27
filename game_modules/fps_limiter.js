@@ -31,23 +31,18 @@ FpsLimiter.prototype.update = function()
 
 FpsLimiter.prototype.setFps = function(fps)
 {
-  this.ms = Math.round(1000 / fps);
-  if (this.ms < 40)
-  {
-    this.ms = 40;
-  }
+  this.ms = getPreferredMs(Math.round(1000 / fps));
 }
 
 FpsLimiter.prototype.setMs = function(ms)
 {
-  if (ms < 40)
-  {
-    this.ms = 40;
-  }
-  else
-  {
-    this.ms = ms;
-  }
+  this.ms = getPreferredMs(ms);
 }
 
-module.exports = {FpsLimiter: FpsLimiter}
+getPreferredMs = function(ms){
+  if (ms < 250) return 250;
+  
+  return ms;
+}
+
+module.exports = {FpsLimiter: FpsLimiter, getPreferredMs: getPreferredMs}

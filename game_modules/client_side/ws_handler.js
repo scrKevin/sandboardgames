@@ -27,12 +27,13 @@ function WsHandler(ws)
   {
     // console.log(evt.data)
     var json = JSON.parse(this.deconstructMessage(evt.data));
+    //console.log(json);
     if(json.type == "patches")
     {
       // console.log(json.ms);
       this.lastGameObj = this.dmp.patch_apply(this.dmp.patch_fromText(json.patches), this.lastGameObj)[0];
-      try
-      {
+      // try
+      // {
         for (changedCard of json.changedCards)
         {
           this.addToChangedCardsBuffer(changedCard);
@@ -61,21 +62,26 @@ function WsHandler(ws)
         this.eventEmitter.emit("updateGame", JSON.parse(this.lastGameObj), this.changedCardsBuffer, json.newDrawCoords, false);
         this.changedCardsBuffer = [];
         // }
+      // }
+      // catch (err)
+      // {
+      //   console.log(err);
+      //   //console.log(this.lastGameObj)
+      //   this.requestPlayerId();
+      // }
+      // if(json.echo)
+      // {
+      //   //console.log("sending echo")
+      //   var sendData = {
+      //     type: "echo"
+      //   };
+      //   this.sendToWs(sendData);
+      // }
+      var sendData = {
+        type: "p",
+        echo: json.echo
       }
-      catch (err)
-      {
-        console.log(err);
-        //console.log(this.lastGameObj)
-        this.requestPlayerId();
-      }
-      if(json.echo)
-      {
-        //console.log("sending echo")
-        var sendData = {
-          type: "echo"
-        };
-        this.sendToWs(sendData);
-      }
+      this.sendToWs(sendData);
     }
     else if (json.type == "playerId")
     {
@@ -97,7 +103,7 @@ function WsHandler(ws)
     {
       if (json.playerId != this.myPlayerId)
       {
-        this.eventEmitter.emit("newPeer", json.playerId)
+        this.eventEmitter.emit("newPeer", json.playerId, json.wasReset)
       }
     }
     else if (json.type == "leftPeer")
@@ -225,6 +231,14 @@ WsHandler.prototype.resetGame = function()
   this.sendToWs(sendData);
 }
 
+WsHandler.prototype.resetWebcam = function()
+{
+  var sendData = {
+    type: "resetWebcam"
+  }
+  this.sendToWs(sendData);
+}
+
 WsHandler.prototype.takeSnapshot = function()
 {
   var sendData = {
@@ -284,6 +298,35 @@ WsHandler.prototype.devToolsState = function(opened)
     type: "devToolsState",
     opened: opened
   }
+  this.sendToWs(sendData);
+}
+
+WsHandler.prototype.reportPatched = function(init)
+{
+  // if (init)
+  // {
+  //   // var sendData = {
+  //   //   type: "initiated"
+  //   // };
+  // }
+  // else{
+  //   var sendData = {
+  //     type: "p",
+  //   }
+  // }
+
+  var sendData = {
+    type: "p",
+    echo: false
+  }
+  this.sendToWs(sendData);
+}
+
+WsHandler.prototype.reportInitiated = function()
+{
+  var sendData = {
+    type: "initiated"
+  };
   this.sendToWs(sendData);
 }
 

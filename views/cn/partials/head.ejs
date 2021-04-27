@@ -1,0 +1,158 @@
+<!-- views/partials/head.ejs -->
+<meta charset="UTF-8">
+<!-- <meta name="viewport" content="width=device-width,user-scalable=no"> -->
+<title>Codenames Sandboard</title>
+
+<!-- Bootstrap CSS -->
+<link href="/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="/css/common.css" rel="stylesheet" type="text/css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.slim.min.js" integrity="sha256-pasqAKBDmFT4eHoN2ndd6lN370kFiGUFyTiUHWhU7k8=" crossorigin="anonymous"></script>
+<script src='/js/bootstrap.min.js'></script>
+<script src="/js/textFit.min.js"></script>
+<script src="/js/cn/cn.js"></script>
+<script src="/js/bundle.js"></script>
+
+<style>
+
+@import url('https://fonts.googleapis.com/css2?family=Lexend+Deca&display=swap');
+
+body
+{
+  background-color: #000a0f;
+  background-image: url("/img/cah/crissxcross.png");
+}
+
+.scaleplane
+{
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  transform-origin: 0 0;
+}
+
+.teamplane
+{
+  position:absolute;
+  top: 0px;
+  height: 1080px;
+  width: 430px;
+  z-index: -1;
+}
+
+#blueplane
+{
+  left:0px;
+  background-color: rgba(34, 0, 255, 0.645);
+}
+
+#redplane
+{
+  left: 1490px;
+  background-color: rgba(255, 0, 0, 0.645);
+}
+
+.cursor
+{
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  border: 1px solid black;
+  z-index: 1000;
+  display: none;
+}
+
+.playerbox
+{
+  position: absolute;
+  z-index: 1;
+  width: 340px;
+}
+
+.webcambox
+{
+  height: 256px;
+  position: relative;
+  padding: 8px;
+  border-radius: 6px;
+  /* background-color: #cccccc; */
+  border: 1px solid black;
+  -webkit-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+  -moz-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+  box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+}
+
+.webcamContainer
+{
+  transform-origin: 50% 0;
+  float: left;
+}
+
+.webcamContainer video
+{
+  height: 240px;
+}
+
+.webcam
+{
+  height: 240px;
+}
+
+
+.card
+{
+  position: absolute;
+  z-index: 0;
+}
+
+.deck
+{
+  background-color: rgba(0, 0, 0, 0.227);
+  width: 1048px;
+  height: 860px;
+}
+
+.playcard
+{
+  width: 180px;
+  height:108px;
+  padding: 5px;
+  /* font-size: 30px; */
+  /* line-height: 148px; */
+  text-align: center;
+  font-family: "Arial", sans-serif;
+  border-radius: 11px;
+  font-weight: bold;
+}
+
+
+.moveBtn
+{
+  z-index: 2000;
+  padding: 8px;
+  border: 1px solid black;
+  border-radius: 6px;
+  background-color: white;
+  top: -5px;
+  -webkit-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+  -moz-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+  box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+}
+
+.gamecard
+{
+  position: absolute;
+  padding-left: 32px;
+}
+
+.openbox
+{
+  position: fixed;
+  border: 5px solid #77ff77;
+}
+
+</style>

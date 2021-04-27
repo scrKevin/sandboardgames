@@ -124,6 +124,7 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp)
     this.emit("stream", fromPlayerId, stream);
     var sendData = {
       type: "readyForNewPeer",
+      fromPlayerId: fromPlayerId
     }
     this.wsHandler.sendToWs(sendData);
   });

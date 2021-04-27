@@ -1,4 +1,5 @@
 let FpsLimiter = require('../fps_limiter').FpsLimiter;
+var getPreferredMs = require('../fps_limiter').getPreferredMs;
 
 function CanvasHandler() {
   this.canvas = null;
@@ -19,7 +20,7 @@ function CanvasHandler() {
 
   this.lastDrawCoordinates = [];
 
-  this.canvasFpsLimiter = new FpsLimiter(5);
+  this.canvasFpsLimiter = new FpsLimiter(0.5);
   this.canvasFpsLimiter.on("update", () => {
     this.sendDrawCoordinates()
   });
@@ -203,11 +204,13 @@ CanvasHandler.prototype.sendDrawCoordinates = function(){
 
 CanvasHandler.prototype.adjustLatency = function(latency)
 {
-  var ms = latency * 1.5;
-  if (ms > 3000)
-  {
-    ms = 3000;
-  }
+  
+  var ms = latency * 5;
+  //console.log(ms);
+  // if (ms > 3000)
+  // {
+  //   ms = 3000;
+  // }
   this.canvasFpsLimiter.setMs(ms);
 }
 

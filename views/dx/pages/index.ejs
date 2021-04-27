@@ -8,6 +8,26 @@
     <div class="scaleplane">
       <img class="cardOpenbox" src="/img/dx/openbox.svg"/>
       <img class="playerVault" src="/img/dx/playerbox.svg"/>
+      <div class="scoring">
+        If all players find the storyteller's card
+        <ul>
+          <li>Storyteller: 0 points</li>
+          <li>Other players: 2 points</li>
+        </ul>
+        <br>
+        If no players find the storyteller's card
+        <ul>
+          <li>Storyteller: 0 points</li>
+          <li>Other players: 2 points (+1 bonus point per vote for his/her card)</li>
+        </ul>
+        <br>
+        If at least 1 player, but not all players have found the storyteller's card
+        <ul>
+          <li>Storyteller: 3 points</li>
+          <li>Players who found the card: 3 points (+1 bonus point per vote for his/her card)</li>
+          <li>Other players: 0 points (+1 bonus point per vote for his/her card)</li>
+        </ul>
+      </div>
       <%- include ('../partials/playerboxes', {playerboxStartPos: playerboxStartPos}); -%>
       <%- include ('../../common/webcams', {webcamPos: webcamPos, fixedPlayers:fixedPlayers}); -%>
       <%- include ('../partials/decks') %>

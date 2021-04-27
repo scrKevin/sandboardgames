@@ -1,5 +1,6 @@
 const WebSocket = require('ws');
 let FpsLimiter = require('./fps_limiter').FpsLimiter;
+var getPreferredMs = require('./fps_limiter').getPreferredMs;
 let diff_match_patch = require('diff-match-patch')
 var pako = require('pako');
 
@@ -12,7 +13,7 @@ function Client(playerId, ws, distributor)
   this.lastSentGameObj = ""
   this.changedCardsBuffer = [];
   this.newDrawCoordinates = {};
-  this.broadcastLimiter = new FpsLimiter(5);
+  this.broadcastLimiter = new FpsLimiter(0.5);
   this.broadcastLimiter.on("update", () => {
     this.broadcast();
   });
@@ -26,9 +27,11 @@ function Client(playerId, ws, distributor)
   this.playerId = playerId;
   this.ws = ws;
   this.isAlive = true;
-  this.latencyTestCounter = 6001;
-  this.latencyTestCouterIncrement = 200;
+  this.patched = false;
+  this.latencyTestCounter = 20001;
+  this.latencyTestCouterIncrement = 5000;
   this.latencyTestTimeStamp = new Date();
+  this.isReset = false;
   this.ws.on("pong", () => {
     this.isAlive = true;
     //this.latency = Math.round((new Date() - this.pingSentTimestamp) / 2);
@@ -70,7 +73,7 @@ Client.prototype.setGameObj = function(gameObj, turnCredentials)
 Client.prototype.sendCardConflict = function(cardId)
 {
   var sendData = {
-    type: "cardConfilict",
+    type: "cardConflict",
     cardId: cardId
   };
   var strToSend = JSON.stringify(sendData);
@@ -133,7 +136,8 @@ Client.prototype.processNewPeerQueue = function()
         this.newPeerState = 'waitingForInitiator';
         var sendData = {
           type: "newPeer",
-          playerId: newPlayerId
+          playerId: newPlayerId,
+          wasReset: otherClient.isReset
         }
         var strToSend = JSON.stringify(sendData);
         var binaryString = this.constructMessage(strToSend);
@@ -186,10 +190,20 @@ Client.prototype.updateBroadcast = function()
   this.broadcastLimiter.update();
 }
 
+Client.prototype.reportPatched = function()
+{
+  setTimeout(() => {
+    this.patched = true;
+  }, this.broadcastLimiter.ms * 1.5);
+  
+}
+
 Client.prototype.broadcast = function()
 {
-  if(this.gameObj != null)
+  //console.log(this.playerId + " update, patched = " + this.patched)
+  if(this.gameObj != null && this.patched)
   {
+    this.patched = false;
     var currentGameObj = JSON.stringify(this.gameObj)
     var diffs = this.dmp.diff_main(this.lastSentGameObj, currentGameObj);
     this.dmp.diff_cleanupEfficiency(diffs);
@@ -204,7 +218,7 @@ Client.prototype.broadcast = function()
       echo: false
     }
     this.latencyTestCounter += this.latencyTestCouterIncrement;
-    if (this.latencyTestCounter >= 6000)
+    if (this.latencyTestCounter >= 20000)
     {
       sendData.echo = true;
       this.latencyTestCounter = 0;
@@ -251,17 +265,18 @@ Client.prototype.constructMessage = function (data)
 Client.prototype.echo = function()
 {
   this.latency = Math.round((new Date() - this.latencyTestTimeStamp) / 2);
-  var ms = this.latency * 1.5;
-  this.latencyTestCouterIncrement = ms;
-  if (ms < 40)
-  {
-    this.latencyTestCouterIncrement = 40
-  }
-  if (ms > 3000)
-  {
-    ms = 3000;
-    this.latencyTestCouterIncrement = 3000;
-  }
+  var ms = this.latency * 5;
+  //this.latencyTestCouterIncrement = ms;
+  // if (ms < 40)
+  // {
+  //   this.latencyTestCouterIncrement = 40
+  // }
+  this.latencyTestCouterIncrement = getPreferredMs(ms)
+  // if (ms > 3000)
+  // {
+  //   ms = 3000;
+  //   this.latencyTestCouterIncrement = 3000;
+  // }
 
   this.broadcastLimiter.setMs(ms);
   //console.log("player " + playerId + " latency = " + this.latency + " ms")
@@ -278,6 +293,13 @@ Client.prototype.sendLatency = function()
   var strToSend = JSON.stringify(sendData);
 
   var binaryString = this.constructMessage(strToSend); //pako.deflate(strToSend, { to: 'string' });
+  if (this.ws.readyState === WebSocket.OPEN) {
+    this.ws.send(binaryString);
+  }
+}
+
+Client.prototype.sendBinaryString = function(binaryString)
+{
   if (this.ws.readyState === WebSocket.OPEN) {
     this.ws.send(binaryString);
   }

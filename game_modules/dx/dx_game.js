@@ -39,7 +39,7 @@ DX_Game.prototype.resetGame = function(game)
   }
 
   var startX = 480;
-  var startY = 0;
+  var startY = 422;
   var drawDeck = new Deck("drawDeck", startX, startY, 134, 236);
   drawDeck.setImmovable();
   drawDeck.scale = 0.5;
@@ -56,13 +56,13 @@ DX_Game.prototype.resetGame = function(game)
 
   game.gameObj.decks.push(drawDeck);
 
-  var voteDeck = new Deck("voteDeck", 480 + 134 + 120, 0, 462, 236);
+  var voteDeck = new Deck("voteDeck", 480 + 134 + 120, 422, 462, 236);
   voteDeck.setImmovable();
   voteDeck.scale = 0.5;
 
   game.gameObj.decks.push(voteDeck);
 
-  var discardDeck = new Deck("discardDeck", 480 + 134 + 120 + 462 + 120, 0, 134, 236);
+  var discardDeck = new Deck("discardDeck", 480 + 134 + 120 + 462 + 120, 422, 134, 236);
   discardDeck.setImmovable();
   discardDeck.scale = 0.5;
 
@@ -82,7 +82,7 @@ DX_Game.prototype.resetGame = function(game)
     }
   }
 
-  game.gameObj.openboxes.push(new Openbox('openbox0', 320, 236, 1280, 422))
+  game.gameObj.openboxes.push(new Openbox('openbox0', 320, 0, 1280, 422))
 
   for (var i = 6; i < 20; i++)
   {

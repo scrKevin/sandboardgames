@@ -7,7 +7,7 @@
 		<div class="scaleplane">
 			<%  var i = 0;
 				for (game in gameInfo) { -%>
-				<div class="gamecard" id='gamecard<%= i %>'>
+				<div class="gamecard moveable" id='gamecard<%= i %>'>
 					<a href='<%= game %>'><img src='/img/<%= gameInfo[game]["lobbyIcon"] %>'/></a>
 					<span class="nOfPlayersText"><%= gameInfo[game]["nOfPlayers"] %></span>
 				</div>
