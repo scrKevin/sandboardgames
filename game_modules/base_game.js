@@ -332,6 +332,31 @@ function WS_distributor(wss, turnServer, resetGameFunction)
         player.updateColor(json.color)
         this.broadcast();
       }
+      else if (json.type == "startCaptureHost")
+      {
+        player.isHostingCapture = true;
+      }
+      else if (json.type == "requestRadioFromPlayer")
+      {
+        for (player of this.gameObj.players)
+        {
+          if (player.id == json.playerNumber)
+          {
+            if (player.isHostingCapture)
+            {
+              for (clientI of this.clients)
+              {
+                if (clientI.playerId == json.playerNumber)
+                {
+                  clientI.sendRadioRequest(id);
+                  continue;
+                }
+              }
+            }
+            continue;
+          }
+        }
+      }
       else if (json.type == "newPeerReceived")
       {
         client.newPeerConfirmed(json.playerId);
@@ -343,11 +368,14 @@ function WS_distributor(wss, turnServer, resetGameFunction)
         {
           if (clientI.playerId == json.playerId)
           {
-            client.peerStatus[clientI.playerId] = "initiatorReady";
+            if(json.peerType == "webcam"){
+              client.peerStatus[clientI.playerId] = "initiatorReady";
+            }
             var sendData = {
               type: "peerConnect",
               fromPlayerId: id,
-              stp: json.stp
+              stp: json.stp,
+              peerType: json.peerType
             }
             var strToSend = JSON.stringify(sendData);
             var binaryString = this.constructMessage(strToSend);
@@ -362,11 +390,15 @@ function WS_distributor(wss, turnServer, resetGameFunction)
         {
           if (clientI.playerId == json.fromPlayerId)
           {
-            client.peerStatus[clientI.playerId] = "peerAccepted";
+            if (json.peerType == "webcam")
+            {
+              client.peerStatus[clientI.playerId] = "peerAccepted";
+            }
             var sendData = {
               type: "peerAccepted",
               fromPlayerId: id,
-              stp: json.stp
+              stp: json.stp,
+              peerType: json.peerType
             }
             var strToSend = JSON.stringify(sendData);
             var binaryString = this.constructMessage(strToSend);
@@ -377,47 +409,56 @@ function WS_distributor(wss, turnServer, resetGameFunction)
       }
       else if (json.type == "streamReceived")
       {
-        setTimeout(function(){
-          try{
-            client.newPeerInitiated(json.fromPlayerId);
-          }
-          catch(error){
-            console.log("error: " + error);
-          }
-          
-        }, 500);
-        client.peerStatus[json.fromPlayerId] = "streamReceived";
+        if (json.peerType == "webcam")
+        {
+          setTimeout(function(){
+            try{
+              client.newPeerInitiated(json.fromPlayerId);
+            }
+            catch(error){
+              console.log("error: " + error);
+            }
+            
+          }, 500);
+          client.peerStatus[json.fromPlayerId] = "streamReceived";
+        }
       }
       else if (json.type == "readyForNewPeer")
       {
-        client.peerStatus[json.fromPlayerId] = "streamReceived";
-        client.acceptPeerState = "idle";
-        if (client.acceptPeerTimeout != null)
+        if (json.peerType == "webcam")
         {
-          console.log(id + " removed acceptPeerTimeout");
-          clearTimeout(client.acceptPeerTimeout);
+          client.peerStatus[json.fromPlayerId] = "streamReceived";
+          client.acceptPeerState = "idle";
+          if (client.acceptPeerTimeout != null)
+          {
+            console.log(id + " removed acceptPeerTimeout");
+            clearTimeout(client.acceptPeerTimeout);
+          }
+          console.log(id + " is ready to accept new peers.");
+          this.allClientsProcessNewPeerQueue();
         }
-        console.log(id + " is ready to accept new peers.");
-        this.allClientsProcessNewPeerQueue();
       }
       else if (json.type == "connectionFailure")
       {
-        console.log("connection failure reported by " + id + ", with " + json.fromPlayerId);
-        client.peerStatus[json.fromPlayerId] = "connectionFailure";
-        for(clientI of this.clients)
+        if (json.peerType == "webcam")
         {
-          if(clientI.playerId == json.fromPlayerId)
+          console.log("connection failure reported by " + id + ", with " + json.fromPlayerId);
+          client.peerStatus[json.fromPlayerId] = "connectionFailure";
+          for(clientI of this.clients)
           {
-            console.log("Found match")
-            if (clientI.peerStatus[id] == "connectionFailure" && clientI.initiated)
+            if(clientI.playerId == json.fromPlayerId)
             {
-              // both peers have lost connection with each other but the connection with the server is ok.
-              // retry connection
-              console.log("Retrying peer connection from " + id + " to " + json.fromPlayerId);
-              clientI.sendNewPeer(client);
+              console.log("Found match")
+              if (clientI.peerStatus[id] == "connectionFailure" && clientI.initiated)
+              {
+                // both peers have lost connection with each other but the connection with the server is ok.
+                // retry connection
+                console.log("Retrying peer connection from " + id + " to " + json.fromPlayerId);
+                clientI.sendNewPeer(client);
+              }
             }
           }
-        }
+      }
       }
       else if (json.type == "reset")
       {
@@ -625,7 +666,8 @@ WS_distributor.prototype.broadcastLeftPeer = function (playerId)
   }
   var sendData = {
     type: "leftPeer",
-    playerId: playerId
+    playerId: playerId,
+    peerType: "webcam"
   }
   var strToSend = JSON.stringify(sendData);
   var binaryString = this.constructMessage(strToSend);

@@ -8,6 +8,8 @@ var myGameObj = null;
 var scale = 1;
 
 var myStream = null;
+var captureStream = null;
+var audioTrack = null;
 var myLatency = 5000;
 
 var myPlayerId = -1;
@@ -66,6 +68,14 @@ var highestZ;
 var blockCardChange = [];
 
 var devToolsOpenedTimes = {};
+
+function addRadio(stream)
+{
+  var video = document.createElement('video');
+  $("#radio").html(video);
+  video.srcObject = stream;
+  video.play();
+}
 
 function addWebcam(stream, playerId, mirrored, muted)
 {
@@ -202,31 +212,44 @@ function InitWebSocket()
       }
     });
 
-    clientController.on("newPeer", (playerId, wasReset) => {
-      if (!wasReset)
+    clientController.on("newPeer", (playerId, wasReset, peerType) => {
+      if (!wasReset && peerType == "webcam")
       {
         doorbell.play();
       }
     });
 
-    clientController.on("leftPeer", (playerId) => {
-      removePlayer(playerId);
-      // $("#webcam" + playerId).html("");
-      // updateCss("#webcam" + playerId, "display", "none");
-      // updateCss("#cursor" + playerId, "display", "none");
-      // updateCss("#player" + playerId + "box", "display", "none");
-      // updateCss("#scaledProjectionBox" + playerId, "display", "none");
-      // updateCss(".pieceFor_" + playerId, "display", "none");
-      // updateCss("#player" + playerId + "NameText", "display", "none");
-      // updateCss("#player" + playerId + "Name", "display", "none");
-      // updateCss("#player" + playerId + "box", "background-color", "#FFFFFF00");
-      // updateCss("#scaledProjectionBox" + playerId, "background-color", "#FFFFFF00");
-      // updateHtml("#player" + playerId + "NameText", "");
-      // $(document).trigger("leftPeer", [playerId]);
+    clientController.on("leftPeer", (playerId, peerType) => {
+      if (peerType == "webcam")
+      {
+        removePlayer(playerId);
+        // $("#webcam" + playerId).html("");
+        // updateCss("#webcam" + playerId, "display", "none");
+        // updateCss("#cursor" + playerId, "display", "none");
+        // updateCss("#player" + playerId + "box", "display", "none");
+        // updateCss("#scaledProjectionBox" + playerId, "display", "none");
+        // updateCss(".pieceFor_" + playerId, "display", "none");
+        // updateCss("#player" + playerId + "NameText", "display", "none");
+        // updateCss("#player" + playerId + "Name", "display", "none");
+        // updateCss("#player" + playerId + "box", "background-color", "#FFFFFF00");
+        // updateCss("#scaledProjectionBox" + playerId, "background-color", "#FFFFFF00");
+        // updateHtml("#player" + playerId + "NameText", "");
+        // $(document).trigger("leftPeer", [playerId]);
+      }
     });
 
-    clientController.on("stream", (playerId, stream) => {
-      addWebcam(stream, playerId, false, false);
+    clientController.on("stream", (playerId, stream, peerType) => {
+      if(peerType == "webcam")
+      {
+        addWebcam(stream, playerId, false, false);
+      }
+      else if(peerType == "capture")
+      {
+        if (stream != null)
+        {
+          addRadio(stream);
+        }
+      }
     });
 
     clientController.on("wsClosed", () => {
@@ -523,6 +546,7 @@ $( document ).ready(function() {
   $('#enterGameBtn').on('click', enterGame);
   $("#resetWebcamBtn").on('click', resetWebcam);
   $('#resetGameBtn').on('click', resetGame);
+  $('#startCaptureBtn').on('click', startCapture);
   $('#takeSnapshotBtn').on('click', takeSnapshot);
   $('#recoverSnapshotBtn').on('click', recoverSnapshot);
   $(".shuffleButton").on('click', shuffleDeck);
@@ -532,6 +556,7 @@ $( document ).ready(function() {
   $(".scoreboxButton").on('click', scoreboxButton);
   $(".scoreboxResetButton").on('click', scoreboxResetButton);
   $(".mic").on('click', toggleMic);
+  $(".playerRadio").on('click', toggleRadio);
 
   $('#name').keyup(function(){
     checkEnterIsAllowed();
@@ -725,6 +750,16 @@ $( document ).ready(function() {
   // });
 });
 
+async function startCapture(){
+  try {
+    captureStream = await navigator.mediaDevices.getDisplayMedia({video:true, audio:{sampleRate: 44100}});
+    clientController.addCaptureStream(captureStream);
+  } catch(err) {
+    console.error("Error: " + err);
+  }
+  
+}
+
 function toggleMic(e) {
   console.log(e)
   if (myStream != null)
@@ -745,6 +780,10 @@ function toggleMic(e) {
     console.log("disp")
     $(".mute").css("display", "block");
   }
+}
+
+function toggleRadio(e) {
+  clientController.requestRadioFromPlayer(Number($(e.target).attr('player')));
 }
 
 function valueExistsInDict(dict, value)
@@ -1124,6 +1163,12 @@ function updateCursors (gameObj)
     updateHtml("#player" + player.id + "NameText", player.name)
     if(player.id != myPlayerId)
     {
+      var radioDisplay = 'none';
+      if (player.isHostingCapture)
+      {
+        radioDisplay = 'block';
+      }
+      updateCss("#radioContainer" + playerIndex, "display", radioDisplay);
       updateCss("#cursor" + playerIndex, "left", (player.pos.x - 22) + "px");
       updateCss("#cursor" + playerIndex, "top", (player.pos.y - 22) + "px");
       updateCss("#cursor" + playerIndex, "display", "block");

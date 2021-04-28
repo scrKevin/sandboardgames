@@ -1,8 +1,11 @@
 <% for (var i =0; i < fixedPlayers;  i++ ) { %>
   <div class='webcam' id='webcam<%= i %>' style="position: absolute; z-index:-1; top: <%= webcamPos[i].top %>px; left:  <%= webcamPos[i].left %>px; display: none;"></div>
-  <div class="micContainer" id="micContainer<%= i %>" style="width: 62px; height: 62px; display: none; position: absolute; top: <%= webcamPos[i].top %>px; left:  <%= webcamPos[i].left %>px; z-index:0;;">
+  <div class="micContainer" id="micContainer<%= i %>" style="width: 62px; height: 62px; display: none; position: absolute; top: <%= webcamPos[i].top %>px; left:  <%= webcamPos[i].left %>px; z-index:0;">
     <img class="mic" src="/img/common/mic.svg" style="position: absolute; z-index: 4; display: block"/>
     <img class="mute mic" src="/img/common/forbidden.svg" style="position: absolute; z-index: 5; display: none;"/>
+  </div>
+  <div class="radioContainer" id="radioContainer<%= i %>" style="width: 62px; height: 62px; display: none; position: absolute; top: <%= webcamPos[i].top %>px; left:  <%= webcamPos[i].left %>px; z-index:0;">
+    <img class="playerRadio" player="<%= i %>" src="/img/common/radio.svg" style="position: absolute; z-index: 4; display: block; left: 0px; bottom: 0px;"/>
   </div>
   <div id="latency<%= i %>" style="position: absolute; top: <%= webcamPos[i].top %>px; left: <%= webcamPos[i].left + 80%>px; z-index: 2"></div>
   <img id="duncehat<%= i%>" src="/img/common/dunce_hat.svg" style="position: absolute; top: <%= webcamPos[i].top %>px; left:  <%= webcamPos[i].left %>px; z-index: 5; display: none;"/>
@@ -17,7 +20,11 @@
         <img class="mute mic" src="/img/common/forbidden.svg" style="position: absolute; z-index: 5; display: none; right: 0px; bottom: 0px;"/>
         <div id="latency<%= i %>" style="position: absolute; bottom: 5px; right: 80px; z-index: 5"></div>
       </div>
+      <div class="radioContainer" id="radioContainer<%= i %>" style="display: none">
+        <img class="playerRadio" player="<%= i %>" src="/img/common/radio.svg" style="position: absolute; z-index: 4; display: block; left: 0px; bottom: 0px;"/>
+      </div>
     </div>
   </div>
   <div class="card moveBtn" id="webcamMoveBtn<%= i %>"><img src="/img/lobby/move.png"/></div>
 <% } %>
+<div id="radio" style="display: none;"></div>

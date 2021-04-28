@@ -31,19 +31,19 @@ ClientController.prototype.initialize = function(ws, myStream)
   this.wsHandler.eventEmitter.on("turnCredentials", (turnCredentials) => {
     this.webcamHandler.turnCredentials(turnCredentials);
   });
-  this.wsHandler.eventEmitter.on("newPeer", (playerId, wasReset) => {
-    this.webcamHandler.initWebcamPeer(playerId);
-    this.emit("newPeer", playerId, wasReset);
+  this.wsHandler.eventEmitter.on("newPeer", (playerId, wasReset, peerType) => {
+    this.webcamHandler.initWebcamPeer(playerId, peerType);
+    this.emit("newPeer", playerId, wasReset, peerType);
   });
-  this.wsHandler.eventEmitter.on("leftPeer", (playerId) => {
-    this.webcamHandler.leftPeer(playerId);
-    this.emit("leftPeer", playerId);
+  this.wsHandler.eventEmitter.on("leftPeer", (playerId, peerType) => {
+    this.webcamHandler.leftPeer(playerId, peerType);
+    this.emit("leftPeer", playerId, peerType);
   });
-  this.wsHandler.eventEmitter.on("peerConnect", (fromPlayerId, stp) => {
-    this.webcamHandler.peerConnected(fromPlayerId, stp);
+  this.wsHandler.eventEmitter.on("peerConnect", (fromPlayerId, stp, peerType) => {
+    this.webcamHandler.peerConnected(fromPlayerId, stp, peerType);
   });
-  this.wsHandler.eventEmitter.on("peerAccepted", (fromPlayerId, stp) => {
-    this.webcamHandler.peerAccepted(fromPlayerId, stp);
+  this.wsHandler.eventEmitter.on("peerAccepted", (fromPlayerId, stp, peerType) => {
+    this.webcamHandler.peerAccepted(fromPlayerId, stp, peerType);
   });
   this.wsHandler.eventEmitter.on("wsClosed", () => {
     this.wsHandler.eventEmitter.removeAllListeners();
@@ -70,13 +70,17 @@ ClientController.prototype.initialize = function(ws, myStream)
   this.mouseHandler = new MouseHandler(this.wsHandler);
   
   this.webcamHandler = new WebcamHandler(this.wsHandler, myStream);
-  this.webcamHandler.on("stream", (playerId, stream) => {
-    this.emit("stream", playerId, stream);
+  this.webcamHandler.on("stream", (playerId, stream, peerType) => {
+    this.emit("stream", playerId, stream, peerType);
   });
 
   this.canvasHandler.initWsHandler(this.wsHandler)
 
   this.init = true;
+}
+
+ClientController.prototype.addCaptureStream = function(newCaptureStream){
+  this.init && this.webcamHandler.addCaptureStream(newCaptureStream);
 }
 
 ClientController.prototype.mouseMove = function(x, y, cardX, cardY)
@@ -177,6 +181,11 @@ ClientController.prototype.reportPatched = function()
 ClientController.prototype.reportInitiated = function()
 {
   this.init && this.wsHandler.reportInitiated();
+}
+
+ClientController.prototype.requestRadioFromPlayer = function(playerNumber)
+{
+  this.init && this.wsHandler.requestRadioFromPlayer(playerNumber);
 }
 
 module.exports = {ClientController: ClientController}

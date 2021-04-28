@@ -7,6 +7,7 @@ function Player(){
     y: 0
   };
   this.drawArray = [];
+  this.isHostingCapture = false;
   //this.newCoords = [];
 }
 

@@ -114,6 +114,25 @@ Client.prototype.newPeerInitiated = function(fromPlayerId)
 //   this.processNewPeerQueue();
 // }
 
+Client.prototype.sendRadioRequest = function(forPlayerId){
+  var sendData = {
+    type: "newPeer",
+    playerId: forPlayerId,
+    wasReset: false,
+    peerType: "capture"
+  }
+  var strToSend = JSON.stringify(sendData);
+  var binaryString = this.constructMessage(strToSend);
+  if (this.ws.readyState === WebSocket.OPEN) {
+    this.ws.send(binaryString);
+    console.log("SENT newPeer (radio) of " + forPlayerId + " to " + this.playerId);
+  }
+  else
+  {
+    console.log("ERROR in sending (radio) newPeer of " + forPlayerId + " to " + this.playerId + ". ws.readyState not OPEN.");
+  }
+}
+
 Client.prototype.processNewPeerQueue = function()
 {
   //this.clearTimeouts();
@@ -137,7 +156,8 @@ Client.prototype.processNewPeerQueue = function()
         var sendData = {
           type: "newPeer",
           playerId: newPlayerId,
-          wasReset: otherClient.isReset
+          wasReset: otherClient.isReset,
+          peerType: "webcam"
         }
         var strToSend = JSON.stringify(sendData);
         var binaryString = this.constructMessage(strToSend);
