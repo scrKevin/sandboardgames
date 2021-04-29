@@ -38,9 +38,9 @@ function getRandomCards()
 CAH_Game.prototype.resetGame = function(game)
 {
   var cah_cards = getRandomCards();
-  game.gameObj.cards = [];
-  game.gameObj.decks = [];
-  game.gameObj.openboxes = [];
+  game.gameObj.cards = {};
+  game.gameObj.decks = {};
+  game.gameObj.openboxes = {};
   game.gameObj.scoreboxes = [];
 
   game.gameObj.highestZ = 10000;
@@ -58,9 +58,9 @@ CAH_Game.prototype.resetGame = function(game)
         var startPosY = (i * 180) + 240;
         var moveBtnDeck = new Deck('webcamMoveBtn' + ((i * columns) + j), startPosX, startPosY, 435, 261)
         var webcamBox = new Card('player' + ((i * columns) + j) + "box", startPosX, startPosY)
-        game.gameObj.cards.push(webcamBox)
-        moveBtnDeck.attachedCards.push(webcamBox)
-        game.gameObj.decks.push(moveBtnDeck)
+        game.gameObj.cards[webcamBox.id] = webcamBox;
+        moveBtnDeck.attachedCards[webcamBox.id] = webcamBox;
+        game.gameObj.decks[moveBtnDeck.id] = moveBtnDeck;
       }
     }
   }
@@ -78,11 +78,11 @@ CAH_Game.prototype.resetGame = function(game)
     newCard.backface = {color: "#000000", backgroundcolor: "#FFFFFF", text: " "};
     newCard.frontface = {color: "#000000", backgroundcolor: "#FFFFFF", text: whiteCardText};
     newCard.show = 'backface';
-    whiteDeck.attachedCards.push(newCard);
-    game.gameObj.cards.push(newCard);
+    whiteDeck.attachedCards[newCard.id] = newCard;
+    game.gameObj.cards[newCard.id] = newCard;
     i++;
   }
-  game.gameObj.decks.push(whiteDeck)
+  game.gameObj.decks[whiteDeck.id] = whiteDeck;
 
   var blackDeckX = 168;
   var blackDeckY = 0;
@@ -97,14 +97,14 @@ CAH_Game.prototype.resetGame = function(game)
     newCard.backface = {color: "#FFFFFF", backgroundcolor: "#000000", text: " "};
     newCard.frontface = {color: "#FFFFFF", backgroundcolor: "#000000", text: blackCard.text};
     newCard.show = 'backface';
-    blackDeck.attachedCards.push(newCard);
-    game.gameObj.cards.push(newCard);
+    blackDeck.attachedCards[newCard.id] = newCard;
+    game.gameObj.cards[newCard.id] = newCard;
     i++;
   }
-  game.gameObj.decks.push(blackDeck);
+  game.gameObj.decks[blackDeck.id] = blackDeck;
 
   openbox = new Openbox('openbox0', 336, 0, 1610, 240);
-  game.gameObj.openboxes.push(openbox);
+  game.gameObj.openboxes[openbox.id] = openbox;
 }
 
 

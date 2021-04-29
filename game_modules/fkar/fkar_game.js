@@ -12,9 +12,9 @@ function FKAR_Game(wss, turnServer){
 
 FKAR_Game.prototype.resetGame = function(game)
 {
-  game.gameObj.cards = [];
-  game.gameObj.decks = [];
-  game.gameObj.openboxes = [];
+  game.gameObj.cards = {};
+  game.gameObj.decks = {};
+  game.gameObj.openboxes = {};
   game.gameObj.scoreboxes = [];
 
   game.gameObj.highestZ = 10000;
@@ -30,13 +30,13 @@ FKAR_Game.prototype.resetGame = function(game)
 
   var fakeArtistCard = new Card('f0', startDeckX + 5, startDeckY + 80);
   fakeArtistCard.faceType = 'text';
-  fakeArtistCard.backface = {color: "#000000", backgroundcolor: "#FFFFFF", text: "Role"}
+  fakeArtistCard.backface = {color: "#000000", backgroundcolor: "#FF0000", text: " "}
   fakeArtistCard.frontface = {color: "#000000", backgroundcolor: "#FFFFFF", text: "X"}
   fakeArtistCard.show = 'backface';
-  startDeck.attachedCards.push(fakeArtistCard);
-  game.gameObj.cards.push(fakeArtistCard);
+  startDeck.attachedCards[fakeArtistCard.id] = fakeArtistCard;
+  game.gameObj.cards[fakeArtistCard.id] = fakeArtistCard;
 
-  game.gameObj.decks.push(startDeck);
+  game.gameObj.decks[startDeck.id] = startDeck;
 
   var remainingDeckX = 465;
   var remainingDeckY = 0;
@@ -47,14 +47,14 @@ FKAR_Game.prototype.resetGame = function(game)
     var remainingCard = new Card('r' + i, remainingDeckX + 5, remainingDeckY + 80);
     remainingCard.faceType = 'text';
     remainingCard.varText = true;
-    remainingCard.backface = {color: "#000000", backgroundcolor: "#FFFFFF", text: "Role"};
+    remainingCard.backface = {color: "#000000", backgroundcolor: "#FF0000", text: " "};
     remainingCard.frontface = {color: "#000000", backgroundcolor: "#FFFFFF", text: ""}
     remainingCard.show = 'backface';
-    remainingDeck.attachedCards.push(remainingCard);
-    game.gameObj.cards.push(remainingCard);
+    remainingDeck.attachedCards[remainingCard.id] = remainingCard;
+    game.gameObj.cards[remainingCard.id] = remainingCard;
   }
 
-  game.gameObj.decks.push(remainingDeck);
+  game.gameObj.decks[remainingDeck.id] = remainingDeck;
 
   for (var i = 10; i < 20; i++)
   {
@@ -63,9 +63,9 @@ FKAR_Game.prototype.resetGame = function(game)
     var moveBtnDeck = new Deck('webcamMoveBtn' + i, startPosX, startPosY, 32, 32)
     var webcamBox = new Card('webcambox' + i, startPosX, startPosY)
     webcamBox.attachedToDeck = true;
-    game.gameObj.cards.push(webcamBox)
-    moveBtnDeck.attachedCards.push(webcamBox)
-    game.gameObj.decks.push(moveBtnDeck)
+    game.gameObj.cards[webcamBox.id] = webcamBox;
+    moveBtnDeck.attachedCards[webcamBox.id] = webcamBox;
+    game.gameObj.decks[moveBtnDeck.id] = moveBtnDeck;
   }
 }
 

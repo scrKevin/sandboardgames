@@ -10,9 +10,9 @@ function RMK_Game(wss, turnServer){
 
 RMK_Game.prototype.resetGame = function(game)
 {
-  game.gameObj.cards = [];
-  game.gameObj.decks = [];
-  game.gameObj.openboxes = [];
+  game.gameObj.cards = {};
+  game.gameObj.decks = {};
+  game.gameObj.openboxes = {};
   game.gameObj.scoreboxes = [];
 
   game.gameObj.highestZ = 10000;
@@ -31,8 +31,8 @@ RMK_Game.prototype.resetGame = function(game)
       newTile.backface = {color: "#000000", backgroundcolor: "#FFFFFF", text: " "};
       newTile.frontface = {color: "#002EFF", backgroundcolor: "#E1E7FF", text: String(i)};
       newTile.show = "backface";
-      game.gameObj.cards.push(newTile);
-      tileDeck.attachedCards.push(newTile);
+      game.gameObj.cards[newTile.id] = newTile;
+      tileDeck.attachedCards[newTile.id] = newTile;
     }
   }
 
@@ -45,8 +45,8 @@ RMK_Game.prototype.resetGame = function(game)
       newTile.backface = {color: "#000000", backgroundcolor: "#FFFFFF", text: " "};
       newTile.frontface = {color: "#FF9700", backgroundcolor: "#FFF1E4", text: String(i)};
       newTile.show = "backface";
-      game.gameObj.cards.push(newTile);
-      tileDeck.attachedCards.push(newTile);
+      game.gameObj.cards[newTile.id] = newTile;
+      tileDeck.attachedCards[newTile.id] = newTile;
     }
   }
 
@@ -59,8 +59,8 @@ RMK_Game.prototype.resetGame = function(game)
       newTile.backface = {color: "#000000", backgroundcolor: "#FFFFFF", text: " "};
       newTile.frontface = {color: "#FF0000", backgroundcolor: "#FFE8E8", text: String(i)};
       newTile.show = "backface";
-      game.gameObj.cards.push(newTile);
-      tileDeck.attachedCards.push(newTile);
+      game.gameObj.cards[newTile.id] = newTile;
+      tileDeck.attachedCards[newTile.id] = newTile;
     }
   }
 
@@ -73,8 +73,8 @@ RMK_Game.prototype.resetGame = function(game)
       newTile.backface = {color: "#000000", backgroundcolor: "#FFFFFF", text: " "};
       newTile.frontface = {color: "#000000", backgroundcolor: "#F3F3F3", text: String(i)};
       newTile.show = "backface";
-      game.gameObj.cards.push(newTile);
-      tileDeck.attachedCards.push(newTile);
+      game.gameObj.cards[newTile.id] = newTile;
+      tileDeck.attachedCards[newTile.id] = newTile;
     }
   }
 
@@ -86,16 +86,16 @@ RMK_Game.prototype.resetGame = function(game)
     newTile.backface = {color: "#000000", backgroundcolor: "#FFFFFF", text: " "};
     newTile.frontface = {color: "#FFFFFF", backgroundcolor: "#FF0000", text: "J"};
     newTile.show = "backface";
-    game.gameObj.cards.push(newTile);
-    tileDeck.attachedCards.push(newTile);
+    game.gameObj.cards[newTile.id] = newTile;
+    tileDeck.attachedCards[newTile.id] = newTile;
   }
 
-  game.gameObj.decks.push(tileDeck);
+  game.gameObj.decks[tileDeck.id] = tileDeck;
 
-  game.gameObj.openboxes.push(new Openbox('openbox0', 320, 240, 1280, 262))
-  game.gameObj.openboxes.push(new Openbox('openbox1', 320, 625, 1280, 214))
-  game.gameObj.openboxes.push(new Openbox('openbox2', 320, 499, 573, 126))
-  game.gameObj.openboxes.push(new Openbox('openbox3', 1027, 499, 573, 126))
+  game.gameObj.openboxes['openbox0'] = new Openbox('openbox0', 320, 240, 1280, 262);
+  game.gameObj.openboxes['openbox1'] = new Openbox('openbox1', 320, 625, 1280, 214);
+  game.gameObj.openboxes['openbox2'] = new Openbox('openbox2', 320, 499, 573, 126);
+  game.gameObj.openboxes['openbox3'] = new Openbox('openbox3', 1027, 499, 573, 126);
 
   for (var i = 4; i < 20; i++)
   {
@@ -104,9 +104,9 @@ RMK_Game.prototype.resetGame = function(game)
     var moveBtnDeck = new Deck('webcamMoveBtn' + i, startPosX, startPosY, 32, 32)
     var webcamBox = new Card('webcambox' + i, startPosX, startPosY)
     webcamBox.attachedToDeck = true;
-    game.gameObj.cards.push(webcamBox)
-    moveBtnDeck.attachedCards.push(webcamBox)
-    game.gameObj.decks.push(moveBtnDeck)
+    game.gameObj.cards[webcamBox.id] = webcamBox;
+    moveBtnDeck.attachedCards[webcamBox.id] = webcamBox;
+    game.gameObj.decks[moveBtnDeck.id] = moveBtnDeck;
   }
 }
 

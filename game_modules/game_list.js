@@ -55,6 +55,10 @@ let availableGames = {
   'cn': new ImplementedGame("Codenames", "cn", CN_Game, "cn", "cn", "cn/codenames_lobby_icon.svg", "4+", {fixedPlayers: 0}),
 }
 
+// let availableGames = {
+//   'soc': new ImplementedGame("Settlers of Catan", "soc", SOC_Game, "soc", "soc", 'soc/settlersOfCatan.svg', "2-4", {playerboxStartPos: StartpositionsSOC.playerBoxes, webcamPos: StartpositionsSOC.webcamPos, fixedPlayers:4}),
+// }
+
 let gamesList = [];
 let gameInfo = {};
 for (ag in availableGames)

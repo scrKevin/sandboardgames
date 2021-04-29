@@ -11,9 +11,9 @@ function PM_Game(wss, turnServer){
 
 PM_Game.prototype.resetGame = function(game)
 {
-  game.gameObj.cards = [];
-  game.gameObj.decks = [];
-  game.gameObj.openboxes = [];
+  game.gameObj.cards = {};
+  game.gameObj.decks = {};
+  game.gameObj.openboxes = {};
   game.gameObj.scoreboxes = [];
 
   game.gameObj.highestZ = 10000;
@@ -26,17 +26,17 @@ PM_Game.prototype.resetGame = function(game)
     var dice1 = new Card("dice" + i, (diceDeck.x + 20) + ((i - 1) * 120), diceDeck.y + 60);
     dice1.rotationX = 0;
     dice1.rotationY = 0;
-    game.gameObj.cards.push(dice1);
-    diceDeck.attachedCards.push(dice1);
+    game.gameObj.cards[dice1.id] = dice1;
+    diceDeck.attachedCards[dice1.id] = dice1;
   }
 
-  game.gameObj.decks.push(diceDeck);
+  game.gameObj.decks[diceDeck.id] = diceDeck;
 
   var startX = 320;
   var startY = 480;
   for (var i = 21; i <= 36; i++)
   {
-      game.gameObj.cards.push(new Card("tile" + i, startX + ((i - 21) * 80), startY))
+      game.gameObj.cards["tile" + i] = new Card("tile" + i, startX + ((i - 21) * 80), startY);
   }
 
   for (var i = 6; i < 20; i++)
@@ -46,9 +46,9 @@ PM_Game.prototype.resetGame = function(game)
     var moveBtnDeck = new Deck('webcamMoveBtn' + i, startPosX, startPosY, 32, 32)
     var webcamBox = new Card('webcambox' + i, startPosX, startPosY)
     webcamBox.attachedToDeck = true;
-    game.gameObj.cards.push(webcamBox)
-    moveBtnDeck.attachedCards.push(webcamBox)
-    game.gameObj.decks.push(moveBtnDeck)
+    game.gameObj.cards[webcamBox.id] = webcamBox;
+    moveBtnDeck.attachedCards[webcamBox.id] = webcamBox;
+    game.gameObj.decks[moveBtnDeck.id] = moveBtnDeck;
   }
 
 }

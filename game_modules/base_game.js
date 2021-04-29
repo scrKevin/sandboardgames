@@ -10,6 +10,7 @@ var Deck = require('./deck').Deck
 var Openbox = require('./openbox').Openbox
 
 let FpsLimiter = require('./fps_limiter').FpsLimiter;
+const deck = require('./deck');
 
 
 function WS_distributor(wss, turnServer, resetGameFunction)
@@ -30,9 +31,9 @@ function WS_distributor(wss, turnServer, resetGameFunction)
 
   this.gameObj = {
     players:[],
-    cards: [],
-    decks: [],
-    openboxes: [],
+    cards: {},
+    decks: {},
+    openboxes: {},
   }
   this.changedCardsBuffer = [];
 
@@ -81,8 +82,7 @@ function WS_distributor(wss, turnServer, resetGameFunction)
       }
       else if(json.type == "varText")
       {
-        for (card of this.gameObj.cards)
-        {
+        for (let card of Object.values(this.gameObj.cards)) {
           if (card.hasOwnProperty("varText"))
           {
             if (card.varText)
@@ -102,21 +102,20 @@ function WS_distributor(wss, turnServer, resetGameFunction)
           this.addToChangedCardsBuffer(json.card.id);
           if (this.isDeck(json.card.id))
           {
-            var deck = this.gameObj.decks.find(function(deck){
-              return deck.id === json.card.id
-            });
+            var deck = this.gameObj.decks[json.card.id];
+
             if (!deck.immovable)
             {
               if (deck.isMyDeck(id, json.mouseclicked) && json.mouseclicked || json.card.release)
               {
                 var movedDeck = deck.updatePos(json.card.pos)
-                for (card of deck.attachedCards)
+                for (let card of Object.values(deck.attachedCards))
                 {
                   card.x -= movedDeck.deltaX - movedDeck.xCorrection;
                   card.y -= movedDeck.deltaY - movedDeck.yCorrection;
                   this.addToChangedCardsBuffer(card.id);
                 }
-                for (openbox of deck.attachedOpenboxes)
+                for (let openbox of Object.values(deck.attachedOpenboxes))
                 {
                   openbox.x -= movedDeck.deltaX - movedDeck.xCorrection;
                   openbox.y -= movedDeck.deltaY - movedDeck.yCorrection;
@@ -130,9 +129,7 @@ function WS_distributor(wss, turnServer, resetGameFunction)
           }
           else
           {
-            var card = this.gameObj.cards.find(function(card){
-              return card.id === json.card.id;
-            });
+            var card = this.gameObj.cards[json.card.id];
             card.setLastTouchedBy(id);
             if((card.isMyCard(id, json.mouseclicked) && json.mouseclicked) || json.card.release)
             {
@@ -148,7 +145,7 @@ function WS_distributor(wss, turnServer, resetGameFunction)
                   card.ownedBy = -1;
                 }
               }
-              for (deck of this.gameObj.decks)
+              for (let deck of Object.values(this.gameObj.decks))
               {
                 if(deck.isInDeck(json.pos.x, json.pos.y))
                 {
@@ -167,7 +164,7 @@ function WS_distributor(wss, turnServer, resetGameFunction)
             if (card.hasOwnProperty("show"))
             {
               var openboxData = {isInAnOpenBox: false, openbox: null};
-              for (openbox of this.gameObj.openboxes)
+              for (let openbox of Object.values(this.gameObj.openboxes))
               {
                 if (openbox.isInOpenBox(json.pos.x, json.pos.y))
                 {
@@ -195,11 +192,9 @@ function WS_distributor(wss, turnServer, resetGameFunction)
       }
       else if (json.type == "clickcard")
       {
-        var card = this.gameObj.cards.find(function(card){
-          return card.id === json.card;
-        });
-        if (typeof(card) !== 'undefined')
+        if (json.card in this.gameObj.cards)
         {
+          var card = this.gameObj.cards[json.card];
           if (card.clickedBy == -1 || card.clickedBy == id)
           {
             card.clickedBy = id;
@@ -227,17 +222,14 @@ function WS_distributor(wss, turnServer, resetGameFunction)
       {
         if (!this.isDeck(json.card))
         {
-          
-          var card = this.gameObj.cards.find(function(card){
-            return card.id === json.card;
-          });
-          if (typeof(card) !== 'undefined')
+          if (json.card in this.gameObj.cards)
           {
+            var card = this.gameObj.cards[json.card];
             this.addToChangedCardsBuffer(json.card);
             card.setLastTouchedBy(id);
             player.updatePos(json.pos);
             this.startAnimationCard(card, json.pos.x, json.pos.y);
-            for (deck of this.gameObj.decks)
+            for (let deck of Object.values(this.gameObj.decks))
             {
               if(deck.isInDeck(json.pos.x, json.pos.y))
               {
@@ -251,7 +243,7 @@ function WS_distributor(wss, turnServer, resetGameFunction)
             if (card.hasOwnProperty("show"))
             {
               var isInAnOpenbox = false;
-              for (openbox of this.gameObj.openboxes)
+              for (let openbox of this.gameObj.openboxes)
               {
                 if (openbox.isInOpenBox(json.pos.x, json.pos.y))
                 {
@@ -277,32 +269,20 @@ function WS_distributor(wss, turnServer, resetGameFunction)
       }
       else if (json.type == "shuffleDeck")
       {
-        for (deck of this.gameObj.decks)
+        let deck = this.gameObj.decks[json.deckId];
+        deck.shuffleDeck(json.xStackMinimum);
+        for (let card of Object.values(deck.attachedCards))
         {
-          if (deck.id == json.deckId)
-          {
-            deck.shuffleDeck(json.xStackMinimum);
-            for (card of deck.attachedCards)
-            {
-              this.addToChangedCardsBuffer(card.id)
-            }
-            break;
-          }
+          this.addToChangedCardsBuffer(card.id)
         }
       }
       else if (json.type == "rollDeck")
       {
-        for (deck of this.gameObj.decks)
+        let deck = this.gameObj.decks[json.deckId];
+        deck.rollDeck();
+        for (let card of Object.values(deck.attachedCards))
         {
-          if (deck.id == json.deckId)
-          {
-            deck.rollDeck();
-            for (card of deck.attachedCards)
-            {
-              this.addToChangedCardsBuffer(card.id)
-            }
-            break;
-          }
+          this.addToChangedCardsBuffer(card.id)
         }
       }
       else if (json.type == "editScorebox")
@@ -463,7 +443,7 @@ function WS_distributor(wss, turnServer, resetGameFunction)
       else if (json.type == "reset")
       {
         this.resetGame(this);
-        for (card of this.gameObj.cards)
+        for (let card of Object.values(this.gameObj.cards))
         {
           this.addToChangedCardsBuffer(card.id);
         }
@@ -474,10 +454,6 @@ function WS_distributor(wss, turnServer, resetGameFunction)
       {
         client.isReset = true;
         this.broadcastLeftPeer(id);
-        // for (clientI of this.clients)
-        // {
-        //   clientI.peerStatus[id] == 'reset';
-        // }
         this.broadcastNewPeer(client, id, ws);
       }
       else if (json.type == "takeSnapshot")
@@ -488,12 +464,11 @@ function WS_distributor(wss, turnServer, resetGameFunction)
       else if (json.type == 'recoverSnapshot')
       {
         this.restoreSnapshot();
-        for (card of this.gameObj.cards)
+        for (let card of Object.values(this.gameObj.cards))
         {
           this.addToChangedCardsBuffer(card.id);
         }
         this.broadcastReset();
-        // console.log(this.gameObj);
         this.broadcast();
       }
       else if (json.type == "draw")
@@ -508,10 +483,6 @@ function WS_distributor(wss, turnServer, resetGameFunction)
       {
         this.broadcastDevToolsState(id, json.opened);
       }
-      // else if (json.type == "echo")
-      // {
-      //   client.echo();
-      // }
       
     });
     
@@ -566,10 +537,6 @@ WS_distributor.prototype.constructMessage = function (data)
 
 WS_distributor.prototype.addToChangedCardsBuffer = function(newItem)
 {
-  // if (this.changedCardsBuffer.indexOf(newItem) === -1)
-  // {
-  //   this.changedCardsBuffer.push(newItem);
-  // }
   for (client of this.clients)
   {
     client.addToChangedCardsBuffer(newItem)
@@ -578,25 +545,25 @@ WS_distributor.prototype.addToChangedCardsBuffer = function(newItem)
 
 WS_distributor.prototype.isDeck = function (id)
 {
-  for (deck of this.gameObj.decks)
+  if (id in this.gameObj.decks)
   {
-    if (deck.id == id)
-    {
-      return true;
-    }
+    return true;
   }
-  return false;
+  else
+  {
+    return false;
+  }
 }
 
 WS_distributor.prototype.restoreSnapshot = function()
 {
   var snapshotObj = JSON.parse(this.snapshot);
-  this.gameObj.cards = [];
-  this.gameObj.decks = [];
-  this.gameObj.openboxes = [];
+  this.gameObj.cards = {};
+  this.gameObj.decks = {};
+  this.gameObj.openboxes = {};
   this.gameObj.scoreboxes = snapshotObj.scoreboxes;
 
-  for (card of snapshotObj.cards)
+  for (let card of Object.values(snapshotObj.cards))
   {
     var newCard = new Card(card.id, card.x, card.y);
 
@@ -605,10 +572,10 @@ WS_distributor.prototype.restoreSnapshot = function()
       newCard[key] = card[key];
     }
 
-    this.gameObj.cards.push(newCard);
+    this.gameObj.cards[newCard.id] = newCard;
   }
 
-  for (openbox of snapshotObj.openboxes)
+  for (let openbox of Object.values(snapshotObj.openboxes))
   {
     var newOpenbox = new Openbox(openbox.id, openbox.x, openbox.y, openbox.width, openbox.height);
     for (var key in openbox)
@@ -619,10 +586,10 @@ WS_distributor.prototype.restoreSnapshot = function()
       }
     }
     
-    this.gameObj.openboxes.push(newOpenbox);
+    this.gameObj.openboxes[newOpenbox.id] = newOpenbox;
   }
 
-  for (deck of snapshotObj.decks)
+  for (let deck of Object.values(snapshotObj.decks))
   {
     var newDeck = new Deck(deck.id, deck.x, deck.y, deck.width, deck.height);
     for (var key in deck)
@@ -633,23 +600,25 @@ WS_distributor.prototype.restoreSnapshot = function()
       }
     }
 
-    for (card of deck.attachedCards)
+    for (let card of Object.values(deck.attachedCards))
     {
-      var cardToAttach = this.gameObj.cards.find(function(cardToAttach){
-        return cardToAttach.id === card.id;
-      });
-      newDeck.attachedCards.push(cardToAttach);
+      // var cardToAttach = this.gameObj.cards.find(function(cardToAttach){
+      //   return cardToAttach.id === card.id;
+      // });
+      var cardToAttach = this.gameObj.cards[card.id];
+      newDeck.attachedCards[cardToAttach.id] = cardToAttach;
     }
 
-    for (openbox of deck.attachedOpenboxes)
+    for (let openbox of Object.values(deck.attachedOpenboxes))
     {
-      var openboxToAttach = this.gameObj.openboxes.find(function(openboxToAttach){
-        return openboxToAttach.id === openbox.id;
-      });
-      newDeck.attachedOpenboxes.push(openboxToAttach);
+      // var openboxToAttach = this.gameObj.openboxes.find(function(openboxToAttach){
+      //   return openboxToAttach.id === openbox.id;
+      // });
+      var openboxToAttach = this.gameObj.openboxes[openbox.id];
+      newDeck.attachedOpenboxes[openbox.id] = openboxToAttach;
     }
 
-    this.gameObj.decks.push(newDeck);
+    this.gameObj.decks[newDeck.id] = newDeck;
   }
 
 }

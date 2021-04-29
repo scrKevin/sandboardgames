@@ -1,6 +1,6 @@
 function Openbox(id, x, y, width, height){
   this.id = id;
-  this.attachedCards = [];
+  this.attachedCards = {};
   this.x = x;
   this.y = y;
   this.width = width;

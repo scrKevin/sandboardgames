@@ -17,9 +17,9 @@ function pad(n, width, z) {
 
 DX_Game.prototype.resetGame = function(game)
 {
-  game.gameObj.cards = [];
-  game.gameObj.decks = [];
-  game.gameObj.openboxes = [];
+  game.gameObj.cards = {};
+  game.gameObj.decks = {};
+  game.gameObj.openboxes = {};
   game.gameObj.scoreboxes = [];
   game.gameObj.sharedPlayerbox = new Openbox("sharedPlayerbox", 320, 1080 - 422, 1280, 422);
   game.gameObj.projectionBoxScale = 0.25;
@@ -50,23 +50,23 @@ DX_Game.prototype.resetGame = function(game)
     newCard.frontface = '/img/dx/cards/card-' + pad(i, 4) + '.jpg';
     newCard.show = 'backface';
     newCard.scale = drawDeck.scale;
-    game.gameObj.cards.push(newCard);
-    drawDeck.attachedCards.push(newCard);
+    game.gameObj.cards[newCard.id] = newCard;
+    drawDeck.attachedCards[newCard.id] = newCard;
   }
 
-  game.gameObj.decks.push(drawDeck);
+  game.gameObj.decks[drawDeck.id] = drawDeck;
 
   var voteDeck = new Deck("voteDeck", 480 + 134 + 120, 422, 462, 236);
   voteDeck.setImmovable();
   voteDeck.scale = 0.5;
 
-  game.gameObj.decks.push(voteDeck);
+  game.gameObj.decks[voteDeck.id] = voteDeck;
 
   var discardDeck = new Deck("discardDeck", 480 + 134 + 120 + 462 + 120, 422, 134, 236);
   discardDeck.setImmovable();
   discardDeck.scale = 0.5;
 
-  game.gameObj.decks.push(discardDeck);
+  game.gameObj.decks[discardDeck.id] = discardDeck;
 
   for (var j = 0; j < 6; j++)
   {
@@ -78,11 +78,11 @@ DX_Game.prototype.resetGame = function(game)
       newTile.backface = {color: "#000000", backgroundcolor: "#FFFFFF", text: " "};
       newTile.frontface = {color: "#FFFFFF", backgroundcolor: "#000000", text: String(i)};
       newTile.show = "backface";
-      game.gameObj.cards.push(newTile);
+      game.gameObj.cards[newTile.id] = newTile;
     }
   }
 
-  game.gameObj.openboxes.push(new Openbox('openbox0', 320, 0, 1280, 422))
+  game.gameObj.openboxes['openbox0'] = new Openbox('openbox0', 320, 0, 1280, 422);
 
   for (var i = 6; i < 20; i++)
   {
@@ -91,9 +91,9 @@ DX_Game.prototype.resetGame = function(game)
     var moveBtnDeck = new Deck('webcamMoveBtn' + i, startPosX, startPosY, 32, 32)
     var webcamBox = new Card('webcambox' + i, startPosX, startPosY)
     webcamBox.attachedToDeck = true;
-    game.gameObj.cards.push(webcamBox)
-    moveBtnDeck.attachedCards.push(webcamBox)
-    game.gameObj.decks.push(moveBtnDeck)
+    game.gameObj.cards[webcamBox.id] = webcamBox;
+    moveBtnDeck.attachedCards[webcamBox.id] = webcamBox;
+    game.gameObj.decks[moveBtnDeck.id] = moveBtnDeck;
   }
 
 }

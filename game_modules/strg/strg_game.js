@@ -10,9 +10,9 @@ function STRG_Game(wss, turnServer){
 
 STRG_Game.prototype.resetGame = function(game)
 {
-  game.gameObj.cards = [];
-  game.gameObj.decks = [];
-  game.gameObj.openboxes = [];
+  game.gameObj.cards = {};
+  game.gameObj.decks = {};
+  game.gameObj.openboxes = {};
   game.gameObj.scoreboxes = [];
 
   game.gameObj.highestZ = 10000;
@@ -51,7 +51,7 @@ STRG_Game.prototype.resetGame = function(game)
       newPiece.frontface = {color: "#FFFFFF", backgroundcolor: "#FF0000", text: piece, secondarytext: "<img src='/img/strg/pieces/" + pieces[piece].img + "' />"}
       newPiece.show = "backface";
       newPiece.visibleFor = 0;
-      game.gameObj.cards.push(newPiece);
+      game.gameObj.cards[newPiece.id] = newPiece;
       n++;
     }
   }
@@ -72,12 +72,12 @@ STRG_Game.prototype.resetGame = function(game)
       newPiece.frontface = {color: "#FFFFFF", backgroundcolor: "#0000FF", text: piece, secondarytext: "<img src='/img/strg/pieces/" + pieces[piece].img + "' />"}
       newPiece.show = "backface";
       newPiece.visibleFor = 1;
-      game.gameObj.cards.push(newPiece);
+      game.gameObj.cards[newPiece.id] = newPiece;
       n++;
     }
   }
 
-  game.gameObj.cards.push(new Card('cheatsheet', 460, 1081));
+  game.gameObj.cards['cheatsheet'] = new Card('cheatsheet', 460, 1081);
 
   for (var i = 2; i < 20; i++)
   {
@@ -86,9 +86,9 @@ STRG_Game.prototype.resetGame = function(game)
     var moveBtnDeck = new Deck('webcamMoveBtn' + i, startPosX, startPosY, 32, 32)
     var webcamBox = new Card('webcambox' + i, startPosX, startPosY)
     webcamBox.attachedToDeck = true;
-    game.gameObj.cards.push(webcamBox)
-    moveBtnDeck.attachedCards.push(webcamBox)
-    game.gameObj.decks.push(moveBtnDeck)
+    game.gameObj.cards[webcamBox.id] = webcamBox;
+    moveBtnDeck.attachedCards[webcamBox.id] = webcamBox;
+    game.gameObj.decks[moveBtnDeck.id] = moveBtnDeck;
   }
 }
 

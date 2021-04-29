@@ -73,6 +73,9 @@ ClientController.prototype.initialize = function(ws, myStream)
   this.webcamHandler.on("stream", (playerId, stream, peerType) => {
     this.emit("stream", playerId, stream, peerType);
   });
+  this.webcamHandler.on("peerClosed", (playerId, peerType) => {
+    this.emit("peerClosed", playerId, peerType);
+  });
 
   this.canvasHandler.initWsHandler(this.wsHandler)
 
@@ -81,6 +84,10 @@ ClientController.prototype.initialize = function(ws, myStream)
 
 ClientController.prototype.addCaptureStream = function(newCaptureStream){
   this.init && this.webcamHandler.addCaptureStream(newCaptureStream);
+}
+
+ClientController.prototype.removeCaptureStream = function(){
+  this.init && this.webcamHandler.removeCaptureStream();
 }
 
 ClientController.prototype.mouseMove = function(x, y, cardX, cardY)

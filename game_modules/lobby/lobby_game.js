@@ -21,9 +21,9 @@ function setGamesList(newGamesList)
 
 Lobby_Game.prototype.resetGame = function(game)
 {
-  game.gameObj.cards = [];
-  game.gameObj.decks = [];
-  game.gameObj.openboxes = [];
+  game.gameObj.cards = {};
+  game.gameObj.decks = {};
+  game.gameObj.openboxes = {};
   game.gameObj.scoreboxes = [];
 
   game.gameObj.highestZ = 10000;
@@ -36,9 +36,9 @@ Lobby_Game.prototype.resetGame = function(game)
       var startPosY = i * 45;
       var moveBtnDeck = new Deck('webcamMoveBtn' + ((i * 4) + j), startPosX, startPosY, 32, 32)
       var webcamBox = new Card('webcambox' + ((i * 4) + j), startPosX, startPosY)
-      game.gameObj.cards.push(webcamBox)
-      moveBtnDeck.attachedCards.push(webcamBox)
-      game.gameObj.decks.push(moveBtnDeck)
+      game.gameObj.cards[webcamBox.id] = webcamBox;
+      moveBtnDeck.attachedCards[webcamBox.id] = webcamBox;
+      game.gameObj.decks[moveBtnDeck.id] = moveBtnDeck;
     }
   }
 
@@ -48,9 +48,9 @@ Lobby_Game.prototype.resetGame = function(game)
     var startPosY = i * 60;
     var gameMoveBtnDeck = new Deck('gamecardMoveBtn' + i, startPosX, startPosY, 32, 32)
     var gameBox = new Card('gamecard' + i, startPosX, startPosY)
-    game.gameObj.cards.push(gameBox)
-    gameMoveBtnDeck.attachedCards.push(gameBox)
-    game.gameObj.decks.push(gameMoveBtnDeck)
+    game.gameObj.cards[gameBox.id] = gameBox;
+    gameMoveBtnDeck.attachedCards[gameBox.id] = gameBox;
+    game.gameObj.decks[gameMoveBtnDeck.id] = gameMoveBtnDeck;
   }
 
 }

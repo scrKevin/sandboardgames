@@ -17,9 +17,9 @@ function pad(n, width, z) {
 
 MP_Game.prototype.resetGame = function(game)
 {
-  game.gameObj.cards = [];
-  game.gameObj.decks = [];
-  game.gameObj.openboxes = [];
+  game.gameObj.cards = {};
+  game.gameObj.decks = {};
+  game.gameObj.openboxes = {};
   game.gameObj.scoreboxes = [];
   game.gameObj.sharedPlayerbox = new Openbox("sharedPlayerbox", 1920-420, 0, 420, 1080);
   game.gameObj.projectionBoxScale = 0.185185;
@@ -37,24 +37,24 @@ MP_Game.prototype.resetGame = function(game)
 
   for (var p = 0; p < 8; p++)
   {
-    game.gameObj.cards.push(new Card("pion_" + p, 1920-420-139 + (p*8), 1080 - 100));
+    game.gameObj.cards["pion_" + p] = new Card("pion_" + p, 1920-420-139 + (p*8), 1080 - 100);
   }
 
   game.gameObj.scoreboxes.push(new Scorebox("auction"));
   var diceDeck = new Deck("diceDeck", 266, 384, 134, 236);
-  game.gameObj.decks.push(diceDeck);
+  game.gameObj.decks[diceDeck.id] = diceDeck;
 
   var dice1 = new Card("dice1", diceDeck.x + 20, diceDeck.y + 60);
   dice1.rotationX = 0;
   dice1.rotationY = 0;
-  game.gameObj.cards.push(dice1);
+  game.gameObj.cards[dice1.id] = dice1;
   var dice2 = new Card("dice2", diceDeck.x + 20, diceDeck.y + 60+85);
   dice2.rotationX = 0;
   dice2.rotationY = 0;
-  game.gameObj.cards.push(dice2);
+  game.gameObj.cards[dice2.id] = dice2;
 
-  diceDeck.attachedCards.push(dice1);
-  diceDeck.attachedCards.push(dice2);
+  diceDeck.attachedCards[dice1.id] = dice1;
+  diceDeck.attachedCards[dice2.id] = dice2;
 
   var index = 0;
   for (p = 0; p < 8; p++)
@@ -73,8 +73,8 @@ MP_Game.prototype.resetGame = function(game)
       m5.scale = walletDeck.scale;
       m5.setCardValue(5);
       index++;
-      game.gameObj.cards.push(m5);
-      walletDeck.attachedCards.push(m5);
+      game.gameObj.cards[m5.id] = m5;
+      walletDeck.attachedCards[m5.id] = m5;
     }
     //25g
     for (var i = 0; i < 5; i++)
@@ -84,8 +84,8 @@ MP_Game.prototype.resetGame = function(game)
       m5.scale = walletDeck.scale;
       m5.setCardValue(25);
       index++;
-      game.gameObj.cards.push(m5);
-      walletDeck.attachedCards.push(m5);
+      game.gameObj.cards[m5.id] = m5;
+      walletDeck.attachedCards[m5.id] = m5;
     }
     //50g
     for (var i = 0; i < 2; i++)
@@ -95,8 +95,8 @@ MP_Game.prototype.resetGame = function(game)
       m5.scale = walletDeck.scale;
       m5.setCardValue(50);
       index++;
-      game.gameObj.cards.push(m5);
-      walletDeck.attachedCards.push(m5);
+      game.gameObj.cards[m5.id] = m5;
+      walletDeck.attachedCards[m5.id] = m5;
     }
     //250g
     for (var i = 0; i < 4; i++)
@@ -106,8 +106,8 @@ MP_Game.prototype.resetGame = function(game)
       m5.scale = walletDeck.scale;
       m5.setCardValue(250);
       index++;
-      game.gameObj.cards.push(m5);
-      walletDeck.attachedCards.push(m5);
+      game.gameObj.cards[m5.id] = m5;
+      walletDeck.attachedCards[m5.id] = m5;
     }
     //100g
     for (var i = 0; i < 2; i++)
@@ -117,8 +117,8 @@ MP_Game.prototype.resetGame = function(game)
       m5.scale = walletDeck.scale;
       m5.setCardValue(100);
       index++;
-      game.gameObj.cards.push(m5);
-      walletDeck.attachedCards.push(m5);
+      game.gameObj.cards[m5.id] = m5;
+      walletDeck.attachedCards[m5.id] = m5;
     }
     //10g
     for (var i = 0; i < 5; i++)
@@ -128,8 +128,8 @@ MP_Game.prototype.resetGame = function(game)
       m5.scale = walletDeck.scale;
       m5.setCardValue(10);
       index++;
-      game.gameObj.cards.push(m5);
-      walletDeck.attachedCards.push(m5);
+      game.gameObj.cards[m5.id] = m5;
+      walletDeck.attachedCards[m5.id] = m5;
     }
     //1g
     for (var i = 0; i < 5; i++)
@@ -139,11 +139,11 @@ MP_Game.prototype.resetGame = function(game)
       m5.scale = walletDeck.scale;
       m5.setCardValue(1);
       index++;
-      game.gameObj.cards.push(m5);
-      walletDeck.attachedCards.push(m5);
+      game.gameObj.cards[m5.id] = m5;
+      walletDeck.attachedCards[m5.id] = m5;
     }
     walletDeck.walletValue = 1500;
-    game.gameObj.decks.push(walletDeck);
+    game.gameObj.decks[walletDeck.id] = walletDeck;
   }
 
 
@@ -158,8 +158,8 @@ MP_Game.prototype.resetGame = function(game)
     m5.scale = bankDeck.scale;
     m5.setCardValue(5);
     index++;
-    game.gameObj.cards.push(m5);
-    bankDeck.attachedCards.push(m5);
+    game.gameObj.cards[m5.id] = m5;
+    bankDeck.attachedCards[m5.id] = m5;
   }
   //25g
   for (var i = 0; i < 50; i++)
@@ -168,8 +168,8 @@ MP_Game.prototype.resetGame = function(game)
     m5.scale = bankDeck.scale;
     m5.setCardValue(25);
     index++;
-    game.gameObj.cards.push(m5);
-    bankDeck.attachedCards.push(m5);
+    game.gameObj.cards[m5.id] = m5;
+    bankDeck.attachedCards[m5.id] = m5;
   }
   //50g
   for (var i = 0; i < 50; i++)
@@ -178,8 +178,8 @@ MP_Game.prototype.resetGame = function(game)
     m5.scale = bankDeck.scale;
     m5.setCardValue(50);
     index++;
-    game.gameObj.cards.push(m5);
-    bankDeck.attachedCards.push(m5);
+    game.gameObj.cards[m5.id] = m5;
+    bankDeck.attachedCards[m5.id] = m5;
   }
   //250g
   for (var i = 0; i < 20; i++)
@@ -188,8 +188,8 @@ MP_Game.prototype.resetGame = function(game)
     m5.scale = bankDeck.scale;
     m5.setCardValue(250);
     index++;
-    game.gameObj.cards.push(m5);
-    bankDeck.attachedCards.push(m5);
+    game.gameObj.cards[m5.id] = m5;
+    bankDeck.attachedCards[m5.id] = m5;
   }
   //1000g
   for (var i = 0; i < 10; i++)
@@ -198,8 +198,8 @@ MP_Game.prototype.resetGame = function(game)
     m5.scale = bankDeck.scale;
     m5.setCardValue(1000);
     index++;
-    game.gameObj.cards.push(m5);
-    bankDeck.attachedCards.push(m5);
+    game.gameObj.cards[m5.id] = m5;
+    bankDeck.attachedCards[m5.id] = m5;
   }
   //100g
   for (var i = 0; i < 75; i++)
@@ -208,8 +208,8 @@ MP_Game.prototype.resetGame = function(game)
     m5.scale = bankDeck.scale;
     m5.setCardValue(100);
     index++;
-    game.gameObj.cards.push(m5);
-    bankDeck.attachedCards.push(m5);
+    game.gameObj.cards[m5.id] = m5;
+    bankDeck.attachedCards[m5.id] = m5;
   }
   //10g
   for (var i = 0; i < 75; i++)
@@ -218,8 +218,8 @@ MP_Game.prototype.resetGame = function(game)
     m5.scale = bankDeck.scale;
     m5.setCardValue(10);
     index++;
-    game.gameObj.cards.push(m5);
-    bankDeck.attachedCards.push(m5);
+    game.gameObj.cards[m5.id] = m5;
+    bankDeck.attachedCards[m5.id] = m5;
   }
   //1g
   for (var i = 0; i < 50; i++)
@@ -228,21 +228,21 @@ MP_Game.prototype.resetGame = function(game)
     m5.scale = bankDeck.scale;
     m5.setCardValue(1);
     index++;
-    game.gameObj.cards.push(m5);
-    bankDeck.attachedCards.push(m5);
+    game.gameObj.cards[m5.id] = m5;
+    bankDeck.attachedCards[m5.id] = m5;
   }
-  game.gameObj.decks.push(bankDeck);
+  game.gameObj.decks[bankDeck.id] = bankDeck;
 
   for (var i = 0; i < 32; i++)
   {
     var m5 = new Card("house" + i, 40, bankDeck.y - 30);
-    game.gameObj.cards.push(m5);
+    game.gameObj.cards[m5.id] = m5;
   }
 
   for (var i = 0; i < 12; i++)
   {
     var m5 = new Card("hotel" + i, 80, bankDeck.y - 30);
-    game.gameObj.cards.push(m5);
+    game.gameObj.cards[m5] = m5;
   }
 
   var townSequence = [2, 3, 3, 3, 3, 3, 3, 2];
@@ -253,7 +253,7 @@ MP_Game.prototype.resetGame = function(game)
     {
       var posX = t * 192;
       var posY = 1090 + (i * 75);
-      game.gameObj.cards.push(new Card("property" + index, posX, posY))
+      game.gameObj.cards["property" + index] = new Card("property" + index, posX, posY);
       index++;
     }
   }
@@ -261,7 +261,7 @@ MP_Game.prototype.resetGame = function(game)
   {
     var posX = townSequence.length * 192;
     var posY = 1090 + (i * 60);
-    game.gameObj.cards.push(new Card("station" + i, posX, posY))
+    game.gameObj.cards["station" + i] = new Card("station" + i, posX, posY);
     index++;
   }
 
@@ -269,7 +269,7 @@ MP_Game.prototype.resetGame = function(game)
   {
     var posX = (townSequence.length + 1) * 192;
     var posY = 1090 + (i * 60);
-    game.gameObj.cards.push(new Card("company" + i, posX, posY))
+    game.gameObj.cards["company" + i] = new Card("company" + i, posX, posY);
     index++;
   }
 
@@ -306,12 +306,12 @@ MP_Game.prototype.resetGame = function(game)
     communityChestCard.backface = {color: "#000000", backgroundcolor: "#02a4dc", text: "ALGEMEEN FONDS"}
     communityChestCard.frontface = {color: "#000000", backgroundcolor: "#FFFFFF", text: communityChestObj[i]}
     communityChestCard.show = 'backface';
-    communityChestDeck.attachedCards.push(communityChestCard);
-    game.gameObj.cards.push(communityChestCard);
+    communityChestDeck.attachedCards[communityChestCard.id] = communityChestCard;
+    game.gameObj.cards[communityChestCard.id] = communityChestCard;
   }
 
-  game.gameObj.decks.push(communityChestDeck);
-  game.gameObj.decks.push(communityChestDiscardDeck);
+  game.gameObj.decks[communityChestDeck.id] = communityChestDeck;
+  game.gameObj.decks[communityChestDiscardDeck.id] = communityChestDiscardDeck;
 
   var chanceObj = {
     0: "Boete voor te snel rijden ƒ 15",
@@ -346,14 +346,14 @@ MP_Game.prototype.resetGame = function(game)
     chanceCard.backface = {color: "#000000", backgroundcolor: "#c31676", text: "KANS"}
     chanceCard.frontface = {color: "#000000", backgroundcolor: "#FFFFFF", text: chanceObj[i]}
     chanceCard.show = 'backface';
-    chanceDeck.attachedCards.push(chanceCard);
-    game.gameObj.cards.push(chanceCard);
+    chanceDeck.attachedCards[chanceCard.id] = chanceCard;
+    game.gameObj.cards[chanceCard.id] = chanceCard;
   }
 
-  game.gameObj.decks.push(chanceDeck);
-  game.gameObj.decks.push(chanceDiscardDeck);
+  game.gameObj.decks[chanceDeck.id] = chanceDeck;
+  game.gameObj.decks[chanceDiscardDeck.id] = chanceDiscardDeck;
 
-  game.gameObj.openboxes.push(new Openbox("ob1", 420, 0, 1080, 1080));
+  game.gameObj.openboxes["ob1"] = new Openbox("ob1", 420, 0, 1080, 1080);
 
   for (var i = 8; i < 20; i++)
   {
@@ -362,9 +362,9 @@ MP_Game.prototype.resetGame = function(game)
     var moveBtnDeck = new Deck('webcamMoveBtn' + i, startPosX, startPosY, 32, 32)
     var webcamBox = new Card('webcambox' + i, startPosX, startPosY)
     webcamBox.attachedToDeck = true;
-    game.gameObj.cards.push(webcamBox)
-    moveBtnDeck.attachedCards.push(webcamBox)
-    game.gameObj.decks.push(moveBtnDeck)
+    game.gameObj.cards[webcamBox.id] = webcamBox;
+    moveBtnDeck.attachedCards[webcamBox.id] = webcamBox;
+    game.gameObj.decks[moveBtnDeck.id] = moveBtnDeck;
   }
 
 }

@@ -2999,7 +2999,6 @@ var dragCardId = null;
 var dragCardIds = [];
 var inspectingCardId = null;
 var formerInspectingCardZ = "1";
-// var suppressNextChanges = [];
 var lastTouchedCardId = null;
 
 var highestZ;
@@ -3016,17 +3015,13 @@ function addRadio(stream)
   video.play();
 }
 
+function removeRadio()
+{
+  $("#radio").html("");
+}
+
 function addWebcam(stream, playerId, mirrored, muted)
 {
-  // if (!welcomeModalshown)
-  // {
-  //   welcomeModalshown = true;
-  //     $('#welcomeModal').modal({
-  //       show: true,
-  //       backdrop: 'static',
-  //       keyboard: false
-  //       });
-  // }
   var video = document.createElement('video');
   $("#webcam" + playerId).html(video)
   if (mirrored)
@@ -3080,7 +3075,6 @@ function InitWebSocket()
   if ("WebSocket" in window)
   {
     var host = window.location.hostname;
-     //console.log(window.location)
     ws = new WebSocket(scheme + "://" + host + port + window.location.pathname);
 
     clientController.initialize(ws, myStream);
@@ -3109,7 +3103,6 @@ function InitWebSocket()
     clientController.on("updateGame", (gameObj, changedCardsBuffer, newDrawCoords, init) => {
       myGameObj = gameObj;
       highestZ = gameObj.highestZ;
-      // console.log(gameObj.highestZ);
       if(init)
       {
         initCards(gameObj)
@@ -3121,7 +3114,6 @@ function InitWebSocket()
         updateCards(gameObj, changedCardsBuffer);
       }
 
-      //updateOpenboxes(gameObj);
       updateCursors(gameObj);
       updateScoreboxes(gameObj);
       updateColorSelection(gameObj);
@@ -3162,18 +3154,6 @@ function InitWebSocket()
       if (peerType == "webcam")
       {
         removePlayer(playerId);
-        // $("#webcam" + playerId).html("");
-        // updateCss("#webcam" + playerId, "display", "none");
-        // updateCss("#cursor" + playerId, "display", "none");
-        // updateCss("#player" + playerId + "box", "display", "none");
-        // updateCss("#scaledProjectionBox" + playerId, "display", "none");
-        // updateCss(".pieceFor_" + playerId, "display", "none");
-        // updateCss("#player" + playerId + "NameText", "display", "none");
-        // updateCss("#player" + playerId + "Name", "display", "none");
-        // updateCss("#player" + playerId + "box", "background-color", "#FFFFFF00");
-        // updateCss("#scaledProjectionBox" + playerId, "background-color", "#FFFFFF00");
-        // updateHtml("#player" + playerId + "NameText", "");
-        // $(document).trigger("leftPeer", [playerId]);
       }
     });
 
@@ -3188,6 +3168,17 @@ function InitWebSocket()
         {
           addRadio(stream);
         }
+      }
+    });
+
+    clientController.on("peerClosed", (playerId, peerType) => {
+      if(peerType == "webcam")
+      {
+        removeWebcam(playerId)
+      }
+      else if(peerType == "capture")
+      {
+        removeRadio();
       }
     });
 
@@ -3226,18 +3217,10 @@ function InitWebSocket()
     });
     clientController.on("latency", (latency, playerId) => {
       console.log("my current latency: " + latency);
-      // if (!welcomeModalshown)
-      // {
-      //   welcomeModalshown = true;
-      //   $('#welcomeModal').modal({
-      //     show: true,
-      //     backdrop: 'static',
-      //     keyboard: false
-      //     });
-      // }
+
       myLatency = latency;
       $("#latency" + playerId).html("Latency: " + latency + "ms");
-      if (latency < 100)
+      if (latency < 150)
       {
         updateCss(".cursor", "transition", "all " + getPreferredMs(latency) * 2.5 + "ms linear");
         updateCss(".cursor", "transition-property", "top, left");
@@ -3285,8 +3268,15 @@ function removePlayer(playerId)
   $(document).trigger("leftPeer", [playerId]);
 }
 
+function removeWebcam(playerId)
+{
+  $("#webcam" + playerId).html("");
+  updateCss("#webcam" + playerId, "display", "none");
+}
+
 
 $(document).bind('mousemove', function (e) {
+  if (!gameInitialized) return;
   e.preventDefault();
 
   var currentXScaled = Math.round(e.pageX * (1 / scale));
@@ -3335,36 +3325,22 @@ $(document).bind('mousemove', function (e) {
   clientController.mouseMove(currentXScaled, currentYScaled, cardX, cardY);
 });
 
-// $(".card").bind("mouseup", function(e){
-//   e.preventDefault();
-//   console.log("Mouseup in " + dragCardId);
-//   var cardPosition = $("#" + dragCardId).position();
-//   var cardX = Math.round(cardPosition.left * (1 / scale));
-//   var cardY = Math.round(cardPosition.top * (1 / scale));
-//   clientController.releaseCard(e.pageX * (1 / scale), e.pageY * (1 / scale), cardX, cardY);
-//   // console.log("RELEASED " + dragCardId)
-//   //updateCss("#" + dragCardId, "z-index", '50');
-//   dragCardId = null;
-//   dragCardIds = [];
-// });
 
 function cardMouseUp(e)
 {
+  if (!gameInitialized) return;
   var cardPosition = $("#" + dragCardId).position();
   var cardX = Math.round(cardPosition.left * (1 / scale));
   var cardY = Math.round(cardPosition.top * (1 / scale));
   clientController.releaseCard(e.pageX * (1 / scale), e.pageY * (1 / scale), cardX, cardY);
-  // console.log("RELEASED " + dragCardId)
-  //updateCss("#" + dragCardId, "z-index", '50');
-  // i = dragCardIds.length;
-  // while(i--) suppressNextChanges[i] = dragCardIds[i];
+
   if (myLatency < 100)
   {
     updateCss("#" + dragCardId, "transition-property", "top, left");
   }
   for (dci of dragCardIds)
   {
-    //console.log(dci)
+
     if (myLatency < 100)
     {
       updateCss("#" + dci, "transition-property", "top, left");
@@ -3375,11 +3351,10 @@ function cardMouseUp(e)
 }
 
 $( document ).on( "mouseup", function( e ) {
-  //console.log("Mouseup outside any card. dragCardId: " + dragCardId);
+  if (!gameInitialized) return;
   if (inspectingCardId !== null)
   {
     updateCss("#" + inspectingCardId, "transform", "scale(" + myGameObj.projectionBoxScale + ")");
-    //updateCss("#" + inspectingCardId, "z-index", "100000");
     updateCss("#" + inspectingCardId, "z-index", formerInspectingCardZ);
     inspectingCardId = null;
     formerInspectingCardZ = "1";
@@ -3392,8 +3367,6 @@ $( document ).on( "mouseup", function( e ) {
   }
   else
   {
-    // i = dragCardIds.length;
-    // while(i--) suppressNextChanges[i] = dragCardIds[i];
     dragCardId = null;
     dragCardIds = [];
     clientController.mouseUp();
@@ -3443,14 +3416,14 @@ function adaptScale()
 
 function isDeck (id)
 {
-  for (deck of myGameObj.decks)
+  if (id in myGameObj.decks)
   {
-    if (deck.id == id)
-    {
-      return true;
-    }
+    return true;
   }
-  return false;
+  else
+  {
+    return false;
+  }
 }
 
 
@@ -3463,7 +3436,6 @@ $( window ).resize(function() {
 $( document ).ready(function() {
   console.log(navigator.mediaDevices.getSupportedConstraints())
   $(".touchbox").css("opacity", "0");
-  //$(".touchbox").css("transition", "opacity 200ms ease-in-out");
   var colorSelectionHtml = "";
   var nColorSelection = 0;
   for (color of colors)
@@ -3503,18 +3475,15 @@ $( document ).ready(function() {
   })
 
   $(".card").on("mousedown", function(event){
+    if(!gameInitialized) return;
     var draggable = null;
     if (isDeck(event.currentTarget.id))
     {
-      draggable = myGameObj.decks.find(function(deck){
-        return deck.id === event.currentTarget.id;
-      });
+      draggable = myGameObj.decks[event.currentTarget.id]
     }
     else
     {
-      draggable = myGameObj.cards.find(function(card){
-        return card.id === event.currentTarget.id;
-      });
+      draggable = myGameObj.cards[event.currentTarget.id];
     }
 
     if (draggable.clickedBy == -1 || draggable.clickedBy == myPlayerId)
@@ -3524,16 +3493,14 @@ $( document ).ready(function() {
       var canEdit = true;
       if (isDeck(dragCardId))
       {
-        var deck = myGameObj.decks.find(function(deck){
-          return deck.id === dragCardId
-        });
+        var deck = myGameObj.decks[dragCardId];
         if (!deck.immovable)
         {
-          for (card of deck.attachedCards)
+          for (let card of Object.values(deck.attachedCards))
           {
             dragCardIds.push(card.id);
           }
-          for (openbox of deck.attachedOpenboxes)
+          for (let openbox of Object.values(deck.attachedOpenboxes))
           {
             dragCardIds.push(openbox.id);
           }
@@ -3563,11 +3530,9 @@ $( document ).ready(function() {
         var cardX = Math.round(cardPosition.left * (1 / scale));
         var cardY = Math.round(cardPosition.top * (1 / scale));
         clientController.clickOnCard(event.currentTarget.id, cardX, cardY);
-        // updateCss("#" + dragCardId, "z-index", highestZ + 1);
         updateCss("#" + dragCardId, "transition-property", "none");
         for (dci of dragCardIds)
         {
-          //console.log(dci)
           updateCss("#" + dci, "transition-property", "none");
         }
         blockCardChange = [];
@@ -3580,7 +3545,7 @@ $( document ).ready(function() {
   });
 
   $(".card").on("touchstart", function(event){
-    //console.log(event);
+    if (!gameInitialized) return;
     event.preventDefault(); 
     if(valueExistsInDict(event.target.classList, "shuffleButton"))
     {
@@ -3602,37 +3567,30 @@ $( document ).ready(function() {
   });
 
   $(".touchbox").on("touchstart", function(event){
+    if (!gameInitialized) return;
     event.preventDefault();
-    //$(".touchbox").css("opacity", "0");
     var posX = $(event.currentTarget).position().left;
     var posY = $(event.currentTarget).position().top;
     $(".touchindicator").css("display", "none");
     clientController.touchTouchbox(posX * (1 / scale), posY * (1 / scale));
-    //$("#" + lastTouchedCardId).css("border", "4px solid black");
     lastTouchedCardId = null;
-    //console.log("touchbox", posX * (1 / scale), posY * (1 / scale))
   })
   
   $(".card").bind("mouseup", function(e){
     e.preventDefault();
-    //console.log("Mouseup in " + dragCardId);
+    if (!gameInitialized) return;
     if (dragCardId !== null)
     {
       var cardPosition = $("#" + dragCardId).position();
       var cardX = Math.round(cardPosition.left * (1 / scale));
       var cardY = Math.round(cardPosition.top * (1 / scale));
       clientController.releaseCard(e.pageX * (1 / scale), e.pageY * (1 / scale), cardX, cardY);
-      // console.log("RELEASED " + dragCardId)
-      //updateCss("#" + dragCardId, "z-index", '50');
-      // i = dragCardIds.length;
-      // while(i--) suppressNextChanges[i] = dragCardIds[i];
       if (myLatency < 100)
       {
         updateCss("#" + dragCardId, "transition-property", "top, left");
       }
       for (dci of dragCardIds)
       {
-        //console.log(dci)
         if(myLatency < 100)
         {
           updateCss("#" + dci, "transition-property", "top, left");
@@ -3656,6 +3614,8 @@ $( document ).ready(function() {
     })
   }
 
+  console.log("Starting local webcam.")
+
   navigator.mediaDevices.getUserMedia({video: {
                           width: {
                               max: 320,
@@ -3669,29 +3629,19 @@ $( document ).ready(function() {
                         echoCancellation: true
                       }})
     .then(function(stream) {
+      console.log("Started local webcam.")
       myStream = stream;
       InitWebSocket();
-      // $('#welcomeModal').modal({
-      //                     show: true,
-      //                     backdrop: 'static',
-      //                     keyboard: false
-      //                     });
   });
-  //   navigator.mediaDevices.getUserMedia({video: true, audio: true})
-  // .then(function(stream) {
-  // myStream = stream;
-  // InitWebSocket();
-  // $('#welcomeModal').modal({
-  //     show: true,
-  //     backdrop: 'static',
-  //     keyboard: false
-  //     });
-  // });
 });
 
 async function startCapture(){
   try {
     captureStream = await navigator.mediaDevices.getDisplayMedia({video:true, audio:{sampleRate: 44100}});
+    captureStream.getVideoTracks()[0].onended = function () {
+      clientController.removeCaptureStream();
+      captureStream = null;
+    }
     clientController.addCaptureStream(captureStream);
   } catch(err) {
     console.error("Error: " + err);
@@ -3753,43 +3703,16 @@ function updateParentCss(selector, property, value)
   }
 }
 
-// function updateCardFace(card, value)
-// {
-//   if(card.faceType === 'image')
-//   {
-//     if ($("#" + card.id).children('img').attr("src") !== value)
-//     {
-//       $("#" + card.id).children('img').attr("src", value);
-//     }
-//   }
-//   else if(card.faceType === 'text')
-//   {
-//     if ($("#" + card.id + "_text").html() !== value.text)
-//     {
-//       $("#" + card.id + "_text").html(value.text);
-//       $("#" + card.id).css("color", value.color);
-//       $("#" + card.id).css("border", "4px solid " + value.color);
-//       $("#" + card.id).css("background-color", value.backgroundcolor);
-//       if(value.hasOwnProperty("secondarytext"))
-//       {
-//         $("#" + card.id + "_sec").html(value.secondarytext);
-//       }
-//       $(document).trigger("cardTextChanged", [card.id]);
-//     }
-//   }
-// }
 
 function updateCardFace(card, faceType)
 {
   if (faceType == "frontface")
   {
     updateCss("#" + card.id + " .threeDcontainer", 'transform', 'translateX(100%) rotateY(180deg)')
-    //$("#" + card.id + " .threeDcontainer").css('transform', 'translateX(100%) rotateY(180deg)');
   }
   else if(faceType == 'backface')
   {
     updateCss("#" + card.id + " .threeDcontainer", 'transform', 'rotateY(0deg)')
-    //$("#" + card.id + " .threeDcontainer").css('transform', 'rotateY(0deg)');
     if ($("#" + card.id + "BFimg").attr("src") !== card.backface)
     {
       $("#" + card.id + "BFimg").attr("src", card.backface);
@@ -3843,13 +3766,9 @@ function init3dCard(card)
   if (card.faceType == "image")
   {
     $("#" + card.id).html("<div class='threeDcontainer'><div class='cardFace' style='transform:rotateY(180deg)'><img src='" + card.frontface + "'/></div><div class='cardFace'><img id='" + card.id + "BFimg' src='" + card.backface + "'/></div></div>")
-    // var width = $("#" + card.id + " img").outerWidth();
     var width = $("#" + card.id + "BFimg").outerWidth();
 
-    // var width = document.defaultView.getComputedStyle($("#" + card.id + "cardFace"), null).width;
-    // var height = $("#" + card.id + "cardFace").height();
     $("#" + card.id).css("width", width);
-    // $("#" + card.id).css("height", height);
   }
   else if(card.faceType === 'text')
   {
@@ -3879,79 +3798,77 @@ function init3dCard(card)
 
 function initCards(gameObj){
   adaptScale();
-  for (var i = 0; i < gameObj.decks.length; i++)
+  for (let deck of Object.values(gameObj.decks))
   {
-    updateCss("#" + gameObj.decks[i].id, "left", gameObj.decks[i].x + "px");
-    updateCss("#" + gameObj.decks[i].id, "top", gameObj.decks[i].y + "px");
+    updateCss("#" + deck.id, "left", deck.x + "px");
+    updateCss("#" + deck.id, "top", deck.y + "px");
   }
-  for (var i = 0; i < gameObj.cards.length; i++)
+  for (let card of Object.values(gameObj.cards))
   {
     var additionalZ = 0;
-    if (gameObj.cards[i].id == dragCardId)
+    if (card.id == dragCardId)
     {
       additionalZ += 100000;
     }
     var projected = false;
     
-    if(gameObj.cards[i].ownedBy == myPlayerId)
+    if(card.ownedBy == myPlayerId)
     {
       additionalZ += 100000;
-      updateCardFace(gameObj.cards[i], "frontface");
+      updateCardFace(card, "frontface");
     }
-    else if (gameObj.cards[i].ownedBy !== -1)
+    else if (card.ownedBy !== -1)
     {
       if (gameObj.hasOwnProperty("projectionBoxScale"))
       {
-        projectCardInScalebox(gameObj.cards[i], gameObj.projectionBoxScale, gameObj.sharedPlayerbox.x, gameObj.sharedPlayerbox.y);
+        projectCardInScalebox(card, gameObj.projectionBoxScale, gameObj.sharedPlayerbox.x, gameObj.sharedPlayerbox.y);
         projected = true;
       }
     }
-    updateCss("#" + gameObj.cards[i].id, "z-index", String(gameObj.cards[i].z + additionalZ));
+    updateCss("#" + card.id, "z-index", String(card.z + additionalZ));
     if (!projected)
     {
-      updateCss("#" + gameObj.cards[i].id, "left", gameObj.cards[i].x + "px");
-      updateCss("#" + gameObj.cards[i].id, "top", gameObj.cards[i].y + "px");
+      updateCss("#" + card.id, "left", card.x + "px");
+      updateCss("#" + card.id, "top", card.y + "px");
     }
-    if (gameObj.cards[i].hasOwnProperty("scale") && !projected)
+    if (card.hasOwnProperty("scale") && !projected)
     {
-      updateCss("#" + gameObj.cards[i].id, "transform", "scale(" + gameObj.cards[i].scale + ")");
+      updateCss("#" + card.id, "transform", "scale(" + card.scale + ")");
     }
     else if(!projected)
     {
-      updateCss("#" + gameObj.cards[i].id, "transform", "scale(1)");
+      updateCss("#" + card.id, "transform", "scale(1)");
     }
-    if (gameObj.cards[i].hasOwnProperty("show"))
+    if (card.hasOwnProperty("show"))
     {
-      init3dCard(gameObj.cards[i]);
-      if (gameObj.cards[i].ownedBy != myPlayerId)
+      init3dCard(card);
+      if (card.ownedBy != myPlayerId)
       {
-        if (cardIsInMyOwnBox(gameObj.cards[i]) || gameObj.cards[i].visibleFor == myPlayerId)
+        if (cardIsInMyOwnBox(card) || card.visibleFor == myPlayerId)
         {
-          updateCardFace(gameObj.cards[i], "frontface");
+          updateCardFace(card, "frontface");
         }
         else
         {
-          if(cardIsInInspectorBox(gameObj.cards[i]))
+          if(cardIsInInspectorBox(card))
           {
-            updateCardFace(gameObj.cards[i], "altFrontface");
+            updateCardFace(card, "altFrontface");
           }
           else
           {
-            updateCardFace(gameObj.cards[i], gameObj.cards[i].show);
+            updateCardFace(card, card.show);
           }
         }
       }
     }
-    initDice(gameObj.cards[i]);
+    initDice(card);
   }
 }
 
 function projectCardInScalebox(card, boxScale, refX, refY)
 {
-  // var boxX = $("#scaledProjectionBox" + card.ownedBy).position().left * (1 / scale);
-  // var boxY = $("#scaledProjectionBox" + card.ownedBy).position().top * (1 / scale);
-  var boxX = myGameObj.projectionBoxes[card.ownedBy].x;// * (1 / scale);
-  var boxY = myGameObj.projectionBoxes[card.ownedBy].y;// * (1 / scale);
+  var boxX = myGameObj.projectionBoxes[card.ownedBy].x;
+  var boxY = myGameObj.projectionBoxes[card.ownedBy].y;
 
   var newX = boxX + ((card.x - refX) * boxScale);
   var newY = boxY + ((card.y - refY) * boxScale);
@@ -3966,35 +3883,41 @@ function updateCards(gameObj, changedCardsBuffer)
 {
   var blockedCardsInDeck = [];
   var blockedOpenboxesInDeck = [];
-  for (var i = 0; i < gameObj.decks.length; i++)
+  for (let deck of Object.values(gameObj.decks))
+  for (deckId of changedCardsBuffer)
   {
-    if (gameObj.decks[i].wallet)
+    if (!(deckId in gameObj.decks))
     {
-      updateHtml("#walletScorebox" + gameObj.decks[i].ownedBy + "_text", gameObj.decks[i].walletValue);
+      continue;
     }
-    if (!dragCardIds.includes(gameObj.decks[i].id ) && gameObj.decks[i].clickedBy != myPlayerId)
+    if (deck.wallet)
     {
-      updateCss("#" + gameObj.decks[i].id, "left", gameObj.decks[i].x + "px");
-      updateCss("#" + gameObj.decks[i].id, "top", gameObj.decks[i].y + "px");
+      updateHtml("#walletScorebox" + deck.ownedBy + "_text", deck.walletValue);
     }
-    else if (gameObj.decks[i].clickedBy == myPlayerId)
+    if (!dragCardIds.includes(deck.id ) && deck.clickedBy != myPlayerId)
     {
-      for (card of gameObj.decks[i].attachedCards)
+      updateCss("#" + deck.id, "left", deck.x + "px");
+      updateCss("#" + deck.id, "top", deck.y + "px");
+    }
+    else if (deck.clickedBy == myPlayerId)
+    {
+      for (let card of Object.values(deck.attachedCards))
       {
         blockedCardsInDeck.push(card.id);
       }
-      for (openbox of gameObj.decks[i].attachedOpenboxes)
+      for (let openbox of Object.values(deck.attachedOpenboxes))
       {
         blockedOpenboxesInDeck.push(openbox.id);
       }
     }
   }
-  var cards = gameObj.cards.filter(function(card){
-    return changedCardsBuffer.includes(card.id) && !blockedCardsInDeck.includes(card.id);
-  });
-  //changedCardsBuffer = [];
-  for (card of cards)
+  for (cardId of changedCardsBuffer)
   {
+    if (!(cardId in gameObj.cards))
+    {
+      continue;
+    }
+    let card = gameObj.cards[cardId];
     if (card.hasOwnProperty("varText"))
     {
       if ($("#" + card.id + "_textFF").html() !== card.frontface.text)
@@ -4007,10 +3930,8 @@ function updateCards(gameObj, changedCardsBuffer)
     {
       updateCss("#" + card.id + " .threeDcontainer", "transform", "rotateX(" + card.rotationX + "deg) rotateY(" + card.rotationY + "deg)")      
     }
-    // if(card.id != dragCardId)
     if(!dragCardIds.includes(card.id) && card.clickedBy != myPlayerId && card.ownedBy == -1)
     {
-      // updateCss("#" + card.id, "z-index", String(card.z + 60));
       updateCss("#" + card.id, "left", card.x + "px");
       updateCss("#" + card.id, "top", card.y + "px");
     }
@@ -4073,7 +3994,7 @@ function updateCards(gameObj, changedCardsBuffer)
       }
     }
   }
-  for (openbox of gameObj.openboxes)
+  for (let openbox of Object.values(gameObj.openboxes))
   {
     if(!dragCardIds.includes(openbox.id) && !blockedOpenboxesInDeck.includes(openbox.id))
     {
@@ -4084,11 +4005,6 @@ function updateCards(gameObj, changedCardsBuffer)
     }
   }
 }
-
-// function updateOpenboxes(gameObj)
-// {
-
-// }
 
 function updateCursors (gameObj)
 {
@@ -4255,21 +4171,16 @@ function rollDeck(e){
 function inspectDeck(e){
   var deckId = e.target.parentElement.id;
   var tmpGameObj = JSON.parse(clientController.wsHandler.lastGameObj);
-  var foundDeck = tmpGameObj.decks.find(function(deck){
-    return deck.id === deckId;
-  });
+  var foundDeck = tmpGameObj.decks[deckId];
   blockCardChange = [];
-  for (card of foundDeck.attachedCards)
+  for (let card of Object.values(foundDeck.attachedCards))
   {
-    // updateCardFace(card, card.frontface)
     updateCardFace(card, "frontface");
     blockCardChange.push(card.id);
   }
 }
 
 function scoreboxButton(e){
-  // console.log(e.currentTarget.parentElement.attributes['value'].value)
-  // console.log(e.currentTarget.value)
   var addValue = Number(e.currentTarget.value);
   if(addValue > 0)
   {
@@ -4279,7 +4190,6 @@ function scoreboxButton(e){
   {
     scoreMinSound.play();
   }
-  //clientController.editScorebox(Number(e.currentTarget.parentElement.attributes['value'].value), addValue)
   clientController.editScorebox(e.currentTarget.parentElement.attributes['value'].value, addValue)
 }
 
@@ -4400,6 +4310,9 @@ ClientController.prototype.initialize = function(ws, myStream)
   this.webcamHandler.on("stream", (playerId, stream, peerType) => {
     this.emit("stream", playerId, stream, peerType);
   });
+  this.webcamHandler.on("peerClosed", (playerId, peerType) => {
+    this.emit("peerClosed", playerId, peerType);
+  });
 
   this.canvasHandler.initWsHandler(this.wsHandler)
 
@@ -4408,6 +4321,10 @@ ClientController.prototype.initialize = function(ws, myStream)
 
 ClientController.prototype.addCaptureStream = function(newCaptureStream){
   this.init && this.webcamHandler.addCaptureStream(newCaptureStream);
+}
+
+ClientController.prototype.removeCaptureStream = function(){
+  this.init && this.webcamHandler.removeCaptureStream();
 }
 
 ClientController.prototype.mouseMove = function(x, y, cardX, cardY)
@@ -4739,6 +4656,15 @@ WebcamHandler.prototype.addCaptureStream = function(newCaptureStream){
   this.wsHandler.sendToWs(sendData);
 }
 
+WebcamHandler.prototype.removeCaptureStream = function()
+{
+  for (let [key, peer] of Object.entries(this.capturePeers))
+  {
+    peer.destroy();
+    delete this.capturePeers[key];
+  }
+}
+
 WebcamHandler.prototype.initWebcamPeer = function(playerId, peerType)
 {
   var streamToSend = this.myStream;
@@ -4817,7 +4743,7 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId, peerType)
     {
       console.log(error)
     }
-
+    this.emit("peerClosed", playerId, peerType);
   });
   
   var sendData = {
@@ -4905,6 +4831,7 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp, peerType)
       console.log(error)
     }
     delete peerArray[fromPlayerId];
+    this.emit("peerClosed", fromPlayerId, peerType);
   });
 
   peerArray[fromPlayerId].signal(stp);

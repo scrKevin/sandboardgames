@@ -52,9 +52,9 @@ CN_Game.prototype.resetGame = function(game)
 {
   var words = getRandomCards();
   //console.log(words);
-  game.gameObj.cards = [];
-  game.gameObj.decks = [];
-  game.gameObj.openboxes = [];
+  game.gameObj.cards = {};
+  game.gameObj.decks = {};
+  game.gameObj.openboxes = {};
   game.gameObj.scoreboxes = [];
 
   game.gameObj.highestZ = 10000;
@@ -100,18 +100,18 @@ CN_Game.prototype.resetGame = function(game)
       textCard.backface = {color: "#000000", backgroundcolor: "#FFFFFF", text: words[(i*5) + j]}
       textCard.frontface = {color: cardArray[(i*5) + j].color, backgroundcolor: cardArray[(i*5) + j].backgroundcolor, text: words[(i*5) + j]}
       textCard.show = 'backface';
-      cardDeck.attachedCards.push(textCard);
-      game.gameObj.cards.push(textCard);
+      cardDeck.attachedCards[textCard.id] = textCard;
+      game.gameObj.cards[textCard.id] = textCard;
     }
   }
 
-  game.gameObj.decks.push(cardDeck);
+  game.gameObj.decks[cardDeck.id] = cardDeck;
 
   for (var amount = 0; amount < 5; amount++)
   {
     for (var type = 1; type <= 2; type++)
     {
-      game.gameObj.cards.push(new Card("spy1" + String(amount) + String(type), 100, 50));
+      game.gameObj.cards["spy1" + String(amount) + String(type)] = new Card("spy1" + String(amount) + String(type), 100, 50);
     }
   }
 
@@ -119,7 +119,7 @@ CN_Game.prototype.resetGame = function(game)
   {
     for (var type = 1; type <= 2; type++)
     {
-      game.gameObj.cards.push(new Card("spy2" + String(amount) + String(type), 1920 - 300, 50));
+      game.gameObj.cards["spy2" + String(amount) + String(type)] = new Card("spy2" + String(amount) + String(type), 1920 - 300, 50);
     }
   }
 
@@ -127,11 +127,11 @@ CN_Game.prototype.resetGame = function(game)
   {
     for (var type = 1; type <= 2; type++)
     {
-      game.gameObj.cards.push(new Card("innocent" + String(amount) + String(type), 600, 50));
+      game.gameObj.cards["innocent" + String(amount) + String(type)] = new Card("innocent" + String(amount) + String(type), 600, 50);
     }
   }
 
-  game.gameObj.cards.push(new Card("assassin", 1920 - 800, 50));
+  game.gameObj.cards["assassin"] = new Card("assassin", 1920 - 800, 50);
 
   var rows = 10;
   var columns = 2;
@@ -146,9 +146,9 @@ CN_Game.prototype.resetGame = function(game)
         var startPosY = (i * 240) + 240;
         var moveBtnDeck = new Deck('webcamMoveBtn' + ((i * columns) + j), startPosX, startPosY, 435, 261)
         var webcamBox = new Card('player' + ((i * columns) + j) + "box", startPosX, startPosY)
-        game.gameObj.cards.push(webcamBox)
-        moveBtnDeck.attachedCards.push(webcamBox)
-        game.gameObj.decks.push(moveBtnDeck)
+        game.gameObj.cards[webcamBox.id] = webcamBox;
+        moveBtnDeck.attachedCards[webcamBox.id] = webcamBox;
+        game.gameObj.decks[moveBtnDeck.id] = moveBtnDeck;
       }
     }
   }
