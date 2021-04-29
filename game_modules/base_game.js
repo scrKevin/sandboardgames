@@ -316,6 +316,11 @@ function WS_distributor(wss, turnServer, resetGameFunction)
       {
         player.isHostingCapture = true;
       }
+      else if (json.type == "stopCaptureHost")
+      {
+        console.log(id + " is stopping capture host.")
+        player.isHostingCapture = false;
+      }
       else if (json.type == "requestRadioFromPlayer")
       {
         for (player of this.gameObj.players)

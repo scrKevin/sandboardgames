@@ -39,13 +39,17 @@ WebcamHandler.prototype.addCaptureStream = function(newCaptureStream){
   this.wsHandler.sendToWs(sendData);
 }
 
-WebcamHandler.prototype.removeCaptureStream = function()
-{
+WebcamHandler.prototype.removeCaptureStream = function() {
+
   for (let [key, peer] of Object.entries(this.capturePeers))
   {
     peer.destroy();
     delete this.capturePeers[key];
   }
+  var sendData = {
+    type: "stopCaptureHost",
+  }
+  this.wsHandler.sendToWs(sendData);
 }
 
 WebcamHandler.prototype.initWebcamPeer = function(playerId, peerType)

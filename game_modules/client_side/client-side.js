@@ -78,6 +78,7 @@ function addRadio(stream)
 
 function removeRadio()
 {
+  console.log('removed radio.')
   $("#radio").html("");
 }
 
@@ -700,6 +701,7 @@ async function startCapture(){
   try {
     captureStream = await navigator.mediaDevices.getDisplayMedia({video:true, audio:{sampleRate: 44100}});
     captureStream.getVideoTracks()[0].onended = function () {
+      console.log("captureStream ended.")
       clientController.removeCaptureStream();
       captureStream = null;
     }
@@ -1084,7 +1086,7 @@ function updateCursors (gameObj)
       {
         radioDisplay = 'block';
       }
-      updateCss("#radioContainer" + playerIndex, "display", radioDisplay);
+      updateCss("#radioContainer" + player.id, "display", radioDisplay);
       updateCss("#cursor" + playerIndex, "left", (player.pos.x - 22) + "px");
       updateCss("#cursor" + playerIndex, "top", (player.pos.y - 22) + "px");
       updateCss("#cursor" + playerIndex, "display", "block");

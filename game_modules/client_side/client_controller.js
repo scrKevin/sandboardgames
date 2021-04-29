@@ -87,7 +87,7 @@ ClientController.prototype.addCaptureStream = function(newCaptureStream){
 }
 
 ClientController.prototype.removeCaptureStream = function(){
-  this.init && this.webcamHandler.removeCaptureStream();
+  this.webcamHandler.removeCaptureStream();
 }
 
 ClientController.prototype.mouseMove = function(x, y, cardX, cardY)
