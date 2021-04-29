@@ -3437,6 +3437,7 @@ $( window ).resize(function() {
 $( document ).ready(function() {
   console.log(navigator.mediaDevices.getSupportedConstraints())
   $(".touchbox").css("opacity", "0");
+  $('img').attr('draggable', false);
   var colorSelectionHtml = "";
   var nColorSelection = 0;
   for (color of colors)
