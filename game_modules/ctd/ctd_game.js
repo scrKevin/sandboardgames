@@ -12,20 +12,20 @@ function CTD_Game(wss, turnServer){
 
 CTD_Game.prototype.resetGame = function(game)
 {
-  game.gameObj.cards = [];
-  game.gameObj.decks = [];
-  game.gameObj.openboxes = [];
+  game.gameObj.cards = {};
+  game.gameObj.decks = {};
+  game.gameObj.openboxes = {};
   game.gameObj.scoreboxes = [];
 
   game.gameObj.highestZ = 10000;
 
-  game.gameObj.openboxes.push(new Openbox("upperOpenbox", 0, 0, 1920, 300))
-  game.gameObj.openboxes.push(new Openbox("lowerOpenbox", 0, 610, 1920, 300))
+  game.gameObj.openboxes["upperOpenbox"] = new Openbox("upperOpenbox", 0, 0, 1920, 300);
+  game.gameObj.openboxes["lowerOpenbox"] = new Openbox("lowerOpenbox", 0, 610, 1920, 300);
 
-  game.gameObj.cards.push(new Card('charactersCard', 0, 752))
-  game.gameObj.cards.push(new Card('scoring', 0, 1080))
-  game.gameObj.cards.push(new Card('onyourturn', 438, 1080))
-  game.gameObj.cards.push(new Card('specialDistricts', 875, 1080))
+  game.gameObj.cards['charactersCard'] = new Card('charactersCard', 0, 752);
+  game.gameObj.cards['scoring'] = new Card('scoring', 0, 1080);
+  game.gameObj.cards['onyourturn'] = new Card('onyourturn', 438, 1080);
+  game.gameObj.cards['specialDistricts'] = new Card('specialDistricts', 875, 1080);
 
   charactersDeckX = 578;
   charactersDeckY = 934;
@@ -49,11 +49,11 @@ CTD_Game.prototype.resetGame = function(game)
     c1Card.backface = {color: "#000000", backgroundcolor: "#f79860", text: "Character", secondarytext: "-"};
     c1Card.frontface = charCardData[i - 1]
     c1Card.show = "backface";
-    charactersDeck.attachedCards.push(c1Card);
-    game.gameObj.cards.push(c1Card);
+    charactersDeck.attachedCards[c1Card.id] = c1Card;
+    game.gameObj.cards[c1Card.id] = c1Card;
   }
 
-  game.gameObj.decks.push(charactersDeck);
+  game.gameObj.decks[charactersDeck.id] = charactersDeck;
 
   var districtsData = [
     {
@@ -198,8 +198,8 @@ CTD_Game.prototype.resetGame = function(game)
         dCard.backface = {color: "#000000", backgroundcolor: "#d0eeff", text: "District", secondarytext: "?"};
         dCard.frontface = {color: districtsData[i].color, backgroundcolor: districtsData[i].backgroundcolor, text: district.text, secondarytext: district.cost}
         dCard.show = "backface";
-        districtsDeck.attachedCards.push(dCard);
-        game.gameObj.cards.push(dCard);
+        districtsDeck.attachedCards[dCard.id] = dCard;
+        game.gameObj.cards[dCard.id] = dCard;
         n++;
       }
     }
@@ -210,10 +210,10 @@ CTD_Game.prototype.resetGame = function(game)
   districtsDeck1 = new Deck('distrctsDeck1', districtsDeckX, districtsDeckY, 211, 128);
   //console.log(n)
 
-  game.gameObj.decks.push(districtsDeck);
-  game.gameObj.decks.push(districtsDeck1);
+  game.gameObj.decks[districtsDeck.id] = districtsDeck;
+  game.gameObj.decks[districtsDeck1.id] = districtsDeck1;
 
-  game.gameObj.cards.push(new Card("crown", 1100, 821))
+  game.gameObj.cards["crown"] = new Card("crown", 1100, 821);
 
   var goldStartX = 1582
   var goldStartY = 910;
@@ -222,7 +222,7 @@ CTD_Game.prototype.resetGame = function(game)
   {
     for(var i = 0; i < 5; i++)
     {
-      game.gameObj.cards.push(new Card("gold" + n, goldStartX + (i * 35), goldStartY + (j * 35)))
+      game.gameObj.cards["gold" + n] = new Card("gold" + n, goldStartX + (i * 35), goldStartY + (j * 35));
       n++;
     }
   }
@@ -235,9 +235,9 @@ CTD_Game.prototype.resetGame = function(game)
     var moveBtnDeck = new Deck('webcamMoveBtn' + i, startPosX, startPosY, 32, 32)
     var webcamBox = new Card('webcambox' + i, startPosX, startPosY)
     webcamBox.attachedToDeck = true;
-    game.gameObj.cards.push(webcamBox)
-    moveBtnDeck.attachedCards.push(webcamBox)
-    game.gameObj.decks.push(moveBtnDeck)
+    game.gameObj.cards[webcamBox.id] = webcamBox;
+    moveBtnDeck.attachedCards[webcamBox.id] = webcamBox;
+    game.gameObj.decks[moveBtnDeck.id] = moveBtnDeck;
   }
 
 }

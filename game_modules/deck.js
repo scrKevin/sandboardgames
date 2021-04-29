@@ -1,22 +1,7 @@
-/**
- * Shuffles array in place.
- * @param {Array} a items An array containing the items.
- */
-// function shuffle(a) {
-//   var j, x, i;
-//   for (i = a.length - 1; i > 0; i--) {
-//     j = Math.floor(Math.random() * (i + 1));
-//     x = a[i];
-//     a[i] = a[j];
-//     a[j] = x;
-//   }
-//   return a;
-// }
-
 function Deck(id, x, y, width, height){
   this.id = id;
-  this.attachedCards = [];
-  this.attachedOpenboxes = [];
+  this.attachedCards = {};
+  this.attachedOpenboxes = {};
   this.x = x;
   this.y = y;
   this.width = width;
@@ -71,36 +56,33 @@ Deck.prototype.shuffleDeck = function(xStackMinimum)
 {
 
   var numberArray = []
-  for (var i = 0; i < this.attachedCards.length; i++)
+  for (var i = 0; i < Object.keys(this.attachedCards).length; i++)
   {
     numberArray.push(i);
   }
   this.shuffle(numberArray);
-  var incrementXForStackEffect = xStackMinimum / this.attachedCards.length;
-  var incrementYForStackEffect = 30 / this.attachedCards.length;
-  for(var i = 0; i < this.attachedCards.length; i++)
-  {
-    this.attachedCards[i].setZ(numberArray[i]);
-    this.attachedCards[i].setX(this.x + 5 + Math.round(numberArray[i] * incrementXForStackEffect));
-    this.attachedCards[i].setY(this.y + 80 - Math.round(numberArray[i] * incrementYForStackEffect));
+  var incrementXForStackEffect = xStackMinimum / Object.keys(this.attachedCards).length;
+  var incrementYForStackEffect = 30 / Object.keys(this.attachedCards).length;
+  
+  var i = 0;
+  for (let card of Object.values(this.attachedCards)) {
+    card.setZ(numberArray[i]);
+    card.setX(this.x + 5 + Math.round(numberArray[i] * incrementXForStackEffect));
+    card.setY(this.y + 80 - Math.round(numberArray[i] * incrementYForStackEffect));
+    i++;
   }
 }
 
 Deck.prototype.rollDeck = function()
 {
-  for(var i = 0; i < this.attachedCards.length; i++)
-  {
+  for (let card of Object.values(this.attachedCards)) {
     var r1 = this.getRandomIntInclusive(0, 11);
-    //console.log("D" + i + " - R1:" + r1, " face: " + this.fairMatrix[r1].r);
     var r2 = this.getRandomIntInclusive(0, 5);
     var r3 = this.getRandomIntInclusive(0, 5);
     var rx = this.fairMatrix[r1].x;
     var ry = this.fairMatrix[r1].y;
-    this.attachedCards[i].setRotationX((rx * 90) + (360 * r2));
-    this.attachedCards[i].setRotationY((ry * 90) + (360 * r3));
-
-    // this.attachedCards[i].setRotationX((rx * 90));
-    // this.attachedCards[i].setRotationY((ry * 90));
+    card.setRotationX((rx * 90) + (360 * r2));
+    card.setRotationY((ry * 90) + (360 * r3));
   }
 }
 
@@ -124,17 +106,15 @@ Deck.prototype.removeFromDeck = function(card, playerId){
       return;
     }
   }
-  var removeIndexCard = this.attachedCards.map(function(item) { return item.id }).indexOf(card.id);
-  if (removeIndexCard != -1)
+
+  if (card.id in this.attachedCards)
   {
-    //console.log("remove " + card.id + " from " + this.id)
-    this.attachedCards.splice(removeIndexCard, 1);
+    delete this.attachedCards[card.id];
     card.attachedToDeck = false;
     card.scale = 1;
     if (card.hasOwnProperty("cardValue"))
     {
       this.walletValue -= card.cardValue;
-      //console.log(this.walletValue);
     }
   }
 }
@@ -148,17 +128,15 @@ Deck.prototype.addToDeck = function(card, playerId){
       return;
     }
   }
-  var allowedToAdd = this.attachedCards.map(function(item) { return item.id }).indexOf(card.id);
-  if (allowedToAdd == -1)
+
+  if (!(card.id in this.attachedCards))
   {
-    //console.log("add " + card.id + " to " + this.id)
-    this.attachedCards.push(card);
+    this.attachedCards[card.id] = card;
     card.attachedToDeck = true;
     card.scale = this.scale;
     if (card.hasOwnProperty("cardValue"))
     {
       this.walletValue += card.cardValue;
-      //console.log(this.walletValue);
     }
   }
 }

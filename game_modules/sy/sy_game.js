@@ -11,38 +11,38 @@ function SY_Game(wss, turnServer){
 
 SY_Game.prototype.resetGame = function(game)
 {
-  game.gameObj.cards = [];
-  game.gameObj.decks = [];
-  game.gameObj.openboxes = [];
+  game.gameObj.cards = {};
+  game.gameObj.decks = {};
+  game.gameObj.openboxes = {};
   game.gameObj.scoreboxes = [];
 
   game.gameObj.highestZ = 10000;
   
   var pionRed = new Card('pion-red', 1620, 880);
-  game.gameObj.cards.push(pionRed);
+  game.gameObj.cards[pionRed.id] = pionRed;
   var pionGreen = new Card('pion-green', 1680, 880);
-  game.gameObj.cards.push(pionGreen);
+  game.gameObj.cards[pionGreen.id] = pionGreen;
   var pionBlue = new Card('pion-blue', 1740, 880);
-  game.gameObj.cards.push(pionBlue);
+  game.gameObj.cards[pionBlue.id] = pionBlue;
   var pionOrange = new Card('pion-orange', 1800, 880);
-  game.gameObj.cards.push(pionOrange);
+  game.gameObj.cards[pionOrange.id] = pionOrange;
   var pionYellow = new Card('pion-yellow', 1860, 880);
-  game.gameObj.cards.push(pionYellow);
+  game.gameObj.cards[pionYellow.id] = pionYellow;
   var pionWhite = new Card('pion-white', 1560, 880);
-  game.gameObj.cards.push(pionWhite);
+  game.gameObj.cards[pionWhite.id] = pionWhite;
 
   var blackTickets = [];
   for (var i = 0; i < 5; i++)
   {
     blackTickets.push(new Card('black-ticket' + i, 1600 + (60 * i), 1000))
-    game.gameObj.cards.push(blackTickets[i]);
+    game.gameObj.cards[blackTickets[i].id] = blackTickets[i];
   }
 
   var twoXTickets = [];
   for (var i = 0; i < 2; i++)
   {
     twoXTickets.push(new Card('2x' + i, 1600 + (60 * i), 1040))
-    game.gameObj.cards.push(twoXTickets[i]);
+    game.gameObj.cards[twoXTickets[i].id] = twoXTickets[i];
   }
 
   for (var j = 0; j < 6; j++)
@@ -58,10 +58,10 @@ SY_Game.prototype.resetGame = function(game)
     for (var i = 0; i < 11; i++)
     {
       var newTaxi = new Card('taxi' + (i + (j * 11)), deckPosX + 20 + (i * 2), deckPosY + 5 + (i * 2));
-      game.gameObj.cards.push(newTaxi);
-      newTaxiDeck.attachedCards.push(newTaxi);
+      game.gameObj.cards[newTaxi.id] = newTaxi;
+      newTaxiDeck.attachedCards[newTaxi.id] = newTaxi;
     }
-    game.gameObj.decks.push(newTaxiDeck)
+    game.gameObj.decks[newTaxiDeck.id] = newTaxiDeck;
   }
   for (var j = 0; j < 6; j++)
   {
@@ -76,10 +76,10 @@ SY_Game.prototype.resetGame = function(game)
     for (var i = 0; i < 8; i++)
     {
       var newBus = new Card('bus' + (i + (j * 8)), deckPosX + 20 + (i * 2), deckPosY + 5 + (i * 2));
-      game.gameObj.cards.push(newBus);
-      newBusDeck.attachedCards.push(newBus);
+      game.gameObj.cards[newBus.id] = newBus;
+      newBusDeck.attachedCards[newBus.id] = newBus;
     }
-    game.gameObj.decks.push(newBusDeck)
+    game.gameObj.decks[newBusDeck.id] = newBusDeck;
   }
   for (var j = 0; j < 6; j++)
   {
@@ -94,10 +94,10 @@ SY_Game.prototype.resetGame = function(game)
     for (var i = 0; i < 4; i++)
     {
       var newMetro = new Card('metro' + (i + (j * 4)), deckPosX + 20 + (i * 2), deckPosY + 5 + (i * 2));
-      game.gameObj.cards.push(newMetro);
-      newMetroDeck.attachedCards.push(newMetro);
+      game.gameObj.cards[newMetro.id] = newMetro;
+      newMetroDeck.attachedCards[newMetro.id] = newMetro;
     }
-    game.gameObj.decks.push(newMetroDeck)
+    game.gameObj.decks[newMetroDeck.id] = newMetroDeck;
   }
   for (var i = 6; i < 20; i++)
   {
@@ -105,13 +105,13 @@ SY_Game.prototype.resetGame = function(game)
     var startPosY = 20 + (35 * i);
     var moveBtnDeck = new Deck('webcamMoveBtn' + i, startPosX, startPosY, 32, 32)
     var webcamBox = new Card('webcambox' + i, startPosX, startPosY)
-    game.gameObj.cards.push(webcamBox)
-    moveBtnDeck.attachedCards.push(webcamBox)
-    game.gameObj.decks.push(moveBtnDeck)
+    game.gameObj.cards[webcamBox.id] = webcamBox;
+    moveBtnDeck.attachedCards[webcamBox.id] = webcamBox;
+    game.gameObj.decks[moveBtnDeck.id] = moveBtnDeck;
   }
 
   var mrXDeck = new Deck("mrx-board", 0, 750, 280, 330);
-  game.gameObj.decks.push(mrXDeck);
+  game.gameObj.decks[mrXDeck.id] = mrXDeck;
 }
 
 module.exports = {SY_Game: SY_Game}

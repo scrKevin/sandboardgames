@@ -12,9 +12,9 @@ function SH_Game(wss, turnServer){
 
 SH_Game.prototype.resetGame = function(game)
 {
-  game.gameObj.cards = [];
-  game.gameObj.decks = [];
-  game.gameObj.openboxes = [];
+  game.gameObj.cards = {};
+  game.gameObj.decks = {};
+  game.gameObj.openboxes = {};
   game.gameObj.scoreboxes = [];
 
   game.gameObj.highestZ = 10000;
@@ -22,9 +22,9 @@ SH_Game.prototype.resetGame = function(game)
   for (var i = 0; i < 10; i++)
   {
     bNCard = new Card('ballotnein' + i, Startpositions.playerBoxes[i].left + 5, Startpositions.playerBoxes[i].top + 105)
-    game.gameObj.cards.push(bNCard);
+    game.gameObj.cards[bNCard.id] = bNCard;
     bJCard = new Card('ballotja' + i, Startpositions.playerBoxes[i].left + 5, Startpositions.playerBoxes[i].top + 20)
-    game.gameObj.cards.push(bJCard);
+    game.gameObj.cards[bJCard.id] = bJCard;
   }
 
   
@@ -32,7 +32,7 @@ SH_Game.prototype.resetGame = function(game)
   policyDeck1Y = 325;
   policyDeck1 = new Deck('policydeck1', policyDeck1X, policyDeck1Y, 160, 207);
 
-  game.gameObj.decks.push(policyDeck1)
+  game.gameObj.decks[policyDeck1.id] = policyDeck1;
 
   for (var i = 0; i < 6; i++)
   {
@@ -41,8 +41,8 @@ SH_Game.prototype.resetGame = function(game)
     newPolicyCard.frontface = '/img/sh/liberalp-l.png';
     newPolicyCard.show = "backface";
     newPolicyCard.attachedToDeck = true;
-    game.gameObj.cards.push(newPolicyCard);
-    policyDeck1.attachedCards.push(newPolicyCard);
+    game.gameObj.cards[newPolicyCard.id] = newPolicyCard;
+    policyDeck1.attachedCards[newPolicyCard.id] = newPolicyCard;
 
   }
 
@@ -53,57 +53,57 @@ SH_Game.prototype.resetGame = function(game)
     newPolicyCard.frontface = '/img/sh/fascistp-l.png';
     newPolicyCard.show = "backface";
     newPolicyCard.attachedToDeck = true;
-    game.gameObj.cards.push(newPolicyCard);
-    policyDeck1.attachedCards.push(newPolicyCard);
+    game.gameObj.cards[newPolicyCard.id] = newPolicyCard;
+    policyDeck1.attachedCards[newPolicyCard.id] = newPolicyCard;
   }
 
   policyDeck2X = 1254;
   policyDeck2Y = 325;
   policyDeck2 = new Deck('policydeck2', policyDeck2X, policyDeck2Y, 160, 207);
 
-  game.gameObj.decks.push(policyDeck2)
+  game.gameObj.decks[policyDeck2.id] = policyDeck2;
 
 
   f56TrackX = -50;
   f56TrackY = 1050;
   f56TrackDeck = new Deck('fascisttrack56', f56TrackX, f56TrackY, 650, 220);
   f56Openbox = new Openbox('fascistOpenbox56', f56TrackX + 44, f56TrackY + 44, 560, 136);
-  game.gameObj.openboxes.push(f56Openbox);
-  f56TrackDeck.attachedOpenboxes.push(f56Openbox);
-  game.gameObj.decks.push(f56TrackDeck);
+  game.gameObj.openboxes[f56Openbox.id] = f56Openbox;
+  f56TrackDeck.attachedOpenboxes[f56Openbox.id] = f56Openbox;
+  game.gameObj.decks[f56TrackDeck.id] = f56TrackDeck;
 
   f78TrackX = -60;
   f78TrackY = 1050;
   f78TrackDeck = new Deck('fascisttrack78', f78TrackX, f78TrackY, 650, 220);
   f78Openbox = new Openbox('fascistOpenbox78', f78TrackX + 44, f78TrackY + 44, 560, 136);
-  game.gameObj.openboxes.push(f78Openbox);
-  f78TrackDeck.attachedOpenboxes.push(f78Openbox);
-  game.gameObj.decks.push(f78TrackDeck);
+  game.gameObj.openboxes[f78Openbox.id] = f78Openbox;
+  f78TrackDeck.attachedOpenboxes[f78Openbox.id] = f78Openbox;
+  game.gameObj.decks[f78TrackDeck.id] = f78TrackDeck;
 
   f910TrackX = -70;
   f910TrackY = 1050;
   f910TrackDeck = new Deck('fascisttrack910', f910TrackX, f910TrackY, 650, 220);
   f910Openbox = new Openbox('fascistOpenbox910', f910TrackX + 44, f910TrackY + 44, 560, 136);
-  game.gameObj.openboxes.push(f910Openbox);
-  f910TrackDeck.attachedOpenboxes.push(f910Openbox);
-  game.gameObj.decks.push(f910TrackDeck);
+  game.gameObj.openboxes[f910Openbox.id] = f910Openbox;
+  f910TrackDeck.attachedOpenboxes[f910Openbox.id] = f910Openbox;
+  game.gameObj.decks[f910TrackDeck.id] = f910TrackDeck;
 
   liberalTrackX = -70;
   liberaltrackY = -100;
   liberalTrackDeck = new Deck('liberaltrack', liberalTrackX, liberaltrackY, 650, 220);
   liberalOpenbox = new Openbox('liberalOpenbox', liberalTrackX + 89, liberaltrackY + 42, 476, 136);
-  game.gameObj.openboxes.push(liberalOpenbox);
-  liberalTrackDeck.attachedOpenboxes.push(liberalOpenbox);
-  game.gameObj.decks.push(liberalTrackDeck);
+  game.gameObj.openboxes[liberalOpenbox.id] = liberalOpenbox;
+  liberalTrackDeck.attachedOpenboxes[liberalOpenbox.id] = liberalOpenbox;
+  game.gameObj.decks[liberalTrackDeck.id] = liberalTrackDeck;
 
   electionTracker = new Card('electionTracker', -10, -10);
-  game.gameObj.cards.push(electionTracker);
+  game.gameObj.cards[electionTracker.id] = electionTracker;
 
   chancellortoken = new Card('chancellortoken', 10, 10);
-  game.gameObj.cards.push(chancellortoken);
+  game.gameObj.cards[chancellortoken.id] = chancellortoken;
 
   presidenttoken = new Card('presidenttoken', 20, 20);
-  game.gameObj.cards.push(presidenttoken);
+  game.gameObj.cards[presidenttoken.id] = presidenttoken;
 
   rolecardsstartX = 700;
   rolecardsstartY = 550;
@@ -116,9 +116,9 @@ SH_Game.prototype.resetGame = function(game)
   hRoleCard.show = "backface";
   hRoleCard.attachedToDeck = true;
 
-  game.gameObj.cards.push(hRoleCard);
-  rolecardsstartDeck.attachedCards.push(hRoleCard);
-  game.gameObj.decks.push(rolecardsstartDeck);
+  game.gameObj.cards[hRoleCard.id] = hRoleCard;
+  rolecardsstartDeck.attachedCards[hRoleCard.id] = hRoleCard;
+  game.gameObj.decks[rolecardsstartDeck.id] = rolecardsstartDeck;
 
   liberalsstartX = 870;
   liberalsstartY = 550;
@@ -132,11 +132,11 @@ SH_Game.prototype.resetGame = function(game)
     newCard.altFrontface = '/img/sh/membership-liberal.png'
     newCard.show = "backface";
     newCard.attachedToDeck = true;
-    game.gameObj.cards.push(newCard);
-    liberalsstartDeck.attachedCards.push(newCard);
+    game.gameObj.cards[newCard.id] = newCard;
+    liberalsstartDeck.attachedCards[newCard.id] = newCard;
   }
 
-  game.gameObj.decks.push(liberalsstartDeck);
+  game.gameObj.decks[liberalsstartDeck.id] = liberalsstartDeck;
 
   fascistsstartX = 1040;
   fascistsstartY = 550;
@@ -150,11 +150,11 @@ SH_Game.prototype.resetGame = function(game)
     newCard.altFrontface = '/img/sh/membership-fascist.png'
     newCard.show = "backface";
     newCard.attachedToDeck = true;
-    game.gameObj.cards.push(newCard);
-    fascistsstartDeck.attachedCards.push(newCard);
+    game.gameObj.cards[newCard.id] = newCard;
+    fascistsstartDeck.attachedCards[newCard.id] = newCard;
   }
 
-  game.gameObj.decks.push(fascistsstartDeck);
+  game.gameObj.decks[fascistsstartDeck.id] = fascistsstartDeck;
 
   for (var i = 10; i < 20; i++)
   {
@@ -163,12 +163,12 @@ SH_Game.prototype.resetGame = function(game)
     var moveBtnDeck = new Deck('webcamMoveBtn' + i, startPosX, startPosY, 32, 32)
     var webcamBox = new Card('webcambox' + i, startPosX, startPosY)
     webcamBox.attachedToDeck = true;
-    game.gameObj.cards.push(webcamBox)
-    moveBtnDeck.attachedCards.push(webcamBox)
-    game.gameObj.decks.push(moveBtnDeck)
+    game.gameObj.cards[webcamBox.id] = webcamBox;
+    moveBtnDeck.attachedCards[webcamBox.id] = webcamBox;
+    game.gameObj.decks[moveBtnDeck.id] = moveBtnDeck;
   }
 
-  game.gameObj.cards.push(new Card('inpsectorbox0', 1900, 1040))
+  game.gameObj.cards['inpsectorbox0'] = new Card('inpsectorbox0', 1900, 1040);
 }
 
 module.exports = {SH_Game: SH_Game}

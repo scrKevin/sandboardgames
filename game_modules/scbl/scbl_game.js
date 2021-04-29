@@ -11,9 +11,9 @@ function SCBL_Game(wss, turnServer){
 
 SCBL_Game.prototype.resetGame = function(game)
 {
-  game.gameObj.cards = [];
-  game.gameObj.decks = [];
-  game.gameObj.openboxes = [];
+  game.gameObj.cards = {};
+  game.gameObj.decks = {};
+  game.gameObj.openboxes = {};
   game.gameObj.scoreboxes = [];
 
   game.gameObj.highestZ = 10000;
@@ -69,14 +69,14 @@ SCBL_Game.prototype.resetGame = function(game)
       newPiece.backface = {color: "#000000", backgroundcolor: "#efe2d2", text: " ", secondarytext: " "};
       newPiece.frontface = {color: "#000000", backgroundcolor: "#efe2d2", text: letter, secondarytext: scblNlObj[letter].points}
       newPiece.show = "backface";
-      tileDeck.attachedCards.push(newPiece);
-      game.gameObj.cards.push(newPiece);
+      tileDeck.attachedCards[newPiece.id] = newPiece;
+      game.gameObj.cards[newPiece.id] = newPiece;
       n++;
     }
   }
   //console.log(n)
-  game.gameObj.decks.push(tileDeck);
-  game.gameObj.openboxes.push(new Openbox('openbox0', 818, 0, 1080, 1080))
+  game.gameObj.decks[tileDeck.id] = tileDeck;
+  game.gameObj.openboxes['openbox0'] = new Openbox('openbox0', 818, 0, 1080, 1080);
 
   for (var i = 4; i < 20; i++)
   {
@@ -85,9 +85,9 @@ SCBL_Game.prototype.resetGame = function(game)
     var moveBtnDeck = new Deck('webcamMoveBtn' + i, startPosX, startPosY, 32, 32)
     var webcamBox = new Card('webcambox' + i, startPosX, startPosY)
     webcamBox.attachedToDeck = true;
-    game.gameObj.cards.push(webcamBox)
-    moveBtnDeck.attachedCards.push(webcamBox)
-    game.gameObj.decks.push(moveBtnDeck)
+    game.gameObj.cards[webcamBox.id] = webcamBox;
+    moveBtnDeck.attachedCards[webcamBox.id] = webcamBox;
+    game.gameObj.decks[moveBtnDeck.id] = moveBtnDeck;
   }
 }
 

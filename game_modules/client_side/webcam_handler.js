@@ -39,6 +39,15 @@ WebcamHandler.prototype.addCaptureStream = function(newCaptureStream){
   this.wsHandler.sendToWs(sendData);
 }
 
+WebcamHandler.prototype.removeCaptureStream = function()
+{
+  for (let [key, peer] of Object.entries(this.capturePeers))
+  {
+    peer.destroy();
+    delete this.capturePeers[key];
+  }
+}
+
 WebcamHandler.prototype.initWebcamPeer = function(playerId, peerType)
 {
   var streamToSend = this.myStream;
@@ -117,7 +126,7 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId, peerType)
     {
       console.log(error)
     }
-
+    this.emit("peerClosed", playerId, peerType);
   });
   
   var sendData = {
@@ -205,6 +214,7 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp, peerType)
       console.log(error)
     }
     delete peerArray[fromPlayerId];
+    this.emit("peerClosed", fromPlayerId, peerType);
   });
 
   peerArray[fromPlayerId].signal(stp);
