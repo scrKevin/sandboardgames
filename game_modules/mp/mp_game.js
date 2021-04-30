@@ -42,6 +42,7 @@ MP_Game.prototype.resetGame = function(game)
 
   game.gameObj.scoreboxes.push(new Scorebox("auction"));
   var diceDeck = new Deck("diceDeck", 266, 384, 134, 236);
+  diceDeck.setImmovable();
   game.gameObj.decks[diceDeck.id] = diceDeck;
 
   var dice1 = new Card("dice1", diceDeck.x + 20, diceDeck.y + 60);
@@ -242,7 +243,7 @@ MP_Game.prototype.resetGame = function(game)
   for (var i = 0; i < 12; i++)
   {
     var m5 = new Card("hotel" + i, 80, bankDeck.y - 30);
-    game.gameObj.cards[m5] = m5;
+    game.gameObj.cards[m5.id] = m5;
   }
 
   var townSequence = [2, 3, 3, 3, 3, 3, 3, 2];

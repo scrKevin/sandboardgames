@@ -103,7 +103,7 @@ Deck.prototype.removeFromDeck = function(card, playerId){
   {
     if(playerId != this.ownedBy)
     {
-      return;
+      return false;
     }
   }
 
@@ -116,7 +116,9 @@ Deck.prototype.removeFromDeck = function(card, playerId){
     {
       this.walletValue -= card.cardValue;
     }
+    return true;
   }
+  return false;
 }
 
 Deck.prototype.addToDeck = function(card, playerId){
@@ -125,7 +127,7 @@ Deck.prototype.addToDeck = function(card, playerId){
   {
     if(playerId != this.ownedBy)
     {
-      return;
+      return false;
     }
   }
 
@@ -138,7 +140,9 @@ Deck.prototype.addToDeck = function(card, playerId){
     {
       this.walletValue += card.cardValue;
     }
+    return true;
   }
+  return false;
 }
 
 Deck.prototype.setImmovable = function()

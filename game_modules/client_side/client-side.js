@@ -56,8 +56,11 @@ var scorePlusSound = new Audio('/wav/score_plus.wav');
 
 var latestMouseX = -1;
 var latestMouseY = -1;
+var dragCardDeltaX = 0;
+var dragCardDeltaY = 0;
 var dragCardId = null;
 var dragCardIds = [];
+var dragCardOwnedByMe = false;
 var inspectingCardId = null;
 var formerInspectingCardZ = "1";
 var lastTouchedCardId = null;
@@ -336,6 +339,17 @@ function removeWebcam(playerId)
   updateCss("#webcam" + playerId, "display", "none");
 }
 
+function isInDeck(x, y, deck)
+{
+  if (x > deck.x && x < (deck.x + deck.width) && y > deck.y && y < (deck.y + deck.height))
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
 
 $(document).bind('mousemove', function (e) {
   if (!gameInitialized) return;
@@ -354,15 +368,47 @@ $(document).bind('mousemove', function (e) {
 
     if (dragCardId != null)
     {
-      cardX = (($("#" + dragCardId).position().left * (1 / scale)) - deltaX)
+      //cardX = (($("#" + dragCardId).position().left * (1 / scale)) - deltaX)
+      cardX = (((e.pageX - dragCardDeltaX) * (1 / scale)) - deltaX)
       if (cardX < 0)
       {
         cardX = 0;
       }
-      cardY = (($("#" + dragCardId).position().top * (1 / scale)) - deltaY)
+      //cardY = (($("#" + dragCardId).position().top * (1 / scale)) - deltaY)
+      cardY = (((e.pageY - dragCardDeltaY) * (1 / scale)) - deltaY)
       if (cardY < 0)
       {
         cardY = 0;
+      }
+      if (!isDeck(dragCardId))
+      {
+        var isInADeck = false;
+        for (let deck of Object.values(myGameObj.decks))
+        {
+          if (isInDeck(currentXScaled, currentYScaled, deck))
+          {
+            isInADeck = true;
+            updateCss("#" + dragCardId, "transform", "scale(" + deck.scale + ")")
+            continue;
+          }
+        }
+        if (!isInADeck)
+        {
+          updateCss("#" + dragCardId, "transform", "scale(1)");
+          if (myGameObj.hasOwnProperty("sharedPlayerbox") && myGameObj.cards[dragCardId].hasOwnProperty('show'))
+          {
+            if(isInOpenBox(cardX, cardY, myGameObj.sharedPlayerbox))
+            {
+              updateCardFaceId(dragCardId, "frontface");
+              updateCss("#" + dragCardId, "transform", "scale(1)")
+            }
+            else
+            {
+              updateCardFaceId(dragCardId, "backface");
+            }
+            
+          }
+        }
       }
     }
     for (attachedCard of dragCardIds)
@@ -387,29 +433,72 @@ $(document).bind('mousemove', function (e) {
   clientController.mouseMove(currentXScaled, currentYScaled, cardX, cardY);
 });
 
+function isInAnOpenBox(x, y)
+{
+  for (let openbox of Object.values(myGameObj.openboxes))
+  {
+    if (isInOpenBox(x, y, openbox)){
+      return true;
+    }
+  }
+  return false;
+}
+
 
 function cardMouseUp(e)
 {
+  e.preventDefault();
   if (!gameInitialized) return;
-  var cardPosition = $("#" + dragCardId).position();
-  var cardX = Math.round(cardPosition.left * (1 / scale));
-  var cardY = Math.round(cardPosition.top * (1 / scale));
-  clientController.releaseCard(e.pageX * (1 / scale), e.pageY * (1 / scale), cardX, cardY);
-
-  if (myLatency < 100)
+  if (dragCardId !== null)
   {
-    updateCss("#" + dragCardId, "transition-property", "top, left");
-  }
-  for (dci of dragCardIds)
-  {
+    // var cardPosition = $("#" + dragCardId).position();
+    // var cardX = Math.round(cardPosition.left * (1 / scale));
+    // var cardY = Math.round(cardPosition.top * (1 / scale));
+    var cardX = Math.round((e.pageX - dragCardDeltaX) * (1 / scale));
+    var cardY = Math.round((e.pageY - dragCardDeltaY) * (1 / scale));
+    if (cardX < 0) cardX = 0;
+    if (cardY < 0) cardY = 0;
+    var mouseX = e.pageX * (1 / scale);
+    var mouseY = e.pageY * (1 / scale)
 
-    if (myLatency < 100)
+    clientController.releaseCard(mouseX, mouseY, cardX, cardY);
+    if(myGameObj.hasOwnProperty("sharedPlayerbox"))
     {
-      updateCss("#" + dci, "transition-property", "top, left");
+      if (isInOpenBox(cardX, cardY, myGameObj.sharedPlayerbox))
+      {
+        dragCardOwnedByMe = true;
+      }
+      else
+      {
+        dragCardOwnedByMe = false;
+      }
     }
+    if(!dragCardOwnedByMe && !isDeck(dragCardId))
+    {
+      updateCss("#" + dragCardId, "z-index", String(myGameObj.cards[dragCardId].z));
+    }
+    dragCardOwnedByMe = false;
+    if (myLatency < 150)
+    {
+      updateCss("#" + dragCardId, "transition-property", "top, left");
+    }
+    for (dci of dragCardIds)
+    {
+      if(myLatency < 150)
+      {
+        updateCss("#" + dci, "transition-property", "top, left");
+      }
+    }
+    if (!isDeck(dragCardId) && myGameObj.cards[dragCardId].hasOwnProperty("show"))
+    {
+      if (isInAnOpenBox(mouseX, mouseY))
+      {
+        updateCardFaceId(dragCardId, "frontface");
+      }
+    }
+    dragCardId = null;
+    dragCardIds = [];
   }
-  dragCardId = null;
-  dragCardIds = [];
 }
 
 $( document ).on( "mouseup", function( e ) {
@@ -423,7 +512,6 @@ $( document ).on( "mouseup", function( e ) {
   }
   if (dragCardId !== null)
   {
-    // console.log("But dragCardId was not null.");
     cardMouseUp(e);
     
   }
@@ -540,7 +628,8 @@ $( document ).ready(function() {
   $(".card").on("mousedown", function(event){
     if(!gameInitialized) return;
     var draggable = null;
-    if (isDeck(event.currentTarget.id))
+    var draggableIsDeck = isDeck(event.currentTarget.id);
+    if (draggableIsDeck)
     {
       draggable = myGameObj.decks[event.currentTarget.id]
     }
@@ -554,7 +643,7 @@ $( document ).ready(function() {
       dragCardId = event.currentTarget.id;
       dragCardIds = [dragCardId];
       var canEdit = true;
-      if (isDeck(dragCardId))
+      if (draggableIsDeck)
       {
         var deck = myGameObj.decks[dragCardId];
         if (!deck.immovable)
@@ -590,8 +679,14 @@ $( document ).ready(function() {
       if (canEdit)
       {
         var cardPosition = $(event.currentTarget).position();
+        dragCardDeltaX = event.pageX - cardPosition.left;
+        dragCardDeltaY = event.pageY - cardPosition.top;
         var cardX = Math.round(cardPosition.left * (1 / scale));
         var cardY = Math.round(cardPosition.top * (1 / scale));
+        if(!draggableIsDeck)
+        {
+          updateCss("#" + dragCardId, "z-index", "10000000");
+        }
         clientController.clickOnCard(event.currentTarget.id, cardX, cardY);
         updateCss("#" + dragCardId, "transition-property", "none");
         for (dci of dragCardIds)
@@ -640,28 +735,29 @@ $( document ).ready(function() {
   })
   
   $(".card").bind("mouseup", function(e){
-    e.preventDefault();
-    if (!gameInitialized) return;
-    if (dragCardId !== null)
-    {
-      var cardPosition = $("#" + dragCardId).position();
-      var cardX = Math.round(cardPosition.left * (1 / scale));
-      var cardY = Math.round(cardPosition.top * (1 / scale));
-      clientController.releaseCard(e.pageX * (1 / scale), e.pageY * (1 / scale), cardX, cardY);
-      if (myLatency < 100)
-      {
-        updateCss("#" + dragCardId, "transition-property", "top, left");
-      }
-      for (dci of dragCardIds)
-      {
-        if(myLatency < 100)
-        {
-          updateCss("#" + dci, "transition-property", "top, left");
-        }
-      }
-      dragCardId = null;
-      dragCardIds = [];
-    }
+    cardMouseUp(e);
+    // e.preventDefault();
+    // if (!gameInitialized) return;
+    // if (dragCardId !== null)
+    // {
+    //   var cardPosition = $("#" + dragCardId).position();
+    //   var cardX = Math.round(cardPosition.left * (1 / scale));
+    //   var cardY = Math.round(cardPosition.top * (1 / scale));
+    //   clientController.releaseCard(e.pageX * (1 / scale), e.pageY * (1 / scale), cardX, cardY);
+    //   if (myLatency < 100)
+    //   {
+    //     updateCss("#" + dragCardId, "transition-property", "top, left");
+    //   }
+    //   for (dci of dragCardIds)
+    //   {
+    //     if(myLatency < 100)
+    //     {
+    //       updateCss("#" + dci, "transition-property", "top, left");
+    //     }
+    //   }
+    //   dragCardId = null;
+    //   dragCardIds = [];
+    // }
   });
 
   if ($("#drawCanvas").length) // initiate canvas if draw canvas exists
@@ -767,9 +863,15 @@ function updateParentCss(selector, property, value)
   }
 }
 
+function updateCardFaceId(id, faceType)
+{
+  updateCardFace(myGameObj.cards[id], faceType);
+}
+
 
 function updateCardFace(card, faceType)
 {
+  //console.log("updating " + card.id + " to " + faceType)
   if (faceType == "frontface")
   {
     updateCss("#" + card.id + " .threeDcontainer", 'transform', 'translateX(100%) rotateY(180deg)')
@@ -1297,4 +1399,16 @@ function recoverSnapshot()
 {
   clientController.recoverSnapshot();
   $('#resetModal').modal('hide');
+}
+
+function isInOpenBox(x, y, openbox)
+{
+  if (x >= openbox.x && x <= (openbox.x + openbox.width) && y >= openbox.y && y <= (openbox.y + openbox.height))
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
 }

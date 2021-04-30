@@ -223,6 +223,8 @@ Client.prototype.broadcast = function()
   //console.log(this.playerId + " update, patched = " + this.patched)
   if(this.gameObj != null && this.patched)
   {
+    // console.log("player " + this.playerId + " changedCardsBuffer:")
+    // console.log(this.changedCardsBuffer)
     this.patched = false;
     var currentGameObj = JSON.stringify(this.gameObj)
     var diffs = this.dmp.diff_main(this.lastSentGameObj, currentGameObj);
@@ -331,7 +333,7 @@ Client.prototype.addToChangedCardsBuffer = function(newItem)
   {
     this.changedCardsBuffer.push(newItem);
   }
-  this.broadcastLimiter.update();
+  //this.broadcastLimiter.update();
 }
 
 Client.prototype.addDrawCoordinates = function(playerId, newCoords)

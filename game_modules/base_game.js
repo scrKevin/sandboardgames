@@ -82,17 +82,19 @@ function WS_distributor(wss, turnServer, resetGameFunction)
       }
       else if(json.type == "varText")
       {
+        var changed = false;
         for (let card of Object.values(this.gameObj.cards)) {
           if (card.hasOwnProperty("varText"))
           {
             if (card.varText)
             {
+              changed = true;
               card.frontface.text = json.text;
               this.addToChangedCardsBuffer(card.id);
-              this.broadcast();
             }
           }
         }
+        if (changed) this.broadcast();
       }
       else if (json.type == "mouse")
       {
@@ -149,11 +151,11 @@ function WS_distributor(wss, turnServer, resetGameFunction)
               {
                 if(deck.isInDeck(json.pos.x, json.pos.y))
                 {
-                  deck.addToDeck(card, id);
+                  if (deck.addToDeck(card, id)) this.addToChangedCardsBuffer(deck.id);
                 }
                 else
                 {
-                  deck.removeFromDeck(card, id);
+                  if (deck.removeFromDeck(card, id)) this.addToChangedCardsBuffer(deck.id);
                 }
               }
             }
@@ -234,10 +236,12 @@ function WS_distributor(wss, turnServer, resetGameFunction)
               if(deck.isInDeck(json.pos.x, json.pos.y))
               {
                 deck.addToDeck(card, id);
+                this.addToChangedCardsBuffer(deck.id);
               }
               else
               {
                 deck.removeFromDeck(card, id);
+                this.addToChangedCardsBuffer(deck.id);
               }
             }
             if (card.hasOwnProperty("show"))
@@ -275,6 +279,7 @@ function WS_distributor(wss, turnServer, resetGameFunction)
         {
           this.addToChangedCardsBuffer(card.id)
         }
+        this.broadcast();
       }
       else if (json.type == "rollDeck")
       {
@@ -284,6 +289,7 @@ function WS_distributor(wss, turnServer, resetGameFunction)
         {
           this.addToChangedCardsBuffer(card.id)
         }
+        this.broadcast();
       }
       else if (json.type == "editScorebox")
       {
@@ -315,11 +321,13 @@ function WS_distributor(wss, turnServer, resetGameFunction)
       else if (json.type == "startCaptureHost")
       {
         player.isHostingCapture = true;
+        this.broadcast();
       }
       else if (json.type == "stopCaptureHost")
       {
         console.log(id + " is stopping capture host.")
         player.isHostingCapture = false;
+        this.broadcast();
       }
       else if (json.type == "requestRadioFromPlayer")
       {
@@ -451,6 +459,10 @@ function WS_distributor(wss, turnServer, resetGameFunction)
         for (let card of Object.values(this.gameObj.cards))
         {
           this.addToChangedCardsBuffer(card.id);
+        }
+        for (let deck of Object.values(this.gameObj.decks))
+        {
+          this.addToChangedCardsBuffer(deck.id);
         }
         this.broadcastReset();
         this.broadcast();
