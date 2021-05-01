@@ -3027,7 +3027,7 @@ function addRadio(stream)
 
 function setRadioVolume(e)
 {
-  //console.log($("#radioVolumeControl").val());
+  console.log($("#radioVolumeControl").val());
   $("#radio video").prop('volume', $("#radioVolumeControl").val() / 100);
 }
 
