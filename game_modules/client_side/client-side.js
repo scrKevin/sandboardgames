@@ -252,6 +252,11 @@ function InitWebSocket()
       else if(peerType == "capture")
       {
         removeRadio();
+        if (playerId == listeningToRadio)
+        {
+          $(".radioControls").css("display", "none")
+          listeningToRadio = -1;
+        }
       }
     });
 

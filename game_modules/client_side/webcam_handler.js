@@ -254,10 +254,11 @@ WebcamHandler.prototype.leftPeer = function(playerId, peerType)
 
 WebcamHandler.prototype.stopRadio = function(fromPlayerId)
 {
-  console.log(this.capturePeers)
-  console.log("deleting " + fromPlayerId)
-  this.capturePeers[fromPlayerId].destroy();
-  delete this.capturePeers[fromPlayerId];
+  if (fromPlayerId in this.capturePeers)
+  {
+    this.capturePeers[fromPlayerId].destroy();
+    delete this.capturePeers[fromPlayerId];
+  }
 }
 
 module.exports = {WebcamHandler: WebcamHandler}
