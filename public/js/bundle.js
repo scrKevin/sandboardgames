@@ -2853,7 +2853,7 @@ CanvasHandler.prototype.initWsHandler = function(wsHandler)
     }
     else
     {
-      for (player of gameObj.players)
+      for (let player of Object.values(gameObj.players))
       {
         if(player.id == this.myPlayerId)
         {
@@ -2924,15 +2924,20 @@ CanvasHandler.prototype.adjustLatency = function(latency)
 
 function getPlayer(gameObj, playerId)
 {
-  for (player of gameObj.players)
+  if (playerId in gameObj.players)
   {
-    if (player.id == playerId)
-    {
-      return player;
-      break;
-    }
+    return gameObj.players[playerId]
   }
   return null;
+  // for (player of gameObj.players)
+  // {
+  //   if (player.id == playerId)
+  //   {
+  //     return player;
+  //     break;
+  //   }
+  // }
+  // return null;
 }
 
 module.exports = {CanvasHandler: CanvasHandler}
@@ -3009,13 +3014,21 @@ var highestZ;
 var blockCardChange = [];
 
 var devToolsOpenedTimes = {};
+var listeningToRadio = -1;
 
 function addRadio(stream)
 {
   var video = document.createElement('video');
   $("#radio").html(video);
+  $("#radioVolumeControl").val(100);
   video.srcObject = stream;
   video.play();
+}
+
+function setRadioVolume(e)
+{
+  //console.log($("#radioVolumeControl").val());
+  $("#radio video").prop('volume', $("#radioVolumeControl").val() / 100);
 }
 
 function removeRadio()
@@ -3292,7 +3305,7 @@ function isInDeck(x, y, deck)
 
 $(document).bind('mousemove', function (e) {
   if (!gameInitialized) return;
-  e.preventDefault();
+  //e.preventDefault();
 
   var currentXScaled = Math.round(e.pageX * (1 / scale));
   var currentYScaled = Math.round(e.pageY * (1 / scale));
@@ -3558,6 +3571,8 @@ $( document ).ready(function() {
   $(".scoreboxResetButton").on('click', scoreboxResetButton);
   $(".mic").on('click', toggleMic);
   $(".playerRadio").on('click', toggleRadio);
+  $("#radioStop").on("click", stopRadio);
+  $("#radioVolumeControl").on('input', setRadioVolume);
 
   $('#name').keyup(function(){
     checkEnterIsAllowed();
@@ -3735,7 +3750,7 @@ $( document ).ready(function() {
 
 async function startCapture(){
   try {
-    captureStream = await navigator.mediaDevices.getDisplayMedia({video:true, audio:{sampleRate: 44100}});
+    captureStream = await navigator.mediaDevices.getDisplayMedia({video:{ frameRate: { ideal: 5, max: 15 }}, audio:{sampleRate: 44100}});
     captureStream.getVideoTracks()[0].onended = function () {
       console.log("captureStream ended.")
       clientController.removeCaptureStream();
@@ -3771,7 +3786,18 @@ function toggleMic(e) {
 }
 
 function toggleRadio(e) {
-  clientController.requestRadioFromPlayer(Number($(e.target).attr('player')));
+  listeningToRadio = Number($(e.target).attr('player'));
+  updateCss("#radioContainer" + listeningToRadio, "display", "none");
+  //$(e.target).css("display", "none");
+  clientController.requestRadioFromPlayer(listeningToRadio);
+  $(".radioControls").css("display", "block")
+}
+
+function stopRadio(e){
+  $(".radioControls").css("display", "none")
+  clientController.stopRadio(listeningToRadio);
+  removeRadio();
+  listeningToRadio = -1;
 }
 
 function valueExistsInDict(dict, value)
@@ -4113,9 +4139,10 @@ function updateCards(gameObj, changedCardsBuffer)
 
 function updateCursors (gameObj)
 {
-  playerIndex = 0;
-  for (player of gameObj.players){
-    updateCss("#cursor" + playerIndex, "background-color", player.color);
+  var ids = [];
+  for (let player of Object.values(gameObj.players)){
+    ids.push(player.id);
+    updateCss("#cursor" + player.id, "background-color", player.color);
     updateCss("#player" + player.id + "box", "background-color", player.color);
     updateCss("#scaledProjectionBox" + player.id, "background-color", player.color);
     updateCss(".pieceFor_" + player.id + " .pieceImg", "filter", filterMap[player.color] + cssFilterBorder);
@@ -4124,26 +4151,66 @@ function updateCursors (gameObj)
     if(player.id != myPlayerId)
     {
       var radioDisplay = 'none';
-      if (player.isHostingCapture)
+      if (player.isHostingCapture && listeningToRadio == -1)
       {
         radioDisplay = 'block';
       }
       updateCss("#radioContainer" + player.id, "display", radioDisplay);
-      updateCss("#cursor" + playerIndex, "left", (player.pos.x - 22) + "px");
-      updateCss("#cursor" + playerIndex, "top", (player.pos.y - 22) + "px");
-      updateCss("#cursor" + playerIndex, "display", "block");
+      updateCss("#cursor" + player.id, "left", (player.pos.x - 11) + "px");
+      updateCss("#cursor" + player.id, "top", (player.pos.y - 11) + "px");
+      updateCss("#cursor" + player.id, "display", "block");
     }
     else
     {
-      updateCss("#cursor" + playerIndex, "display", "none");
+      updateCss("#cursor" + player.id, "display", "none");
     }
-    playerIndex++;
   }
-  for (var i = playerIndex; i < 20; i++){
-    updateCss("#cursor" + i, "left", "0px");
-    updateCss("#cursor" + i, "top", "0px");
-    updateCss("#cursor" + playerIndex, "display", "none");
+
+  for (var i = 0; i < 20; i++)
+  {
+    if (!(i in ids))
+    {
+      updateCss("#cursor" + i, "left", "0px");
+      updateCss("#cursor" + i, "top", "0px");
+      updateCss("#cursor" + i, "display", "none");
+    }
   }
+
+  // playerIndex = 0;
+  // console.log(gameObj);
+  // for (player of gameObj.players){
+  //   updateCss("#cursor" + playerIndex, "background-color", player.color);
+  //   updateCss("#player" + player.id + "box", "background-color", player.color);
+  //   updateCss("#scaledProjectionBox" + player.id, "background-color", player.color);
+  //   updateCss(".pieceFor_" + player.id + " .pieceImg", "filter", filterMap[player.color] + cssFilterBorder);
+  //   $(document).trigger("pieceColor", [player.id, filterMap[player.color]]);
+  //   updateHtml("#player" + player.id + "NameText", player.name)
+  //   if(player.id != myPlayerId)
+  //   {
+  //     var radioDisplay = 'none';
+  //     if (player.isHostingCapture && listeningToRadio == -1)
+  //     {
+  //       radioDisplay = 'block';
+  //     }
+  //     updateCss("#radioContainer" + player.id, "display", radioDisplay);
+  //     updateCss("#cursor" + playerIndex, "left", (player.pos.x - 22) + "px");
+  //     updateCss("#cursor" + playerIndex, "top", (player.pos.y - 22) + "px");
+  //     updateCss("#cursor" + playerIndex, "display", "block");
+  //     console.log(playerIndex)
+  //   }
+  //   else
+  //   {
+  //     updateCss("#cursor" + playerIndex, "display", "none");
+  //   }
+  //   playerIndex++;
+  // }
+  // console.log("final playerindex: " + playerIndex)
+  // for (var i = playerIndex; i < 20; i++){
+  //   updateCss("#cursor" + i, "left", "0px");
+  //   updateCss("#cursor" + i, "top", "0px");
+  //   updateCss("#cursor" + playerIndex, "display", "none");
+  // }
+  // console.log(" ");
 }
 
 function updateScoreboxes (gameObj)
@@ -4233,7 +4300,7 @@ function cardIsInInspectorBox(card)
 }
 
 function colorIsTaken(gameObj, code){
-  for (player of gameObj.players)
+  for (let player of Object.values(gameObj.players))
   {
     if (player.color == code)
     {
@@ -4442,6 +4509,11 @@ ClientController.prototype.addCaptureStream = function(newCaptureStream){
 
 ClientController.prototype.removeCaptureStream = function(){
   this.webcamHandler.removeCaptureStream();
+}
+
+ClientController.prototype.stopRadio = function(playerId)
+{
+  this.init && this.webcamHandler.stopRadio(playerId);
 }
 
 ClientController.prototype.mouseMove = function(x, y, cardX, cardY)
@@ -4984,6 +5056,14 @@ WebcamHandler.prototype.leftPeer = function(playerId, peerType)
     console.log(error)
   }
   delete peerArray[playerId]
+}
+
+WebcamHandler.prototype.stopRadio = function(fromPlayerId)
+{
+  console.log(this.capturePeers)
+  console.log("deleting " + fromPlayerId)
+  this.capturePeers[fromPlayerId].destroy();
+  delete this.capturePeers[fromPlayerId];
 }
 
 module.exports = {WebcamHandler: WebcamHandler}

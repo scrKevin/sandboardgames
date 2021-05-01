@@ -19,7 +19,7 @@ FKAR_Game.prototype.resetGame = function(game)
 
   game.gameObj.highestZ = 10000;
 
-  for (player of game.gameObj.players)
+  for (let player of Object.values(game.gameObj.players))
   {
     player.drawArray = [];
   }

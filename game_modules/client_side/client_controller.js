@@ -90,6 +90,11 @@ ClientController.prototype.removeCaptureStream = function(){
   this.webcamHandler.removeCaptureStream();
 }
 
+ClientController.prototype.stopRadio = function(playerId)
+{
+  this.init && this.webcamHandler.stopRadio(playerId);
+}
+
 ClientController.prototype.mouseMove = function(x, y, cardX, cardY)
 {
   this.init && this.mouseHandler.mouseMove(x, y, cardX, cardY);

@@ -145,7 +145,7 @@ CanvasHandler.prototype.initWsHandler = function(wsHandler)
     }
     else
     {
-      for (player of gameObj.players)
+      for (let player of Object.values(gameObj.players))
       {
         if(player.id == this.myPlayerId)
         {
@@ -216,15 +216,20 @@ CanvasHandler.prototype.adjustLatency = function(latency)
 
 function getPlayer(gameObj, playerId)
 {
-  for (player of gameObj.players)
+  if (playerId in gameObj.players)
   {
-    if (player.id == playerId)
-    {
-      return player;
-      break;
-    }
+    return gameObj.players[playerId]
   }
   return null;
+  // for (player of gameObj.players)
+  // {
+  //   if (player.id == playerId)
+  //   {
+  //     return player;
+  //     break;
+  //   }
+  // }
+  // return null;
 }
 
 module.exports = {CanvasHandler: CanvasHandler}

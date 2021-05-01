@@ -34,7 +34,7 @@ $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
     shouldBeVisibleArray.push(false);
   }
 
-  for (player of gameObj.players)
+  for (let player of Object.values(gameObj.players))
   {
     shouldBeVisibleArray[player.id] = true;
   }

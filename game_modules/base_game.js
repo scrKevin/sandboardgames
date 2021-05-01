@@ -30,7 +30,7 @@ function WS_distributor(wss, turnServer, resetGameFunction)
   this.clients = [];
 
   this.gameObj = {
-    players:[],
+    players:{},
     cards: {},
     decks: {},
     openboxes: {},
@@ -50,7 +50,7 @@ function WS_distributor(wss, turnServer, resetGameFunction)
     var client = new Client(id, ws, this);
 
     this.clients.push(client);
-    this.gameObj.players.push(player);
+    this.gameObj.players[id] = player;//.push(player);
 
     ws.on('message', (message) => {
       var json = JSON.parse(this.deconstructMessage(message));
@@ -331,22 +331,15 @@ function WS_distributor(wss, turnServer, resetGameFunction)
       }
       else if (json.type == "requestRadioFromPlayer")
       {
-        for (player of this.gameObj.players)
+        if (this.gameObj.players[json.playerNumber].isHostingCapture)
         {
-          if (player.id == json.playerNumber)
+          for (clientIS of this.clients)
           {
-            if (player.isHostingCapture)
+            if (clientIS.playerId == json.playerNumber)
             {
-              for (clientI of this.clients)
-              {
-                if (clientI.playerId == json.playerNumber)
-                {
-                  clientI.sendRadioRequest(id);
-                  continue;
-                }
-              }
+              clientIS.sendRadioRequest(id);
+              continue;
             }
-            continue;
           }
         }
       }
@@ -511,8 +504,10 @@ function WS_distributor(wss, turnServer, resetGameFunction)
       var removeIndexClients = this.clients.map(function(item) { return item.playerId; }).indexOf(id);
       this.clients.splice(removeIndexClients, 1);
 
-      var removeIndexGameObj = this.gameObj.players.map(function(item){ return item.id;}).indexOf(id);
-      this.gameObj.players.splice(removeIndexGameObj, 1);
+      // var removeIndexGameObj = this.gameObj.players.map(function(item){ return item.id;}).indexOf(id);
+      // this.gameObj.players.splice(removeIndexGameObj, 1);
+
+      delete this.gameObj.players[id];
 
       this.playerNumbers[id] = true;
       this.broadcastLeftPeer(id);

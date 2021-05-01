@@ -16,6 +16,14 @@ function toggleVisible(selector, shouldBeVisible)
   }
 }
 
+function updateCss(selector, property, value)
+{
+  if ($(selector).css(property) !== value)
+  {
+    $(selector).css(property, value);
+  }
+}
+
 $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
 
   var shouldBeVisibleArray = [];
@@ -24,7 +32,7 @@ $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
     shouldBeVisibleArray.push(false);
   }
 
-  for (player of gameObj.players)
+  for (let player of Object.values(gameObj.players))
   {
     shouldBeVisibleArray[player.id] = true;
   }
@@ -34,4 +42,14 @@ $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
     toggleVisible("#webcambox" + index, shouldBeVisible);
   });
 
+});
+
+$(document).on("addWebcam", function(e, playerId, mirrored, muted){
+  updateCss("#ballotja" + playerId, "display", "block");
+  updateCss("#ballotnein" + playerId, "display", "block");
+});
+
+$(document).on("leftPeer", function(e, playerId){
+  updateCss("#ballotja" + playerId, "display", "none");
+  updateCss("#ballotnein" + playerId, "display", "none");
 });
