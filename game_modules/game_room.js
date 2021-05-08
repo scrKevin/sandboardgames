@@ -46,7 +46,7 @@ GameRoom.prototype.getNrOfPlayers = function()
   var totalPlayers = 0
   for (game of this.games)
   {
-    totalPlayers += game.gameHandler.game.gameObj.players.length;
+    totalPlayers += Object.keys(game.gameHandler.game.gameObj.players).length;
   }
   return totalPlayers;
 }
