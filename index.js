@@ -35,7 +35,20 @@ const httpsOptions = {
 }
 
 var httpsServer = https.createServer(httpsOptions, app);
-var httpServer = http.createServer(app);
+if (process.env.NODE_ENV === 'development') {
+  var httpServer = http.createServer(app);
+}
+else if (process.env.NODE_ENV === 'production') {
+  var redirectApp = express ()
+  var httpServer = http.createServer(redirectApp);
+
+  redirectApp.use(function requireHTTPS(req, res, next) {
+    if (!req.secure) {
+      return res.redirect('https://' + req.headers.host + req.url);
+    }
+    next();
+  })
+}
 
 var gameRooms = [];
 
@@ -77,9 +90,11 @@ httpsServer.on('upgrade', function upgrade(request, socket, head) {
   onUpgrade(request, socket, head);
 });
 
-httpServer.on('upgrade', function upgrade(request, socket, head) {
-  onUpgrade(request, socket, head);
-});
+if (process.env.NODE_ENV === 'development') {
+  httpServer.on('upgrade', function upgrade(request, socket, head) {
+    onUpgrade(request, socket, head);
+  });
+}
 
 app.get("/", (req, res) => {
   res.render("mainpage/pages/index", {gameRooms: gameRooms});
