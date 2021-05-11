@@ -28,6 +28,7 @@ function Client(playerId, ws, distributor)
   this.ws = ws;
   this.isAlive = true;
   this.patched = false;
+  this.broadCastNextAvailable = false;
   this.latencyTestCounter = 20001;
   this.latencyTestCouterIncrement = 5000;
   this.latencyTestTimeStamp = new Date();
@@ -81,6 +82,8 @@ Client.prototype.sendCardConflict = function(cardId)
   if (this.ws.readyState === WebSocket.OPEN) {
     this.ws.send(binaryString);
   }
+  this.addToChangedCardsBuffer(cardId);
+  this.updateBroadcast();
 }
 
 Client.prototype.sendNewPeer = function (otherClient)
@@ -101,7 +104,7 @@ Client.prototype.newPeerInitiated = function(fromPlayerId)
 {
   clearTimeout(this.newPeerTimeouts[fromPlayerId]);
   delete this.newPeerTimeouts[fromPlayerId];
-  console.log(this.playerId + " cleard timeout for " + fromPlayerId);
+  console.log(this.playerId + " cleared timeout for " + fromPlayerId);
   console.log("Stream from " + fromPlayerId + " received by " + this.playerId)
   this.newPeerState = 'idle';
   this.processNewPeerQueue();
@@ -214,6 +217,10 @@ Client.prototype.reportPatched = function()
 {
   setTimeout(() => {
     this.patched = true;
+    if (this.broadCastNextAvailable)
+    {
+      this.broadcast();
+    }
   }, this.broadcastLimiter.ms * 1.5);
   
 }
@@ -226,6 +233,7 @@ Client.prototype.broadcast = function()
     // console.log("player " + this.playerId + " changedCardsBuffer:")
     // console.log(this.changedCardsBuffer)
     this.patched = false;
+    this.broadCastNextAvailable = false;
     var currentGameObj = JSON.stringify(this.gameObj)
     var diffs = this.dmp.diff_main(this.lastSentGameObj, currentGameObj);
     this.dmp.diff_cleanupEfficiency(diffs);
@@ -257,6 +265,10 @@ Client.prototype.broadcast = function()
     if (this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(binaryString);
     }
+  }
+  else if (!this.patched)
+  {
+    this.broadCastNextAvailable = true;
   }
 }
 
