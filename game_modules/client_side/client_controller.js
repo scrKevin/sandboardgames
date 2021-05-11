@@ -22,8 +22,12 @@ ClientController.prototype.initialize = function(ws, myStream)
   this.wsHandler.eventEmitter.on("playerId", (playerId) => {
     this.emit("playerId", playerId);
   });
-  this.wsHandler.eventEmitter.on("cardConflict", (cardId) => {
-    this.emit("cardConflict", cardId);
+  this.wsHandler.eventEmitter.on("cardConflict", (cardId, replacementCardId) => {
+    if (replacementCardId !== -1)
+    {
+      this.mouseHandler.dragCardId = replacementCardId;
+    }
+    this.emit("cardConflict", cardId, replacementCardId);
   });
   this.wsHandler.eventEmitter.on("updateGame", (gameObj, changedCardsBuffer, newDrawCoords, init) => {
     this.emit("updateGame", gameObj, changedCardsBuffer, newDrawCoords, init);
@@ -105,9 +109,9 @@ ClientController.prototype.mouseUp = function()
   this.init && this.mouseHandler.mouseUp();
 }
 
-ClientController.prototype.clickOnCard = function(id, cardX, cardY)
+ClientController.prototype.clickOnCard = function(id, cardX, cardY, dragCardDeltaX, dragCardDeltaY)
 {
-  this.init && this.mouseHandler.clickOnCard(id, cardX, cardY);
+  this.init && this.mouseHandler.clickOnCard(id, cardX, cardY, dragCardDeltaX, dragCardDeltaY);
 }
 
 ClientController.prototype.touchCard = function(id, x, y)

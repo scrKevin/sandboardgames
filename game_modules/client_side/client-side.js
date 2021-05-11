@@ -207,12 +207,20 @@ function InitWebSocket()
       $(document).trigger("gameObj", [gameObj, myPlayerId, scale]);
     });
 
-    clientController.on("cardConflict", (cardId) => {
+    clientController.on("cardConflict", (cardId, replacementCardId) => {
       if (dragCardId == cardId)
       {
-        console.log("Card conflict detected for " + cardId);
-        dragCardId = null;
-        dragCardIds = [];
+        console.log("Card conflict detected for " + cardId + " replace with " + replacementCardId);
+        if (replacementCardId !== -1)
+        {
+          dragCardId = replacementCardId;
+          dragCardIds = [replacementCardId];
+        }
+        else
+        {
+          dragCardId = null;
+          dragCardIds = [];
+        }
       }
     });
 
@@ -702,7 +710,7 @@ $( document ).ready(function() {
         {
           updateCss("#" + dragCardId, "z-index", "10000000");
         }
-        clientController.clickOnCard(event.currentTarget.id, cardX, cardY);
+        clientController.clickOnCard(event.currentTarget.id, cardX, cardY, dragCardDeltaX, dragCardDeltaY);
         updateCss("#" + dragCardId, "transition-property", "none");
         for (dci of dragCardIds)
         {

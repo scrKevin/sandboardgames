@@ -78,4 +78,13 @@ Card.prototype.updatePos = function(pos)
   }
 }
 
+Card.prototype.isValidReplacement = function(x, y)
+{
+  if ((this.x - x > -20 && this.x - x < 20) && (this.y - y > -20 && this.y - y < 20) && this.clickedBy == -1)
+  {
+    return true;
+  }
+  return false;
+}
+
 module.exports = {Card: Card}

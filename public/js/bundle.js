@@ -3151,12 +3151,20 @@ function InitWebSocket()
       $(document).trigger("gameObj", [gameObj, myPlayerId, scale]);
     });
 
-    clientController.on("cardConflict", (cardId) => {
+    clientController.on("cardConflict", (cardId, replacementCardId) => {
       if (dragCardId == cardId)
       {
-        console.log("Card conflict detected for " + cardId);
-        dragCardId = null;
-        dragCardIds = [];
+        console.log("Card conflict detected for " + cardId + " replace with " + replacementCardId);
+        if (replacementCardId !== -1)
+        {
+          dragCardId = replacementCardId;
+          dragCardIds = [replacementCardId];
+        }
+        else
+        {
+          dragCardId = null;
+          dragCardIds = [];
+        }
       }
     });
 
@@ -3646,7 +3654,7 @@ $( document ).ready(function() {
         {
           updateCss("#" + dragCardId, "z-index", "10000000");
         }
-        clientController.clickOnCard(event.currentTarget.id, cardX, cardY);
+        clientController.clickOnCard(event.currentTarget.id, cardX, cardY, dragCardDeltaX, dragCardDeltaY);
         updateCss("#" + dragCardId, "transition-property", "none");
         for (dci of dragCardIds)
         {
@@ -4448,8 +4456,12 @@ ClientController.prototype.initialize = function(ws, myStream)
   this.wsHandler.eventEmitter.on("playerId", (playerId) => {
     this.emit("playerId", playerId);
   });
-  this.wsHandler.eventEmitter.on("cardConflict", (cardId) => {
-    this.emit("cardConflict", cardId);
+  this.wsHandler.eventEmitter.on("cardConflict", (cardId, replacementCardId) => {
+    if (replacementCardId !== -1)
+    {
+      this.mouseHandler.dragCardId = replacementCardId;
+    }
+    this.emit("cardConflict", cardId, replacementCardId);
   });
   this.wsHandler.eventEmitter.on("updateGame", (gameObj, changedCardsBuffer, newDrawCoords, init) => {
     this.emit("updateGame", gameObj, changedCardsBuffer, newDrawCoords, init);
@@ -4531,9 +4543,9 @@ ClientController.prototype.mouseUp = function()
   this.init && this.mouseHandler.mouseUp();
 }
 
-ClientController.prototype.clickOnCard = function(id, cardX, cardY)
+ClientController.prototype.clickOnCard = function(id, cardX, cardY, dragCardDeltaX, dragCardDeltaY)
 {
-  this.init && this.mouseHandler.clickOnCard(id, cardX, cardY);
+  this.init && this.mouseHandler.clickOnCard(id, cardX, cardY, dragCardDeltaX, dragCardDeltaY);
 }
 
 ClientController.prototype.touchCard = function(id, x, y)
@@ -4724,7 +4736,7 @@ MouseHandler.prototype.mouseUp = function()
   this.mouseFpsLimiter.update();
 }
 
-MouseHandler.prototype.clickOnCard = function(id, cardX, cardY)
+MouseHandler.prototype.clickOnCard = function(id, cardX, cardY, dragCardDeltaX, dragCardDeltaY)
 {
   this.dragCardId = id;
   this.dragCardX = cardX;
@@ -4732,7 +4744,11 @@ MouseHandler.prototype.clickOnCard = function(id, cardX, cardY)
   this.mouseclicked = true;
   var sendData = {
     type: "clickcard",
-    card: id
+    card: id,
+    cardX: cardX,
+    cardY: cardY,
+    dcdx: dragCardDeltaX,
+    dcdy: dragCardDeltaY
   }
   this.wsHandler.sendToWs(sendData);
   this.mouseFpsLimiter.update();
@@ -5174,7 +5190,7 @@ function WsHandler(ws)
     }
     else if (json.type == "cardConflict")
     {
-      this.eventEmitter.emit('cardConflict', json.cardId);
+      this.eventEmitter.emit('cardConflict', json.cardId, json.replacementCardId);
     }
     else if (json.type == "newPeer")
     {

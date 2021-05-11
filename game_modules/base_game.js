@@ -210,8 +210,38 @@ function WS_distributor(wss, turnServer, resetGameFunction)
           else
           {
             // confilict with clicked cards
-            console.log("card confilict with " + card.clickedBy + " (first) and " + id + " (second)")
-            client.sendCardConflict(card.id);
+            console.log("card confilict for " + card.id + " with " + card.clickedBy + " (first) and " + id + " (second)")
+            var validReplacements = {};
+            for (let replacementCard of Object.values(this.gameObj.cards))
+            {
+              if (replacementCard.id != card.id)
+              {
+                if (replacementCard.isValidReplacement(json.cardX, json.cardY))
+                {
+                  validReplacements[replacementCard.z] = replacementCard;
+                }
+              }
+            }
+            //console.log(validReplacements)
+            var orderedByZ = Object.keys(validReplacements).sort().reduce(
+              (obj, key) => { 
+                obj[key] = validReplacements[key]; 
+                return obj;
+              }, 
+              {}
+            );
+            //console.log(orderedByZ)
+            var replacementCardId = -1;
+            if (Object.keys(orderedByZ).length > 0)
+            {
+              var replacementCard = orderedByZ[Object.keys(orderedByZ)[Object.keys(orderedByZ).length - 1]]
+              this.gameObj.cards[replacementCard.id].clickedBy = id;
+              console.log("found replacement card for " + id + ": " + replacementCard.id)
+              replacementCardId = replacementCard.id;
+            }
+            
+            client.sendCardConflict(card.id, replacementCardId);
+            this.broadcast();
           }
         }
       }

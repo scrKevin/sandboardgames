@@ -71,11 +71,12 @@ Client.prototype.setGameObj = function(gameObj, turnCredentials)
   this.gameObj = gameObj;
 }
 
-Client.prototype.sendCardConflict = function(cardId)
+Client.prototype.sendCardConflict = function(cardId, replacementCardId)
 {
   var sendData = {
     type: "cardConflict",
-    cardId: cardId
+    cardId: cardId,
+    replacementCardId: replacementCardId
   };
   var strToSend = JSON.stringify(sendData);
   var binaryString = this.constructMessage(strToSend);// pako.deflate(strToSend, { to: 'string' });
@@ -83,6 +84,7 @@ Client.prototype.sendCardConflict = function(cardId)
     this.ws.send(binaryString);
   }
   this.addToChangedCardsBuffer(cardId);
+  this.addToChangedCardsBuffer(replacementCardId);
   this.updateBroadcast();
 }
 

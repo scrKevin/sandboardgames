@@ -35,7 +35,7 @@ MouseHandler.prototype.mouseUp = function()
   this.mouseFpsLimiter.update();
 }
 
-MouseHandler.prototype.clickOnCard = function(id, cardX, cardY)
+MouseHandler.prototype.clickOnCard = function(id, cardX, cardY, dragCardDeltaX, dragCardDeltaY)
 {
   this.dragCardId = id;
   this.dragCardX = cardX;
@@ -43,7 +43,11 @@ MouseHandler.prototype.clickOnCard = function(id, cardX, cardY)
   this.mouseclicked = true;
   var sendData = {
     type: "clickcard",
-    card: id
+    card: id,
+    cardX: cardX,
+    cardY: cardY,
+    dcdx: dragCardDeltaX,
+    dcdy: dragCardDeltaY
   }
   this.wsHandler.sendToWs(sendData);
   this.mouseFpsLimiter.update();
