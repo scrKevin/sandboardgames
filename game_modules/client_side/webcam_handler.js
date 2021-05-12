@@ -63,7 +63,7 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId, peerType)
   console.log("initiating peer for player " + playerId)
   var peerOptions = {
     initiator: true,
-    trickle: false,
+    trickle: true,
     config: peerConfig,
     stream: streamToSend
   }
@@ -150,47 +150,69 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp, peerType)
     streamToSend = null;
     peerArray = this.capturePeers;
   }
-  console.log("peer connected from player " + fromPlayerId)
-  var peerOptions = {
-    initiator: false,
-    trickle: false,
-    config: peerConfig,
-    stream: streamToSend
-  }
-  if(process.env.NODE_ENV === 'test')
+  if (!(fromPlayerId in peerArray))
   {
-    peerOptions.wrtc = wrtc;
-  }
-  peerArray[fromPlayerId] = new SimplePeer(peerOptions);
-
-  peerArray[fromPlayerId].on('stream', (stream) => {
-    console.log("got stream for player " + fromPlayerId);
-    this.emit("stream", fromPlayerId, stream, peerType);
-    var sendData = {
-      type: "readyForNewPeer",
-      fromPlayerId: fromPlayerId,
-      peerType: peerType
+    console.log("peer connected from player " + fromPlayerId)
+    var peerOptions = {
+      initiator: false,
+      trickle: true,
+      config: peerConfig,
+      stream: streamToSend
     }
-    this.wsHandler.sendToWs(sendData);
-  });
-
-  peerArray[fromPlayerId].on('signal', (data) => {
-    console.log("got peer signal from player " + fromPlayerId)
-    //console.log(data);
-    var sendData = {
-      type: "acceptPeer",
-      fromPlayerId: fromPlayerId,
-      stp: data,
-      peerType: peerType
-    }
-    this.wsHandler.sendToWs(sendData);
-  });
-
-  peerArray[fromPlayerId].on('error', err => {
-    console.log("error in peerConnected from " + fromPlayerId)
-    console.log(err);
-    if (err.code == "ERR_CONNECTION_FAILURE")
+    if(process.env.NODE_ENV === 'test')
     {
+      peerOptions.wrtc = wrtc;
+    }
+  
+    peerArray[fromPlayerId] = new SimplePeer(peerOptions);
+
+    peerArray[fromPlayerId].on('stream', (stream) => {
+      console.log("got stream for player " + fromPlayerId);
+      this.emit("stream", fromPlayerId, stream, peerType);
+      var sendData = {
+        type: "readyForNewPeer",
+        fromPlayerId: fromPlayerId,
+        peerType: peerType
+      }
+      this.wsHandler.sendToWs(sendData);
+    });
+
+    peerArray[fromPlayerId].on('signal', (data) => {
+      console.log("got peer signal from player " + fromPlayerId)
+      //console.log(data);
+      var sendData = {
+        type: "acceptPeer",
+        fromPlayerId: fromPlayerId,
+        stp: data,
+        peerType: peerType
+      }
+      this.wsHandler.sendToWs(sendData);
+    });
+
+    peerArray[fromPlayerId].on('error', err => {
+      console.log("error in peerConnected from " + fromPlayerId)
+      console.log(err);
+      if (err.code == "ERR_CONNECTION_FAILURE")
+      {
+        try {
+          peerArray[fromPlayerId].destroy();
+        }
+        catch (error)
+        {
+          console.log(error)
+        }
+        delete peerArray[fromPlayerId]
+        var sendData = {
+          type: "connectionFailure",
+          fromPlayerId: fromPlayerId,
+          peerType: peerType
+        }
+        this.wsHandler.sendToWs(sendData);
+      }
+    });
+
+    peerArray[fromPlayerId].on('close', () => {
+      console.log("closed WebcamPeer for player " + fromPlayerId);
       try {
         peerArray[fromPlayerId].destroy();
       }
@@ -198,28 +220,10 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp, peerType)
       {
         console.log(error)
       }
-      delete peerArray[fromPlayerId]
-      var sendData = {
-        type: "connectionFailure",
-        fromPlayerId: fromPlayerId,
-        peerType: peerType
-      }
-      this.wsHandler.sendToWs(sendData);
-    }
-  });
-
-  peerArray[fromPlayerId].on('close', () => {
-    console.log("closed WebcamPeer for player " + fromPlayerId);
-    try {
-      peerArray[fromPlayerId].destroy();
-    }
-    catch (error)
-    {
-      console.log(error)
-    }
-    delete peerArray[fromPlayerId];
-    this.emit("peerClosed", fromPlayerId, peerType);
-  });
+      delete peerArray[fromPlayerId];
+      this.emit("peerClosed", fromPlayerId, peerType);
+    });
+  }
 
   peerArray[fromPlayerId].signal(stp);
 }
