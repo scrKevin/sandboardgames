@@ -3047,6 +3047,8 @@ function addWebcam(stream, playerId, mirrored, muted)
   }
   video.muted = muted;
   video.srcObject = stream;
+  $("#webcam" + playerId + " video").attr('autoplay',"");
+  $("#webcam" + playerId + " video").attr('playsinline',"");
   video.addEventListener("playing", function () {
     setTimeout(function () {
       console.log("Stream dimensions: " + video.videoWidth + "x" + video.videoHeight);
@@ -3080,6 +3082,39 @@ function addWebcam(stream, playerId, mirrored, muted)
 }
 
 var gameInitialized = false;
+
+function replaceCard(replacementCardId, oldCardId)
+{
+  if (replacementCardId !== -1)
+  {
+    updateCss("#" + oldCardId, "z-index", String(myGameObj.cards[oldCardId].z));
+    if (myLatency < 150)
+    {
+      for (dci of dragCardIds)
+      {
+        updateCss("#" + dci, "transition-property", "top, left");
+      }
+    }
+    dragCardId = replacementCardId;
+    dragCardIds = [replacementCardId];
+    updateCss("#" + dragCardId, "z-index", "10000000");
+    for (dci of dragCardIds)
+    {
+      updateCss("#" + dci, "transition-property", "none");
+    }          
+  }
+  else
+  {
+    for (dci of dragCardIds)
+    {
+      if (myLatency < 150) {
+        updateCss("#" + dci, "transition-property", "top, left");
+      }
+    }
+    dragCardId = null;
+    dragCardIds = [];
+  }
+}
 
 function InitWebSocket()
 {
@@ -3155,16 +3190,7 @@ function InitWebSocket()
       if (dragCardId == cardId)
       {
         console.log("Card conflict detected for " + cardId + " replace with " + replacementCardId);
-        if (replacementCardId !== -1)
-        {
-          dragCardId = replacementCardId;
-          dragCardIds = [replacementCardId];
-        }
-        else
-        {
-          dragCardId = null;
-          dragCardIds = [];
-        }
+        replaceCard(replacementCardId, dragCardId);
       }
     });
 
@@ -3541,6 +3567,14 @@ function isDeck (id)
   }
 }
 
+function cardIsValidReplacement (card, conflictingCard)
+{
+  if ((card.x - conflictingCard.x > -20 && card.x - conflictingCard.x < 20) && (card.y - conflictingCard.y > -20 && card.y - conflictingCard.y < 20) && card.clickedBy == -1 && card.id != conflictingCard.id)
+  {
+    return true;
+  }
+  return false;
+}
 
 
 $( window ).resize(function() {
@@ -3666,6 +3700,41 @@ $( document ).ready(function() {
     else
     {
       console.log("Clicked draggable " + draggable.id + " is already clicked by player " + draggable.clickedBy);
+      validReplacements = {}
+      for (let replacementCard of Object.values(myGameObj.cards))
+      {
+        if (replacementCard.id != draggable.id)
+        {
+          if (cardIsValidReplacement(replacementCard, draggable))
+          {
+            validReplacements[replacementCard.z] = replacementCard;
+          }
+        }
+      }
+      var orderedByZ = Object.keys(validReplacements).sort().reduce(
+        (obj, key) => { 
+          obj[key] = validReplacements[key]; 
+          return obj;
+        }, 
+        {}
+      );
+      var replacementCardId = -1;
+      if (Object.keys(orderedByZ).length > 0)
+      {
+        var replacementCard = orderedByZ[Object.keys(orderedByZ)[Object.keys(orderedByZ).length - 1]]
+        //myGameObj.cards[replacementCard.id].clickedBy = id;
+        console.log("found replacement card for " + draggable.id + ": " + replacementCard.id)
+        replacementCardId = replacementCard.id;
+      }
+      replaceCard(replacementCardId, draggable.id);
+      if (replacementCardId !== -1) {
+        var cardPosition = $("#" + replacementCardId).position();
+        dragCardDeltaX = event.pageX - cardPosition.left;
+        dragCardDeltaY = event.pageY - cardPosition.top;
+        var cardX = Math.round(cardPosition.left * (1 / scale));
+        var cardY = Math.round(cardPosition.top * (1 / scale));
+        clientController.clickOnCard(replacementCardId, cardX, cardY, dragCardDeltaX, dragCardDeltaY);
+      }
     }
   });
 

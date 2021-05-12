@@ -21,7 +21,13 @@ const availableGames = require("./game_modules/game_list").availableGames;
 
 const app = express();
 const httpsPort = process.env.PORT || "8000";
-const httpPort = "8080";
+let httpPort = "8080";
+if (process.env.NODE_ENV === 'development') {
+  httpPort = "8080";
+}
+else if (process.env.NODE_ENV === 'production') {
+  httpPort = "80";
+}
 
 console.log("PORTS: https: " + httpsPort + ", http: " + httpPort);
 
