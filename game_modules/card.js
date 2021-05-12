@@ -78,9 +78,9 @@ Card.prototype.updatePos = function(pos)
   }
 }
 
-Card.prototype.isValidReplacement = function(x, y)
+Card.prototype.isValidReplacement = function(x, y, requestedById)
 {
-  if ((this.x - x > -20 && this.x - x < 20) && (this.y - y > -20 && this.y - y < 20) && this.clickedBy == -1)
+  if ((this.x - x > -20 && this.x - x < 20) && (this.y - y > -20 && this.y - y < 20) && this.clickedBy == -1 && (this.ownedBy == -1 || this.ownedBy == requestedById))
   {
     return true;
   }

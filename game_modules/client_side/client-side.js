@@ -1,6 +1,16 @@
 let ClientController = require("./client_controller").ClientController;
 var getPreferredMs = require('../fps_limiter').getPreferredMs;
 require("./devtools-detect");
+var userAgent = window.navigator.userAgent.toLowerCase()
+var ios = /iphone|ipod|ipad/.test( userAgent );
+
+console.log(userAgent);
+if (ios) {
+  console.log("is ios")
+}
+else {
+  console.log("not ios")
+}
 
 var clientController = new ClientController()
 var welcomeModalshown = false;
@@ -105,6 +115,9 @@ function addWebcam(stream, playerId, mirrored, muted)
   video.srcObject = stream;
   $("#webcam" + playerId + " video").attr('autoplay',"");
   $("#webcam" + playerId + " video").attr('playsinline',"");
+  if (playerId != myPlayerId) {
+    $("#webcam" + playerId + " video").attr('controls',"");
+  }
   video.addEventListener("playing", function () {
     setTimeout(function () {
       console.log("Stream dimensions: " + video.videoWidth + "x" + video.videoHeight);
@@ -625,7 +638,7 @@ function isDeck (id)
 
 function cardIsValidReplacement (card, conflictingCard)
 {
-  if ((card.x - conflictingCard.x > -20 && card.x - conflictingCard.x < 20) && (card.y - conflictingCard.y > -20 && card.y - conflictingCard.y < 20) && card.clickedBy == -1 && card.id != conflictingCard.id)
+  if ((card.x - conflictingCard.x > -20 && card.x - conflictingCard.x < 20) && (card.y - conflictingCard.y > -20 && card.y - conflictingCard.y < 20) && card.clickedBy == -1 && card.id != conflictingCard.id && (card.ownedBy == -1 || card.ownedBy == myPlayerId))
   {
     return true;
   }

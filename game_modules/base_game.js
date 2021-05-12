@@ -216,7 +216,7 @@ function WS_distributor(wss, turnServer, resetGameFunction)
             {
               if (replacementCard.id != card.id)
               {
-                if (replacementCard.isValidReplacement(json.cardX, json.cardY))
+                if (replacementCard.isValidReplacement(json.cardX, json.cardY, id))
                 {
                   validReplacements[replacementCard.z] = replacementCard;
                 }
