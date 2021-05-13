@@ -110,13 +110,17 @@ function WsHandler(ws)
     {
       this.eventEmitter.emit("leftPeer", json.playerId, json.peerType)
     }
+    else if (json.type == "relayLeft")
+    {
+      this.eventEmitter.emit("relayLeft", json.playerId, json.relayFor)
+    }
     else if (json.type == "peerConnect")
     {
-      this.eventEmitter.emit("peerConnect", json.fromPlayerId, json.stp, json.peerType)
+      this.eventEmitter.emit("peerConnect", json.fromPlayerId, json.stp, json.peerType, json.relayFor)
     }
     else if (json.type == "peerAccepted")
     {
-      this.eventEmitter.emit("peerAccepted", json.fromPlayerId, json.stp, json.peerType)
+      this.eventEmitter.emit("peerAccepted", json.fromPlayerId, json.stp, json.peerType, json.relayFor)
     }
     else if (json.type == "reset")
     {
@@ -130,6 +134,10 @@ function WsHandler(ws)
     else if (json.type == "latency")
     {
       this.eventEmitter.emit("latency", json.latency, json.playerId);
+    }
+    else if (json.type == "hostRelay")
+    {
+      this.eventEmitter.emit("hostRelay", json.peerId1, json.peerId2);
     }
   }.bind(this);
   this.ws.onclose = function()
@@ -326,6 +334,15 @@ WsHandler.prototype.reportInitiated = function()
 {
   var sendData = {
     type: "initiated"
+  };
+  this.sendToWs(sendData);
+}
+
+WsHandler.prototype.reportPlaying = function(playerId)
+{
+  var sendData = {
+    type: "reportPlaying",
+    playerId: playerId
   };
   this.sendToWs(sendData);
 }

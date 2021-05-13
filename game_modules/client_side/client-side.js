@@ -139,6 +139,9 @@ function addWebcam(stream, playerId, mirrored, muted)
         $("#webcam" + playerId + " video").css("margin-top", "0px")
       }
     }, 500);
+    if (playerId != myPlayerId) {
+      clientController.reportPlaying(playerId)
+    }
   });
   video.play();
   updateCss("#webcam" + playerId, "display", "block");
@@ -277,7 +280,11 @@ function InitWebSocket()
       }
     });
 
-    clientController.on("stream", (playerId, stream, peerType) => {
+    clientController.on("relayLeft", (playerId, relayFor) => {
+      removeWebcam(relayFor)
+    });
+
+    clientController.on("stream", (playerId, stream, peerType, relayFor) => {
       if(peerType == "webcam")
       {
         addWebcam(stream, playerId, false, false);
@@ -289,9 +296,14 @@ function InitWebSocket()
           addRadio(stream);
         }
       }
+      else if (peerType == 'relay')
+      {
+        console.log("got stream for " + relayFor + " via relay from " + playerId);
+        addWebcam(stream, relayFor, false, false);
+      }
     });
 
-    clientController.on("peerClosed", (playerId, peerType) => {
+    clientController.on("peerClosed", (playerId, peerType, optionalRelayFor) => {
       if(peerType == "webcam")
       {
         removeWebcam(playerId)
@@ -304,6 +316,11 @@ function InitWebSocket()
           $(".radioControls").css("display", "none")
           listeningToRadio = -1;
         }
+      }
+      else if (peerType == "relay")
+      {
+        console.log("clear webcam " + optionalRelayFor + " relayed from " + playerId)
+        removeWebcam(optionalRelayFor);
       }
     });
 

@@ -33,6 +33,8 @@ function Client(playerId, ws, distributor)
   this.latencyTestCouterIncrement = 5000;
   this.latencyTestTimeStamp = new Date();
   this.isReset = false;
+  //this.seekingRelay = [];
+  this.hostingRelays = [];
   this.ws.on("pong", () => {
     this.isAlive = true;
     //this.latency = Math.round((new Date() - this.pingSentTimestamp) / 2);
@@ -349,6 +351,71 @@ Client.prototype.addToChangedCardsBuffer = function(newItem)
   }
   //this.broadcastLimiter.update();
 }
+
+Client.prototype.hostRelay = function(peerId1, peerId2)
+{
+  console.log(this.playerId + " will host relay between " + peerId1 + " and " + peerId2)
+  this.hostingRelays.push({"first": peerId1, "second": peerId2})
+  var sendData = {
+    type: "hostRelay",
+    peerId1: peerId1,
+    peerId2: peerId2
+  }
+  var strToSend = JSON.stringify(sendData);
+
+  var binaryString = this.constructMessage(strToSend); //pako.deflate(strToSend, { to: 'string' });
+  if (this.ws.readyState === WebSocket.OPEN) {
+    this.ws.send(binaryString);
+  }
+}
+
+Client.prototype.reportRelayLeft = function (relayPlayerId, relayFor)
+{
+  var sendData = {
+    type: "relayLeft",
+    playerId: relayPlayerId,
+    relayFor: relayFor
+  }
+  var strToSend = JSON.stringify(sendData);
+
+  var binaryString = this.constructMessage(strToSend); //pako.deflate(strToSend, { to: 'string' });
+  if (this.ws.readyState === WebSocket.OPEN) {
+    this.ws.send(binaryString);
+  }
+}
+
+Client.prototype.reportLeftPeer = function(playerId)
+{
+  if (this.hostingRelays.length > 0)
+  {
+    for (hr of this.hostingRelays)
+    {
+      if (hr['first'] == playerId || hr['second'] == playerId)
+      {
+        this.reportRelayLeft(hr['first'], hr['second']);
+        this.reportRelayLeft(hr['second'], hr['first']);
+        this.hostingRelays.splice(this.hostingRelays.indexOf(hr), 1);
+      }
+    }
+  }
+}
+
+// Client.prototype.addSeekingRelay = function(peerId)
+// {
+//   if (this.seekingRelay.indexOf(peerId) === -1)
+//   {
+//     this.seekingRelay.push(peerId);
+//   }
+// }
+
+// Client.prototype.removeSeekingRelay = function(peerId)
+// {
+//   var index = this.seekingRelay.indexOf(peerId);
+//   if (index !== -1)
+//   {
+//     this.seekingRelay.splice(index, 1);
+//   }
+// }
 
 Client.prototype.addDrawCoordinates = function(playerId, newCoords)
 {

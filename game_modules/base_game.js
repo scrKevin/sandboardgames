@@ -11,6 +11,7 @@ var Openbox = require('./openbox').Openbox
 
 let FpsLimiter = require('./fps_limiter').FpsLimiter;
 const deck = require('./deck');
+const client = require('./client');
 
 
 function WS_distributor(wss, turnServer, resetGameFunction)
@@ -28,6 +29,8 @@ function WS_distributor(wss, turnServer, resetGameFunction)
     this.playerNumbers.push(true);
   }
   this.clients = [];
+
+  this.seekingRelay = [];
 
   this.gameObj = {
     players:{},
@@ -385,13 +388,16 @@ function WS_distributor(wss, turnServer, resetGameFunction)
           if (clientI.playerId == json.playerId)
           {
             if(json.peerType == "webcam"){
-              client.peerStatus[clientI.playerId] = "initiatorReady";
+              //client.peerStatus[clientI.playerId] = "initiatorReady";
             }
             var sendData = {
               type: "peerConnect",
               fromPlayerId: id,
               stp: json.stp,
               peerType: json.peerType
+            }
+            if (json.peerType == 'relay') {
+              sendData.relayFor = json.relayFor
             }
             var strToSend = JSON.stringify(sendData);
             var binaryString = this.constructMessage(strToSend);
@@ -408,13 +414,16 @@ function WS_distributor(wss, turnServer, resetGameFunction)
           {
             if (json.peerType == "webcam")
             {
-              client.peerStatus[clientI.playerId] = "peerAccepted";
+              //client.peerStatus[clientI.playerId] = "peerAccepted";
             }
             var sendData = {
               type: "peerAccepted",
               fromPlayerId: id,
               stp: json.stp,
               peerType: json.peerType
+            }
+            if (json.peerType == 'relay') {
+              sendData.relayFor = json.relayFor
             }
             var strToSend = JSON.stringify(sendData);
             var binaryString = this.constructMessage(strToSend);
@@ -454,6 +463,21 @@ function WS_distributor(wss, turnServer, resetGameFunction)
           this.allClientsProcessNewPeerQueue();
         }
       }
+      else if (json.type == "reportPlaying")
+      {
+        client.peerStatus[json.playerId] = "playing"
+        if (this.seekingRelay.length > 0)
+        {
+          for (let sr of this.seekingRelay)
+          {
+            if (client.peerStatus[sr["first"]] == "playing" && client.peerStatus[sr["second"]] == "playing")
+            {
+              this.seekingRelay.splice(this.seekingRelay.indexOf(sr), 1);
+              this.relayPeers(sr["first"], sr["second"])
+            }
+          }
+        }
+      }
       else if (json.type == "connectionFailure")
       {
         if (json.peerType == "webcam")
@@ -464,13 +488,14 @@ function WS_distributor(wss, turnServer, resetGameFunction)
           {
             if(clientI.playerId == json.fromPlayerId)
             {
-              console.log("Found match")
+              console.log(`Found match, my ID=${id}, peerstatus[${json.fromPlayerId}]=${clientI.peerStatus[id]}`)
               if (clientI.peerStatus[id] == "connectionFailure" && clientI.initiated)
               {
                 // both peers have lost connection with each other but the connection with the server is ok.
-                // retry connection
-                console.log("Retrying peer connection from " + id + " to " + json.fromPlayerId);
-                clientI.sendNewPeer(client);
+                // relay connection via another player if possible
+                console.log("Try to relay " + id + " to " + json.fromPlayerId + " via another player");
+                this.relayPeers(id, json.fromPlayerId);
+                //clientI.sendNewPeer(client);
               }
             }
           }
@@ -493,6 +518,28 @@ function WS_distributor(wss, turnServer, resetGameFunction)
       else if (json.type == "resetWebcam")
       {
         client.isReset = true;
+        for (let clientI of this.clients)
+        {
+          if (clientI.id != id) {
+            clientI.peerStatus[id] = "left";
+            clientI.reportLeftPeer(id);
+          }
+        }
+        if (client.hostingRelays.length > 0)
+        {
+          for (hr of client.hostingRelays)
+          {
+            client.peerStatus[hr['first']] = "left"
+            client.peerStatus[hr['second']] = "left"
+            for (let clientI of this.clients)
+            {
+              if (clientI.playerId == hr['first']) clientI.reportRelayLeft(id, hr["second"])
+              if (clientI.playerId == hr['second']) clientI.reportRelayLeft(id, hr["first"])
+            }
+          }
+          this.relayPeers(hr["first"], hr["second"])
+        }
+        
         this.broadcastLeftPeer(id);
         this.broadcastNewPeer(client, id, ws);
       }
@@ -531,6 +578,27 @@ function WS_distributor(wss, turnServer, resetGameFunction)
       console.log("removed turnCredentials for player " + id);
       client.clearTimeouts();
       client.initiated = false;
+      for (let clientI of this.clients)
+      {
+        if (clientI.id != id){
+          clientI.peerStatus[id] = "left";
+          clientI.reportLeftPeer(id);
+        } 
+      }
+      if (client.hostingRelays.length > 0)
+      {
+        for (hr of client.hostingRelays)
+        {
+          client.peerStatus[hr['first']] = "left"
+          client.peerStatus[hr['second']] = "left"
+          for (let clientI of this.clients)
+          {
+            if (clientI.playerId == hr['first']) clientI.reportRelayLeft(id, hr["second"])
+            if (clientI.playerId == hr['second']) clientI.reportRelayLeft(id, hr["first"])
+          }
+        }
+        this.relayPeers(hr["first"], hr["second"])
+      }
       var removeIndexClients = this.clients.map(function(item) { return item.playerId; }).indexOf(id);
       this.clients.splice(removeIndexClients, 1);
 
@@ -579,9 +647,9 @@ WS_distributor.prototype.constructMessage = function (data)
 
 WS_distributor.prototype.addToChangedCardsBuffer = function(newItem)
 {
-  for (client of this.clients)
+  for (clientI of this.clients)
   {
-    client.addToChangedCardsBuffer(newItem)
+    clientI.addToChangedCardsBuffer(newItem)
   }
 }
 
@@ -667,14 +735,14 @@ WS_distributor.prototype.restoreSnapshot = function()
 
 WS_distributor.prototype.broadcastLeftPeer = function (playerId)
 {
-  for (clientI of this.clients)
-  {
-    if (clientI.playerId != playerId)
-    {
-      //delete clientI.peerStatus[playerId];
-      clientI.peerStatus[playerId] = 'left';
-    }
-  }
+  // for (clientI of this.clients)
+  // {
+  //   if (clientI.playerId != playerId)
+  //   {
+  //     //delete clientI.peerStatus[playerId];
+  //     clientI.peerStatus[playerId] = 'left';
+  //   }
+  // }
   var sendData = {
     type: "leftPeer",
     playerId: playerId,
@@ -769,11 +837,57 @@ WS_distributor.prototype.broadcastDevToolsState = function (playerId, opened)
 }
 
 WS_distributor.prototype.broadcast = function(){
-  for (client of this.clients)
+  for (clientI of this.clients)
   {
-    client.updateBroadcast();
+    clientI.updateBroadcast();
   }
   //this.broadcastLimiter.update();
+}
+
+WS_distributor.prototype.relayPeers = function(peerId1, peerId2)
+{
+  var availableRelays = {}
+  for (clientI of this.clients)
+  {
+    if (clientI.peerStatus[peerId1] == "playing" && clientI.peerStatus[peerId2] == "playing")
+    {
+      console.log(clientI.playerId + " could host relay between " + peerId1 + " and " + peerId2)
+      availableRelays[clientI.hostingRelays.length] = clientI
+    }
+  }
+  var orderedByHostingRelays = Object.keys(availableRelays).sort().reduce(
+    (obj, key) => { 
+      obj[key] = availableRelays[key]; 
+      return obj;
+    }, 
+    {}
+  );
+  var bestRelayHost = null;
+  if (Object.keys(orderedByHostingRelays).length > 0)
+  {
+    var bestRelayHost = orderedByHostingRelays[Object.keys(orderedByHostingRelays)[0]]
+  }
+
+  if (bestRelayHost !== null)
+  {
+    // var option1 = {"first": peerId1, "second": peerId2}
+    // var option2 = {"first": peerId2, "second": peerId1}
+    // var indexOption1 = this.seekingRelay.indexOf(option1)
+    // if (indexOption1 !== -1) this.seekingRelay.splice(indexOption1, 1)
+    // var indexOption2 = this.seekingRelay.indexOf(option2)
+    // if (indexOption2 !== -1) this.seekingRelay.splice(indexOption2, 1)
+
+    console.log(this.seekingRelay)
+
+    bestRelayHost.hostRelay(peerId1, peerId2)
+    
+  }
+  else
+  {
+    console.log("no host found.")
+    this.seekingRelay.push({"first": peerId1, "second": peerId2})
+    console.log(this.seekingRelay)
+  }
 }
 
 WS_distributor.prototype.startAnimationCard = async function(card, targetX, targetY){

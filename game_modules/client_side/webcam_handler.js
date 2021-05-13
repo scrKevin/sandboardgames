@@ -17,10 +17,18 @@ function WebcamHandler(wsHandler, myStream)
   this.captureStream = null;
   this.peers = {};
   this.capturePeers = {};
+  this.relayPeers = {};
+  this.myPlayerId = -1;
+  this.streams = {};
   EventEmitter.call(this);
 }
 
 WebcamHandler.prototype = Object.create(EventEmitter.prototype);
+
+WebcamHandler.prototype.setPlayerId = function(playerId)
+{
+  this.myPlayerId = playerId;
+}
 
 WebcamHandler.prototype.turnCredentials = function(turnCredentials)
 {
@@ -52,13 +60,19 @@ WebcamHandler.prototype.removeCaptureStream = function() {
   this.wsHandler.sendToWs(sendData);
 }
 
-WebcamHandler.prototype.initWebcamPeer = function(playerId, peerType)
+WebcamHandler.prototype.initWebcamPeer = function(playerId, peerType, optionalRelayFor)
 {
   var streamToSend = this.myStream;
   var peerArray = this.peers;
   if(peerType == 'capture'){
     streamToSend = this.captureStream;
     peerArray = this.capturePeers;
+  }
+  else if (peerType == 'relay')
+  {
+    streamToSend = this.streams[optionalRelayFor];
+    if (!(optionalRelayFor in this.relayPeers)) this.relayPeers[optionalRelayFor] = {}
+    peerArray = this.relayPeers[optionalRelayFor];
   }
   console.log("initiating peer for player " + playerId)
   var peerOptions = {
@@ -82,11 +96,29 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId, peerType)
       stp: data,
       peerType: peerType
     }
+    if (peerType == 'relay') sendData.relayFor = optionalRelayFor
     this.wsHandler.sendToWs(sendData);
   });
 
   peerArray[playerId].on('stream', stream => {
     console.log("got stream for player " + playerId)
+    ////// Delete this V
+    // if (this.myPlayerId == 1 && playerId == 2)
+    // {
+    //   this.emit("stream", playerId, null, peerType);
+    //   // peerArray[playerId].destroy();
+    //   // delete peerArray[playerId]
+    //   var sendData = {
+    //     type: "connectionFailure",
+    //     fromPlayerId: playerId,
+    //     peerType: peerType
+    //   }
+    //   this.wsHandler.sendToWs(sendData);
+    // }
+    // /////
+    // else {
+    /////// Keep this V
+    if (peerType == "webcam") this.streams[playerId] = stream;
     this.emit("stream", playerId, stream, peerType);
     var sendData = {
       type: "streamReceived",
@@ -94,6 +126,9 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId, peerType)
       peerType: peerType
     }
     this.wsHandler.sendToWs(sendData);
+    ///// end of keep this ^
+    //}
+    //////
   });
 
   peerArray[playerId].on('error', err => {
@@ -141,7 +176,7 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId, peerType)
   this.wsHandler.sendToWs(sendData);
 }
 
-WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp, peerType)
+WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp, peerType, optionalRelayFor)
 {
   var streamToSend = this.myStream;
   var peerArray = this.peers;
@@ -149,6 +184,12 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp, peerType)
   {
     streamToSend = null;
     peerArray = this.capturePeers;
+  }
+  else if (peerType == 'relay')
+  {
+    streamToSend = null;
+    if (!(optionalRelayFor in this.relayPeers)) this.relayPeers[optionalRelayFor] = {}
+    peerArray = this.relayPeers[optionalRelayFor]
   }
   if (!(fromPlayerId in peerArray))
   {
@@ -168,13 +209,33 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp, peerType)
 
     peerArray[fromPlayerId].on('stream', (stream) => {
       console.log("got stream for player " + fromPlayerId);
-      this.emit("stream", fromPlayerId, stream, peerType);
+       ////// Delete this V
+      // if (this.myPlayerId == 2 && fromPlayerId == 1)
+      // {
+      //   this.emit("stream", fromPlayerId, null, peerType);
+      //   // peerArray[fromPlayerId].destroy();
+      //   // delete peerArray[fromPlayerId]
+      //   var sendData = {
+      //     type: "connectionFailure",
+      //     fromPlayerId: fromPlayerId,
+      //     peerType: peerType
+      //   }
+      //   this.wsHandler.sendToWs(sendData);
+      // }
+      // /////
+      // else {
+      ///// keep this V
+      if (peerType == "webcam") this.streams[fromPlayerId] = stream;
+      this.emit("stream", fromPlayerId, stream, peerType, optionalRelayFor);
       var sendData = {
         type: "readyForNewPeer",
         fromPlayerId: fromPlayerId,
         peerType: peerType
       }
       this.wsHandler.sendToWs(sendData);
+      //// end of keep this
+      //}
+      ///////
     });
 
     peerArray[fromPlayerId].on('signal', (data) => {
@@ -186,15 +247,17 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp, peerType)
         stp: data,
         peerType: peerType
       }
+      if (peerType == 'relay') sendData.relayFor = optionalRelayFor
       this.wsHandler.sendToWs(sendData);
     });
 
     peerArray[fromPlayerId].on('error', err => {
-      console.log("error in peerConnected from " + fromPlayerId)
+      console.log("error in peerConnected from " + fromPlayerId + " peertype = " + peerType)
       console.log(err);
       if (err.code == "ERR_CONNECTION_FAILURE")
       {
         try {
+          console.log(peerArray);
           peerArray[fromPlayerId].destroy();
         }
         catch (error)
@@ -221,19 +284,23 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp, peerType)
         console.log(error)
       }
       delete peerArray[fromPlayerId];
-      this.emit("peerClosed", fromPlayerId, peerType);
+      this.emit("peerClosed", fromPlayerId, peerType, optionalRelayFor);
     });
   }
 
   peerArray[fromPlayerId].signal(stp);
 }
 
-WebcamHandler.prototype.peerAccepted = function(fromPlayerId, stp, peerType)
+WebcamHandler.prototype.peerAccepted = function(fromPlayerId, stp, peerType, optionalRelayFor)
 {
   var peerArray = this.peers;
   if (peerType == 'capture')
   {
     peerArray = this.capturePeers;
+  }
+  else if (peerType == 'relay')
+  {
+    peerArray = this.relayPeers[optionalRelayFor]
   }
   console.log("peer accepted from player " + fromPlayerId);
   peerArray[fromPlayerId].signal(stp);
@@ -256,6 +323,18 @@ WebcamHandler.prototype.leftPeer = function(playerId, peerType)
   delete peerArray[playerId]
 }
 
+WebcamHandler.prototype.relayLeft = function(playerId, relayFor)
+{
+  try {
+    this.relayPeers[relayFor][playerId].destroy();
+  }
+  catch (error)
+  {
+    console.log(error)
+  }
+  delete this.relayPeers[relayFor][playerId]
+}
+
 WebcamHandler.prototype.stopRadio = function(fromPlayerId)
 {
   if (fromPlayerId in this.capturePeers)
@@ -263,6 +342,12 @@ WebcamHandler.prototype.stopRadio = function(fromPlayerId)
     this.capturePeers[fromPlayerId].destroy();
     delete this.capturePeers[fromPlayerId];
   }
+}
+
+WebcamHandler.prototype.hostRelay = function (peerId1, peerId2)
+{
+  this.initWebcamPeer(peerId1, 'relay', peerId2);
+  this.initWebcamPeer(peerId2, 'relay', peerId1);
 }
 
 module.exports = {WebcamHandler: WebcamHandler}

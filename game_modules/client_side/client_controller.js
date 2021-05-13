@@ -21,6 +21,7 @@ ClientController.prototype.initialize = function(ws, myStream)
   this.wsHandler = new WsHandler(ws);
   this.wsHandler.eventEmitter.on("playerId", (playerId) => {
     this.emit("playerId", playerId);
+    this.webcamHandler.setPlayerId(playerId);
   });
   this.wsHandler.eventEmitter.on("cardConflict", (cardId, replacementCardId) => {
     if (replacementCardId !== -1)
@@ -43,11 +44,15 @@ ClientController.prototype.initialize = function(ws, myStream)
     this.webcamHandler.leftPeer(playerId, peerType);
     this.emit("leftPeer", playerId, peerType);
   });
-  this.wsHandler.eventEmitter.on("peerConnect", (fromPlayerId, stp, peerType) => {
-    this.webcamHandler.peerConnected(fromPlayerId, stp, peerType);
+  this.wsHandler.eventEmitter.on("relayLeft", (playerId, relayFor) => {
+    this.webcamHandler.relayLeft(playerId, relayFor);
+    //this.emit("relayLeft", playerId, relayFor);
   });
-  this.wsHandler.eventEmitter.on("peerAccepted", (fromPlayerId, stp, peerType) => {
-    this.webcamHandler.peerAccepted(fromPlayerId, stp, peerType);
+  this.wsHandler.eventEmitter.on("peerConnect", (fromPlayerId, stp, peerType, relayFor) => {
+    this.webcamHandler.peerConnected(fromPlayerId, stp, peerType, relayFor);
+  });
+  this.wsHandler.eventEmitter.on("peerAccepted", (fromPlayerId, stp, peerType, relayFor) => {
+    this.webcamHandler.peerAccepted(fromPlayerId, stp, peerType, relayFor);
   });
   this.wsHandler.eventEmitter.on("wsClosed", () => {
     this.wsHandler.eventEmitter.removeAllListeners();
@@ -70,15 +75,18 @@ ClientController.prototype.initialize = function(ws, myStream)
     this.init && this.canvasHandler.adjustLatency(latency);
     this.emit("latency", latency, playerId);
   });
+  this.wsHandler.eventEmitter.on("hostRelay", (peerId1, peerId2) => {
+    this.webcamHandler.hostRelay(peerId1, peerId2);
+  });
 
   this.mouseHandler = new MouseHandler(this.wsHandler);
   
   this.webcamHandler = new WebcamHandler(this.wsHandler, myStream);
-  this.webcamHandler.on("stream", (playerId, stream, peerType) => {
-    this.emit("stream", playerId, stream, peerType);
+  this.webcamHandler.on("stream", (playerId, stream, peerType, optionalRelayFor) => {
+    this.emit("stream", playerId, stream, peerType, optionalRelayFor);
   });
-  this.webcamHandler.on("peerClosed", (playerId, peerType) => {
-    this.emit("peerClosed", playerId, peerType);
+  this.webcamHandler.on("peerClosed", (playerId, peerType, optionalRelayFor) => {
+    this.emit("peerClosed", playerId, peerType, optionalRelayFor);
   });
 
   this.canvasHandler.initWsHandler(this.wsHandler)
@@ -197,6 +205,11 @@ ClientController.prototype.reportPatched = function()
 ClientController.prototype.reportInitiated = function()
 {
   this.init && this.wsHandler.reportInitiated();
+}
+
+ClientController.prototype.reportPlaying = function(playerId)
+{
+  this.init && this.wsHandler.reportPlaying(playerId);
 }
 
 ClientController.prototype.requestRadioFromPlayer = function(playerNumber)
