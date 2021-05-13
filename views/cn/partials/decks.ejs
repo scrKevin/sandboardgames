@@ -1,7 +1,7 @@
 <div class='teamplane' id="blueplane"></div>
 <div class='teamplane' id="redplane"></div>
 
-<div class='card deck' id='cardDeck'><button type="button" class="btn btn-primary btn-lg inspectDeckButton" style="width: 140px;">SPYMASTER</button></div>
+<div class='deck' id='cardDeck'><button type="button" class="btn btn-primary btn-lg inspectDeckButton" style="width: 140px;">SPYMASTER</button></div>
 
 <% for (var i = 0; i < 5; i++) { for (var j = 0; j < 5; j++) {-%>
     <%- include ('../../common/textCard', {id: "textCard" + String(i) + String(j), cardFaceClass: "playcard", textClass: "", secTextClass:""}); -%>

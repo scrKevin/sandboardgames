@@ -78,6 +78,7 @@ DX_Game.prototype.resetGame = function(game)
       newTile.backface = {color: "#000000", backgroundcolor: "#FFFFFF", text: " "};
       newTile.frontface = {color: "#FFFFFF", backgroundcolor: "#000000", text: String(i)};
       newTile.show = "backface";
+      newTile.setZ(10001);
       game.gameObj.cards[newTile.id] = newTile;
     }
   }

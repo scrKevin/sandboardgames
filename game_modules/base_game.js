@@ -263,6 +263,17 @@ function WS_distributor(wss, turnServer, resetGameFunction)
             this.addToChangedCardsBuffer(json.card);
             card.setLastTouchedBy(id);
             player.updatePos(json.pos);
+            if (this.gameObj.hasOwnProperty("sharedPlayerbox"))
+            {
+              if(this.gameObj.sharedPlayerbox.isInOpenBox(json.pos.x, json.pos.y))
+              {
+                card.ownedBy = id;
+              }
+              else
+              {
+                card.ownedBy = -1;
+              }
+            }
             this.startAnimationCard(card, json.pos.x, json.pos.y);
             for (let deck of Object.values(this.gameObj.decks))
             {
@@ -280,7 +291,7 @@ function WS_distributor(wss, turnServer, resetGameFunction)
             if (card.hasOwnProperty("show"))
             {
               var isInAnOpenbox = false;
-              for (let openbox of this.gameObj.openboxes)
+              for (let openbox of Object.values(this.gameObj.openboxes))
               {
                 if (openbox.isInOpenBox(json.pos.x, json.pos.y))
                 {

@@ -541,7 +541,7 @@ function cardMouseUp(e)
     clientController.releaseCard(mouseX, mouseY, cardX, cardY);
     if(myGameObj.hasOwnProperty("sharedPlayerbox"))
     {
-      if (isInOpenBox(cardX, cardY, myGameObj.sharedPlayerbox))
+      if (isInOpenBox(cardX, cardY, myGameObj.sharedPlayerbox) && !ios)
       {
         dragCardOwnedByMe = true;
       }
@@ -1229,7 +1229,7 @@ function updateCards(gameObj, changedCardsBuffer)
     {
       updateCss("#" + card.id + " .threeDcontainer", "transform", "rotateX(" + card.rotationX + "deg) rotateY(" + card.rotationY + "deg)")      
     }
-    if(!dragCardIds.includes(card.id) && card.clickedBy != myPlayerId && card.ownedBy == -1)
+    if((!dragCardIds.includes(card.id) && card.clickedBy != myPlayerId && card.ownedBy == -1) || ios)
     {
       updateCss("#" + card.id, "left", card.x + "px");
       updateCss("#" + card.id, "top", card.y + "px");
