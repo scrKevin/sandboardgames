@@ -3166,6 +3166,7 @@ function InitWebSocket()
         }
       }
       $("#micContainer" + myPlayerId).css("display", "block");
+      $(document).trigger("playerId", myPlayerId);
     });
 
     clientController.on("updateGame", (gameObj, changedCardsBuffer, newDrawCoords, init) => {
@@ -3583,6 +3584,7 @@ function adaptScale()
   $(".scaleplane").css("perspective-origin", (50 / scale) + "vw " + (50 / scale) + "vh");
   $(".scaleplane").css("perspective", (3500 / scale) + "px");
   clientController.canvasHandler.updateScale(scale);
+  $(document).trigger("scale", scale);
 }
 
 function isDeck (id)
@@ -3858,6 +3860,8 @@ $( document ).ready(function() {
       myStream = stream;
       InitWebSocket();
   });
+
+  $(document).trigger("clientControllerReady", clientController);
 });
 
 async function startCapture(){
@@ -4748,6 +4752,11 @@ ClientController.prototype.reportPlaying = function(playerId)
 ClientController.prototype.requestRadioFromPlayer = function(playerNumber)
 {
   this.init && this.wsHandler.requestRadioFromPlayer(playerNumber);
+}
+
+ClientController.prototype.sendCustomMessage = function(json)
+{
+  this.init && this.wsHandler.sendCustomMessage(json);
 }
 
 module.exports = {ClientController: ClientController}
@@ -5646,6 +5655,15 @@ WsHandler.prototype.requestRadioFromPlayer = function(playerNumber)
   var sendData = {
     type: "requestRadioFromPlayer",
     playerNumber: playerNumber
+  };
+  this.sendToWs(sendData);
+}
+
+WsHandler.prototype.sendCustomMessage = function(json)
+{
+  var sendData = {
+    type: "custom",
+    message: json
   };
   this.sendToWs(sendData);
 }

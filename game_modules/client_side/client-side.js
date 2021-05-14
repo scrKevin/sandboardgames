@@ -222,6 +222,7 @@ function InitWebSocket()
         }
       }
       $("#micContainer" + myPlayerId).css("display", "block");
+      $(document).trigger("playerId", myPlayerId);
     });
 
     clientController.on("updateGame", (gameObj, changedCardsBuffer, newDrawCoords, init) => {
@@ -639,6 +640,7 @@ function adaptScale()
   $(".scaleplane").css("perspective-origin", (50 / scale) + "vw " + (50 / scale) + "vh");
   $(".scaleplane").css("perspective", (3500 / scale) + "px");
   clientController.canvasHandler.updateScale(scale);
+  $(document).trigger("scale", scale);
 }
 
 function isDeck (id)
@@ -914,6 +916,8 @@ $( document ).ready(function() {
       myStream = stream;
       InitWebSocket();
   });
+
+  $(document).trigger("clientControllerReady", clientController);
 });
 
 async function startCapture(){

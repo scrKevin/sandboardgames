@@ -1,0 +1,19 @@
+<html>
+  <head>
+    <%- include ("../partials/head") %>
+  </head>
+  <body>
+    <%- include ('../../common/welcomeModal'); -%>
+    <%- include ('../../common/resetWebcamModal'); -%>
+    <%- include ('../../common/resetModal'); -%>
+    
+    <div class="scaleplane">
+      <button id="startGameBtn">Start Game</button>
+      <%- include ("../partials/drawplane") %>
+      <%- include ("../partials/guessplane") %>
+      <%- include ("../partials/playerboxes") %>
+      <%- include ('../../common/webcams', {webcamPos: webcamPos, fixedPlayers:fixedPlayers}) -%>
+      <%- include ("../../common/cursors") -%>
+    </div>
+  </body>
+</html>

@@ -14,13 +14,14 @@ const deck = require('./deck');
 const client = require('./client');
 
 
-function WS_distributor(wss, turnServer, resetGameFunction)
+function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunction)
 {
   this.useZip = false;
   this.lastSentTime = new Date();
   this.transmittedBytes = 0;
 
   this.resetGame = resetGameFunction;
+  this.customMessageFunction = customMessageFunction;
   this.turnServer = turnServer;
   this.wss = wss;
   this.playerNumbers = []
@@ -580,6 +581,11 @@ function WS_distributor(wss, turnServer, resetGameFunction)
       else if (json.type == "devToolsState")
       {
         this.broadcastDevToolsState(id, json.opened);
+      }
+      else if (json.type == "custom")
+      {
+        // pass it to game specific messages
+        this.customMessageFunction(client, player, json.message);
       }
       
     });

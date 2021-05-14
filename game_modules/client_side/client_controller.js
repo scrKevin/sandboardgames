@@ -217,4 +217,9 @@ ClientController.prototype.requestRadioFromPlayer = function(playerNumber)
   this.init && this.wsHandler.requestRadioFromPlayer(playerNumber);
 }
 
+ClientController.prototype.sendCustomMessage = function(json)
+{
+  this.init && this.wsHandler.sendCustomMessage(json);
+}
+
 module.exports = {ClientController: ClientController}

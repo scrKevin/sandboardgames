@@ -8,7 +8,6 @@ function Player(){
   };
   this.drawArray = [];
   this.isHostingCapture = false;
-  //this.newCoords = [];
 }
 
 Player.prototype.setId = function(playerNumbers){

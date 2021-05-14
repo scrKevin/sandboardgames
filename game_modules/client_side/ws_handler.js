@@ -356,4 +356,13 @@ WsHandler.prototype.requestRadioFromPlayer = function(playerNumber)
   this.sendToWs(sendData);
 }
 
+WsHandler.prototype.sendCustomMessage = function(json)
+{
+  var sendData = {
+    type: "custom",
+    message: json
+  };
+  this.sendToWs(sendData);
+}
+
 module.exports = {WsHandler: WsHandler}
