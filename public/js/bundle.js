@@ -3176,7 +3176,7 @@ function InitWebSocket()
       {
         initCards(gameObj)
         console.log("reset or init");
-        
+        $(document).trigger("reset", myPlayerId);
       }
       else
       {
@@ -3555,111 +3555,16 @@ $(document).on ("keydown", function (event) {
   }
 });
 
-window.addEventListener('devtoolschange', event => {
-  clientController.devToolsState(event.detail.isOpen);
-});
+$(document).on("initCardFunctions", (e) => {
+  initCardFunctions()
+  initCards(myGameObj)
+})
 
-function adaptScale()
+function initCardFunctions()
 {
-  var width = $(window).width();
-  var height = $(window).height();
-
-  var ratio = 1920 / 1080;
-
-  var ratioWindow = width / height;
-
-  if (ratioWindow > ratio)
-  {
-    scale = height / 1080;
-    $(".scaleplane").css("transform", "scale(" + scale + ")")
-  }
-  else
-  {
-    scale = width / 1920;
-    $(".scaleplane").css("transform", "scale(" + scale + ")")
-  }
-  $(".scaleplane").css("width", (100 / scale) + "vw");
-  $(".scaleplane").css("height", (100 / scale) + "vh");
-
-  $(".scaleplane").css("perspective-origin", (50 / scale) + "vw " + (50 / scale) + "vh");
-  $(".scaleplane").css("perspective", (3500 / scale) + "px");
-  clientController.canvasHandler.updateScale(scale);
-  $(document).trigger("scale", scale);
-}
-
-function isDeck (id)
-{
-  if (id in myGameObj.decks)
-  {
-    return true;
-  }
-  else
-  {
-    return false;
-  }
-}
-
-function cardIsValidReplacement (card, conflictingCard)
-{
-  if ((card.x - conflictingCard.x > -20 && card.x - conflictingCard.x < 20) && (card.y - conflictingCard.y > -20 && card.y - conflictingCard.y < 20) && card.clickedBy == -1 && card.id != conflictingCard.id && (card.ownedBy == -1 || card.ownedBy == myPlayerId))
-  {
-    return true;
-  }
-  return false;
-}
-
-
-$( window ).resize(function() {
-  adaptScale();
-
-});
-
-$( document ).ready(function() {
-  console.log(navigator.mediaDevices.getSupportedConstraints())
-  $(".touchbox").css("opacity", "0");
-  $('img').attr('draggable', false);
-  var colorSelectionHtml = "";
-  var nColorSelection = 0;
-  for (color of colors)
-  {
-    nColorSelection++;
-    colorSelectionHtml += '<div class="form-check form-check-inline" style="background-color: ' + color + '; padding: 20px; display: inline-block">';
-    colorSelectionHtml += '<input class="form-check-input colorSelector" type="checkbox" id="inlineCheckbox' + nColorSelection + '" value="' + nColorSelection + '">';
-    colorSelectionHtml += '<label class="form-check-label" for="inlineCheckbox' + nColorSelection + '"></label>';
-    colorSelectionHtml += '</div>';
-  }
-  $(".colorSelectionContainer").html(colorSelectionHtml);
-
-
-  adaptScale();
-
-  $('.colorSelector').on('click', selectColor);
-  $(".cursor").off();
-  $('#enterGameBtn').attr('disabled',true);
-  $('#enterGameBtn').on('click', enterGame);
-  $("#resetWebcamBtn").on('click', resetWebcam);
-  $('#resetGameBtn').on('click', resetGame);
-  $('#startCaptureBtn').on('click', startCapture);
-  $('#takeSnapshotBtn').on('click', takeSnapshot);
-  $('#recoverSnapshotBtn').on('click', recoverSnapshot);
-  $(".shuffleButton").on('click', shuffleDeck);
-  $(".rollButton").on('click', rollDeck);
-  $(".inspectDeckButton").on('click', inspectDeck);
-
-  $(".scoreboxButton").on('click', scoreboxButton);
-  $(".scoreboxResetButton").on('click', scoreboxResetButton);
-  $(".mic").on('click', toggleMic);
-  $(".playerRadio").on('click', toggleRadio);
-  $("#radioStop").on("click", stopRadio);
-  $("#radioVolumeControl").on('input', setRadioVolume);
-
-  $('#name').keyup(function(){
-    checkEnterIsAllowed();
-    clientController.typeName($('#name').val())
-  })
-
   $(".card").on("mousedown", function(event){
     if(!gameInitialized) return;
+    //console.log(event)
     var draggable = null;
     var draggableIsDeck = isDeck(event.currentTarget.id);
     if (draggableIsDeck)
@@ -3827,6 +3732,112 @@ $( document ).ready(function() {
     //   dragCardIds = [];
     // }
   });
+}
+
+window.addEventListener('devtoolschange', event => {
+  clientController.devToolsState(event.detail.isOpen);
+});
+
+function adaptScale()
+{
+  var width = $(window).width();
+  var height = $(window).height();
+
+  var ratio = 1920 / 1080;
+
+  var ratioWindow = width / height;
+
+  if (ratioWindow > ratio)
+  {
+    scale = height / 1080;
+    $(".scaleplane").css("transform", "scale(" + scale + ")")
+  }
+  else
+  {
+    scale = width / 1920;
+    $(".scaleplane").css("transform", "scale(" + scale + ")")
+  }
+  $(".scaleplane").css("width", (100 / scale) + "vw");
+  $(".scaleplane").css("height", (100 / scale) + "vh");
+
+  $(".scaleplane").css("perspective-origin", (50 / scale) + "vw " + (50 / scale) + "vh");
+  $(".scaleplane").css("perspective", (3500 / scale) + "px");
+  clientController.canvasHandler.updateScale(scale);
+  $(document).trigger("scale", scale);
+}
+
+function isDeck (id)
+{
+  if (id in myGameObj.decks)
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+function cardIsValidReplacement (card, conflictingCard)
+{
+  if ((card.x - conflictingCard.x > -20 && card.x - conflictingCard.x < 20) && (card.y - conflictingCard.y > -20 && card.y - conflictingCard.y < 20) && card.clickedBy == -1 && card.id != conflictingCard.id && (card.ownedBy == -1 || card.ownedBy == myPlayerId))
+  {
+    return true;
+  }
+  return false;
+}
+
+
+$( window ).resize(function() {
+  adaptScale();
+
+});
+
+$( document ).ready(function() {
+  console.log(navigator.mediaDevices.getSupportedConstraints())
+  $(".touchbox").css("opacity", "0");
+  $('img').attr('draggable', false);
+  var colorSelectionHtml = "";
+  var nColorSelection = 0;
+  for (color of colors)
+  {
+    nColorSelection++;
+    colorSelectionHtml += '<div class="form-check form-check-inline" style="background-color: ' + color + '; padding: 20px; display: inline-block">';
+    colorSelectionHtml += '<input class="form-check-input colorSelector" type="checkbox" id="inlineCheckbox' + nColorSelection + '" value="' + nColorSelection + '">';
+    colorSelectionHtml += '<label class="form-check-label" for="inlineCheckbox' + nColorSelection + '"></label>';
+    colorSelectionHtml += '</div>';
+  }
+  $(".colorSelectionContainer").html(colorSelectionHtml);
+
+
+  adaptScale();
+
+  $('.colorSelector').on('click', selectColor);
+  $(".cursor").off();
+  $('#enterGameBtn').attr('disabled',true);
+  $('#enterGameBtn').on('click', enterGame);
+  $("#resetWebcamBtn").on('click', resetWebcam);
+  $('#resetGameBtn').on('click', resetGame);
+  $('#startCaptureBtn').on('click', startCapture);
+  $('#takeSnapshotBtn').on('click', takeSnapshot);
+  $('#recoverSnapshotBtn').on('click', recoverSnapshot);
+  $(".shuffleButton").on('click', shuffleDeck);
+  $(".rollButton").on('click', rollDeck);
+  $(".inspectDeckButton").on('click', inspectDeck);
+
+  $(".scoreboxButton").on('click', scoreboxButton);
+  $(".scoreboxResetButton").on('click', scoreboxResetButton);
+  $(".mic").on('click', toggleMic);
+  $(".playerRadio").on('click', toggleRadio);
+  $("#radioStop").on("click", stopRadio);
+  $("#radioVolumeControl").on('input', setRadioVolume);
+
+  $('#name').keyup(function(){
+    checkEnterIsAllowed();
+    clientController.typeName($('#name').val())
+  })
+
+  initCardFunctions()
 
   if ($("#drawCanvas").length) // initiate canvas if draw canvas exists
   {

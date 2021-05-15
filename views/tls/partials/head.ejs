@@ -257,6 +257,18 @@
     box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
   }
 
+  .subjectBox
+  {
+    position: absolute;
+    width: 900px;
+    height: 160px;
+    background-color: #CCCCCC;
+    overflow: hidden;
+    border: 2px solid black;
+    border-radius: 5px;
+    transition: height 250ms;
+  }
+
   .moveBtn
   {
     z-index: 2000;
@@ -265,6 +277,51 @@
     border-radius: 6px;
     background-color: white;
     top: -5px;
+    -webkit-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+    -moz-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+    box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+  }
+
+  .collapseBtn
+  {
+    position: absolute;
+    z-index: 2000;
+    padding: 8px;
+    border: 1px solid black;
+    border-radius: 6px;
+    background-color: white;
+    top: 0px;
+    left: 846px;
+    -webkit-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+    -moz-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+    box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+  }
+
+  .downBtn
+  {
+    position: absolute;
+    z-index: 2000;
+    padding: 8px;
+    border: 1px solid black;
+    border-radius: 6px;
+    background-color: #002454;
+    top: 600px;
+    left: 846px;
+    -webkit-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+    -moz-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+    box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
+  }
+
+  .upBtn
+  {
+    position: absolute;
+    z-index: 2000;
+    padding: 8px;
+    border: 1px solid black;
+    border-radius: 6px;
+    background-color: #002454;
+    top: 500px;
+    left: 846px;
     -webkit-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
     -moz-box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
     box-shadow: 4px 4px 5px 0px rgba(0,0,0,0.75);
@@ -283,5 +340,40 @@
     background-color: #FFFFFF;
     border: 2px solid #000000;
     z-index: -2;
+  }
+
+  .subjectCanvas
+  {
+    position: relative;
+    left: 100px;
+    height: 900px;
+    border: 1px solid black;
+    background-color: #ffffff;
+  }
+
+  .subjectWordText
+  {
+    position: relative;
+    height: 80px;
+    width: 900px;
+    font-size: 40px;
+    text-align: center;
+  }
+
+  .scrollbox
+  {
+    color:black;
+    position: absolute;
+    transition: top 250ms;
+  }
+
+  .countdown
+  {
+    color: red;
+    font-size: 60px;
+    font-weight: bold;
+    position: absolute;
+    top: 32px;
+    left: 32px;
   }
 </style>

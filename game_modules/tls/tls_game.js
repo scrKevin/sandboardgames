@@ -1,10 +1,15 @@
 const fs = require('fs');
 var path = require('path');
 
+let Deck = require('../deck').Deck;
+let Card = require('../card').Card;
+
 let Game = require('../base_game').Game;
 let TlsPlayerObject = require('./tls_player_object').TlsPlayerObject;
 let TlsGameObject = require('./tls_game_object').TlsGameObject;
 let TlsSubject = require('./tls_subject').TlsSubject
+let TlsDrawing = require('./tls_drawing').TlsDrawing
+let TlsGuess = require('./tls_guess').TlsGuess
 
 var wordArray = fs.readFileSync(path.join(__dirname, 'words_en.txt')).toString().split("\n");
 
@@ -212,14 +217,18 @@ TLS_Game.prototype.processClientMessage = function(client, player, json)
 {
   if (json.type == "start_tls_game")
   {
-    if (this.gameObj.tlsGameObject.gameState == 0)
+    if (this.gameObj.tlsGameObject.gameState == 0 || this.gameObj.tlsGameObject.gameState == -1)
     {
+      this.gameObj.cards = {};
+      this.gameObj.decks = {};
+      this.gameObj.tlsGameObject = new TlsGameObject();
       this.gameObj.tlsGameObject.gameState = 1
       let nOfRounds = Object.keys(this.gameObj.players).length;
       //nOfRounds = 7 // testing
       let nOfSubjects = Object.keys(this.gameObj.players).length;
       //nOfSubjects = 7 // testing
       if (nOfRounds % 2 !== 0) nOfRounds--;// uneven number of players
+      this.gameObj.tlsGameObject.nOfRounds = nOfRounds;
 
       let words = getRandomWords(nOfSubjects);
       let wordIndex = 0;
@@ -249,7 +258,8 @@ TLS_Game.prototype.processClientMessage = function(client, player, json)
     {
       if (subject.seenBy[this.gameObj.tlsGameObject.gameState - 1] == player.id)
       {
-        subject.drawings.push(json.drawing)
+        //subject.drawings.push(json.drawing)
+        subject.drawings.push(new TlsDrawing(player.id, json.drawing))
       }
     }
     if (allDrawingsCollected(this.gameObj.tlsGameObject))
@@ -257,6 +267,75 @@ TLS_Game.prototype.processClientMessage = function(client, player, json)
       this.gameObj.tlsGameObject.gameState++;
       this.broadcast();
     }
+  }
+  else if (json.type == "submitGuess")
+  {
+    for (let subject of this.gameObj.tlsGameObject.subjects)
+    {
+      if (subject.seenBy[this.gameObj.tlsGameObject.gameState - 1] == player.id)
+      {
+        //subject.guesses.push(json.guess)
+        subject.guesses.push(new TlsGuess(player.id, json.guess))
+      }
+    }
+    if (allGuessesCollected(this.gameObj.tlsGameObject))
+    {
+      this.gameObj.tlsGameObject.gameState++;
+      if (this.gameObj.tlsGameObject.gameState > this.gameObj.tlsGameObject.nOfRounds)
+      {
+        this.gameObj.tlsGameObject.gameState = -1;
+        var startX = 510;
+        var startY = 0;
+        for (let subject of this.gameObj.tlsGameObject.subjects)
+        {
+          let moveBtnDeck = new Deck("subjectMoveBtn" + subject.id, startX, startY, 50, 50)
+          let subjectBox = new Card("subjectBox" + subject.id, startX, startY)
+          this.gameObj.cards[subjectBox.id] = subjectBox;
+          moveBtnDeck.attachedCards[subjectBox.id] = subjectBox;
+          this.gameObj.decks[moveBtnDeck.id] = moveBtnDeck;
+          // this.addToChangedCardsBuffer(subjectBox.id)
+          // this.addToChangedCardsBuffer(moveBtnDeck.id)
+        }
+      }
+      this.broadcast();
+    }
+  }
+  else if (json.type == "collapseBtn")
+  {
+    for (let subject of this.gameObj.tlsGameObject.subjects)
+    {
+      if (subject.id == json.subjectId)
+      {
+        subject.collapsed = !subject.collapsed;
+        break;
+      }
+    }
+    this.broadcast();
+  }
+  else if (json.type == "subjectScrollDown")
+  {
+    for (let subject of this.gameObj.tlsGameObject.subjects)
+    {
+      if (subject.id == json.subjectId)
+      {
+        subject.scrollPosition++;
+        //console.log(subject.scrollPosition)
+        break;
+      }
+    }
+    this.broadcast();
+  }
+  else if (json.type == "subjectScrollUp")
+  {
+    for (let subject of this.gameObj.tlsGameObject.subjects)
+    {
+      if (subject.id == json.subjectId)
+      {
+        if (subject.scrollPosition > 0) subject.scrollPosition--;
+        break;
+      }
+    }
+    this.broadcast();
   }
 }
 
@@ -266,6 +345,19 @@ function allDrawingsCollected(tlsGameObj)
   for (let subject of tlsGameObj.subjects)
   {
     if (subject.drawings.length !== nOfDrawings)
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+function allGuessesCollected(tlsGameObj)
+{
+  let nOfGuesses = (tlsGameObj.gameState) / 2;
+  for (let subject of tlsGameObj.subjects)
+  {
+    if (subject.guesses.length !== nOfGuesses)
     {
       return false;
     }

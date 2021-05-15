@@ -20,6 +20,13 @@ var h = 0;
 var l = 0;
 var t = 0;
 
+var guessCanvas = null;
+var guessCtx = null;
+var wGuess = 0;
+var hGuess = 0;
+var lGuess = 0;
+var tGuess = 0;
+
 var scale = 1;
 
 var currX = 0;
@@ -31,6 +38,25 @@ var flag = false;
 var dot_flag = false;
 
 var currentDrawing = []
+
+var scrollSteps = [80, 80, 900];
+
+var drawTimeLimit = 10;
+var drawTimeLeft = 30;
+var countDownDisplayInterval = null;
+
+this.colorMap = {
+  "#FF0000": "#FF5252",
+  "#88ff91": "#88ff91",
+  "#0000FF": "#8080FF",
+  "#FFFF00": "#FFFF00",
+  "#00FFFF": "#00FFFF",
+  "#790079": "#E600E6",
+  "#FF8800": "#FF8800",
+  "#888888": "#888888",
+  "#0e8200": "#109E00",
+  "#ffbff7": "#ffbff7"
+}
 
 function initCanvas (canvasNew)
 {
@@ -55,6 +81,17 @@ function initCanvas (canvasNew)
   canvas.addEventListener("mouseout", (e) => {
     processMouse('out', e)
   }, false);
+}
+
+function initGuessCanvas (canvasNew)
+{
+  guessCanvas = canvasNew;
+  //console.log(canvas)
+  guessCtx = guessCanvas.getContext("2d");
+  wGuess = guessCanvas.width;
+  hGuess = guessCanvas.height;
+  lGuess = $("#tlsGuessCanvas").position().left;
+  tGuess = $("#tlsGuessCanvas").position().top;
 }
 
 function processMouse (res, e)
@@ -105,10 +142,48 @@ function draw ()
   ctx.closePath();
 }
 
+function displayDrawingToGuess (drawing)
+{
+  for (let line of drawing)
+  {
+    //console.log(line)
+    guessCtx.beginPath();
+    guessCtx.moveTo(line.x0, line.y0);
+    guessCtx.lineTo(line.x1, line.y1);
+    guessCtx.strokeStyle = "#000000"
+    guessCtx.lineWidth = 2;
+    guessCtx.stroke();
+    guessCtx.closePath();
+  }
+}
+
+function displayResultDrawing (resultCanvas, drawing)
+{
+  resultCtx = resultCanvas.getContext("2d");
+  for (let line of drawing)
+  {
+    //console.log(line)
+    resultCtx.beginPath();
+    resultCtx.moveTo(line.x0, line.y0);
+    resultCtx.lineTo(line.x1, line.y1);
+    resultCtx.strokeStyle = "#000000"
+    resultCtx.lineWidth = 2;
+    resultCtx.stroke();
+    resultCtx.closePath();
+  }
+}
+
 function erase () {
   if (canvas != null)
   {
     ctx.clearRect(0, 0, w, h);
+  }
+}
+
+function eraseGuessCanvas () {
+  if (guessCanvas != null)
+  {
+    guessCtx.clearRect(0, 0, wGuess, hGuess);
   }
 }
 
@@ -156,9 +231,11 @@ $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
 
   let tlsGame = gameObj.tlsGameObject;
 
-  if (tlsGame.gameState === 0)
+  if (tlsGame.gameState === 0 || tlsGame.gameState === -1)
   {
     updateCss("#startGameBtn", "display", "block");
+    updateCss("#guessplane", "display", "none");
+    updateCss("#drawplane", "display", "none");
   }
   else
   {
@@ -184,13 +261,26 @@ $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
   if (tlsGame.gameState !== lastGameState){
     lastGameState = tlsGame.gameState;
 
+    if (tlsGame.gameState == 1)
+    {
+      $(".subjectBox").remove();
+      $(".moveBtn").remove();
+    }
+    
+
     if (isDrawPhase(tlsGame.gameState))
     {
       for (let subject of tlsGame.subjects)
       {
-        if (subject.seenBy[tlsGame.gameState] == myPlayerId)
+        if (subject.seenBy[tlsGame.gameState - 1] == myPlayerId)
         {
-          $("#word").html(subject.word);
+          if (tlsGame.gameState == 1){
+            $("#word").html(subject.word);
+          }
+          else {
+            $("#word").html(subject.guesses[((tlsGame.gameState - 1) / 2) - 1].word);
+          }
+          
           break;
         }
       }
@@ -198,18 +288,126 @@ $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
       currentDrawing = [];
       updateCss("#drawplane", "display", "block");
       updateCss("#guessplane", "display", "none");
+      drawTimeLeft = drawTimeLimit;
+      countDownDisplayInterval = setInterval(() => {
+        drawTimeLeft--;
+        $(".countdown").html(drawTimeLeft);
+      }, 1000);
       submitTimeout = setTimeout(() =>{
+        clearInterval(countDownDisplayInterval);
         let sendData = {
           type: "submitDrawing",
           drawing: currentDrawing
         }
         clientController.sendCustomMessage(sendData)
-      }, 10000);
+      }, drawTimeLimit * 1000);
     }
     else if (isGuessPhase(tlsGame.gameState))
     {
+      eraseGuessCanvas();
+      for (let subject of tlsGame.subjects)
+      {
+        if (subject.seenBy[tlsGame.gameState - 1] == myPlayerId)
+        {
+          //console.log(subject.drawings[(tlsGame.gameState / 2) - 1])
+          displayDrawingToGuess(subject.drawings[(tlsGame.gameState / 2) - 1].lines)
+          break;
+        }
+      }
+
       updateCss("#guessplane", "display", "block");
       updateCss("#drawplane", "display", "none");
+    }
+    else if (tlsGame.gameState == -1)
+    {
+      // show results
+      updateCss("#guessplane", "display", "none");
+      updateCss("#drawplane", "display", "none");
+      for (let subject of tlsGame.subjects)
+      {
+
+        $('.scaleplane').append("<div class='subjectBox moveable' id='subjectBox" + subject.id + "'></div>")
+        $('.scaleplane').append('<div class="card moveBtn" id="subjectMoveBtn' + subject.id + '"><img src="/img/lobby/move.png"/></div>')
+        let subjectHtml = "<div class='collapseBtn' id='subjectCollapseBtn" + subject.id + "'><img src='/img/tls/collapse.png'/></div><div class='upBtn' id='subjectUpBtn" + subject.id + "'><img src='/img/tls/up.png'/></div><div class='downBtn' id='subjectDownBtn" + subject.id + "'><img src='/img/tls/down.png'/></div><div class='scrollbox' id='scrollbox" + subject.id + "'><div class='subjectWordText'><span style='font-weight: bold;'>" + subject.word + "</span></div>";
+        for (let round = 0; round < subject.guesses.length; round++)
+        {
+          let playerThatDrew = "";
+          let playerThatGuessed = "";
+          let playerThatDrewColor = "#FFFFFF"
+          let playerThatGuessedColor = "#FFFFFF"
+          for (let dPlayer of Object.values(gameObj.players))
+          {
+            if (dPlayer.id == subject.drawings[round].drawnBy)
+            {
+              playerThatDrew = dPlayer.name;
+              playerThatDrewColor = colorMap[dPlayer.color];
+            }
+            if (dPlayer.id == subject.guesses[round].guessedBy)
+            {
+              playerThatGuessed = dPlayer.name;
+              playerThatGuessedColor = colorMap[dPlayer.color];
+            }
+          }
+          subjectHtml += "<div class='subjectWordText' style='background-color:" + playerThatDrewColor + "'><span style='font-weight: bold;'>" + playerThatDrew + "</span> drew:</div>";
+          subjectHtml += "<canvas class='subjectCanvas' id='canvasSubject" + subject.id + "_" + round + "' width='700' height='900'></canvas>";
+          subjectHtml += "<div class='subjectWordText' style='background-color:" + playerThatGuessedColor + "'><span style='font-weight: bold;'>" + playerThatGuessed + "</span> guessed: " + subject.guesses[round].word + "</div>";
+        }
+        subjectHtml += "</div>"
+        $("#subjectBox" + subject.id).html(subjectHtml)
+      }
+      for (let subject of tlsGame.subjects)
+      {
+        for (let round = 0; round < subject.guesses.length; round++)
+        {
+          let resultCanvas = document.getElementById("canvasSubject" + subject.id + "_" + round)
+          displayResultDrawing(resultCanvas, subject.drawings[round].lines);
+        }
+        $("#subjectCollapseBtn" + subject.id).on("click", (e) =>{
+          let sendData = {
+            type: "collapseBtn",
+            subjectId: subject.id
+          }
+          clientController.sendCustomMessage(sendData)
+        })
+        $("#subjectUpBtn" + subject.id).on("click", (e) =>{
+          let sendData = {
+            type: "subjectScrollUp",
+            subjectId: subject.id
+          }
+          clientController.sendCustomMessage(sendData)
+        })
+        $("#subjectDownBtn" + subject.id).on("click", (e) =>{
+          let sendData = {
+            type: "subjectScrollDown",
+            subjectId: subject.id
+          }
+          clientController.sendCustomMessage(sendData)
+        })
+      }
+      $(document).trigger("initCardFunctions")
+      
+    }
+
+    
+  }
+  else if (tlsGame.gameState == -1)
+  {
+    for (let subject of tlsGame.subjects)
+    {
+      if (subject.collapsed)
+      {
+        updateCss("#subjectBox" + subject.id, "height", "160px")
+      }
+      else
+      {
+        updateCss("#subjectBox" + subject.id, "height", "1060px")
+      }
+      let pos = 0;
+      for (i = 0; i < subject.scrollPosition; i++)
+      {
+        pos += scrollSteps[i % scrollSteps.length]
+      }
+      updateCss("#scrollbox" + subject.id, "top", "-" + pos + "px")
     }
   }
 
@@ -219,6 +417,7 @@ $(document).on("clientControllerReady", function(e, newClientController){
   clientController = newClientController;
 
   initCanvas(document.getElementById('tlsDrawCanvas'));
+  initGuessCanvas(document.getElementById('tlsGuessCanvas'))
 
   $("#startGameBtn").on('click', (e) => {
     let sendData = {
@@ -227,13 +426,34 @@ $(document).on("clientControllerReady", function(e, newClientController){
     clientController.sendCustomMessage(sendData)
   })
 
+  $("#submitGuessBtn").on('click', (e) => {
+    let guess = $("#guess").val();
+    //console.log(guess);
+    if (typeof guess !== 'undefined' && guess !== '')
+    {
+      updateCss("#guessplane", "display", "none");
+      $("#guess").val("");
+      let sendData = {
+        type: "submitGuess",
+        guess: guess
+      }
+      clientController.sendCustomMessage(sendData)
+    }
+  })
+
 })
 
 $(document).on("scale", function(e, newScale){
   scale = newScale;
 })
 
-$(document).on("scale", function(e, newPlayerId){
+$(document).on("playerId", function(e, newPlayerId){
   myPlayerId = newPlayerId;
 })
+
+$(document).on("reset", function(e){
+  $(".subjectBox").remove();
+  $(".moveBtn").remove();
+})
+
 
