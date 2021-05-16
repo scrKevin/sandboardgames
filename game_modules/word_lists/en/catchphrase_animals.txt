@@ -1,0 +1,238 @@
+cat
+mole
+komodo dragon
+ewe
+snapping turtle
+catfish
+polar bear
+wildebeest
+stallion
+Canadian goose
+crane
+partridge
+toucan
+worm
+whale
+trout
+baboon
+stork
+hyena
+panda
+canary
+ape
+skunk
+bear
+dolphin
+dragon
+pony
+kitten
+clam
+rabbit
+bass
+tiger
+ox
+elephant
+sheep
+humpback whale
+dragonfly
+flock
+butterfly
+dodo bird
+blowfish
+turkey
+ladybug
+gila monster
+salamander
+lemur
+grizzly
+lark
+eagle
+goat
+goose
+rolly polly
+crab
+reindeer
+parrot
+crow
+bulldog
+deer
+groundhog
+prairie dog
+koala
+meerkat
+dog
+manatee
+armadillo
+earthworm
+turtle
+monkey
+chameleon
+otter
+ostrich
+shrimp
+finch
+horse
+alligator
+albatross
+fly
+ant
+bison
+bunny
+cougar
+camel
+rat
+flounder
+pig
+coyote
+penguin
+elk
+mallard
+chick
+boa constrictor
+hawk
+sheep dog
+dinosaur
+zebra
+lion
+leopard
+sea turtle
+bumblebee
+emu
+beaver
+hive
+antelope
+sea lion
+bush baby
+black bear
+gopher
+aardvark
+gerbil
+squirrel
+cheetah
+raven
+capybara
+moth
+human
+tortoise
+rooster
+dove
+duck
+housecat
+moose
+mule
+shrew
+pelican
+yak
+hamster
+wombat
+cricket
+cub
+macaw
+herd
+inchworm
+puppy
+robin
+hedgehog
+chicken
+mink
+calf
+crocodile
+fox
+mouse
+gorilla
+badger
+school of fish
+mosquito
+grasshopper
+swordfish
+poodle
+caterpillar
+Tasmanian devil
+porcupine
+owl
+cockroach
+snail
+buffalo
+kangaroo
+gnu
+wasp
+barracuda
+giraffe
+hen
+blue whale
+piranha
+seahorse
+Galapagos tortoise
+bluebird
+clownfish
+alpaca
+jaguar
+chipmunk
+tadpole
+bald eagle
+gazelle
+anteater
+chimpanzee
+walrus
+bat
+hornet
+saber-tooth tiger
+parakeet
+squid
+warthog
+chinchilla
+bird
+pigeon
+jellyfish
+guinea pig
+spider
+narwhal
+doe
+donkey
+weasel
+swan
+ram
+joey
+snake
+seagull
+toad
+lobster
+starfish
+llama
+hare
+falcon
+killer whale
+shark
+eel
+bee
+panther
+hippopotamus
+basset hound
+flamingo
+salmon
+raccoon
+T-Rex
+rhinoceros
+jackalope
+frog
+cow
+tuna
+stingray
+oyster
+unicorn
+wolf
+hummingbird
+cobra
+water buffalo
+wooly mammoth
+duckling
+ferret
+seal
+boar
+lamb
+hammerhead shark
+python
+iguana
+daddy longlegs
+three-toed sloth
+platypus

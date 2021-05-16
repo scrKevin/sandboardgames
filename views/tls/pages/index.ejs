@@ -13,6 +13,11 @@
       <%- include ("../partials/guessplane") %>
       <%- include ("../partials/playerboxes") %>
       <%- include ('../../common/webcams', {webcamPos: webcamPos, fixedPlayers:fixedPlayers}) -%>
+      <%  var scoreboxValues = [1];
+        for (var i = 0; i < fixedPlayers; i++) { 
+          var id = i; -%>
+          <%- include('../../common/scorebox', {scoreboxId: id, scoreboxValues: scoreboxValues}); %>
+      <%  } -%>
       <%- include ("../../common/cursors") -%>
     </div>
   </body>

@@ -1,5 +1,23 @@
 <div id="drawplane">
   <div class="countdown">30</div>
+  <div class="lineThickness" id="t0" onclick="changeThickness('t0', 2);"><img src='/img/tls/line_thickness_0.png' /></div>
+  <div class="lineThickness" id="t1" onclick="changeThickness('t1', 4);"><img src='/img/tls/line_thickness_1.png' /></div>
+  <div class="lineThickness" id="t2" onclick="changeThickness('t2', 8);"><img src='/img/tls/line_thickness_2.png' /></div>
+  <div class="lineThickness" id="t3" onclick="changeThickness('t3', 16);"><img src='/img/tls/line_thickness_3.png' /></div>
+  <table id="colorTable" style="width: 200px; border-collapse:separate;">
+    <tr>
+      <% for (var i = 0; i < 7; i++) { -%>
+      <td class="ctd" id="cg<%= i %>" style="border: 2px solid #CCCCCC; width:27px; height: 27px; background-color: hsl(0, 0%, <%= i * (100 / 6) %>%);" onclick="changeColor('cg<%= i %>', 0, 0, <%= i * (100 / 6) %>);"></td>
+      <% } -%>
+    </tr>
+    <% for (var hue = 0; hue < 24; hue++) { -%>
+    <tr>
+      <% for (var i = 0; i < 7; i++) { -%>
+      <td class="ctd" id="c<%= hue %><%= i %>" style="border: 2px solid #CCCCCC; width:27px; height: 27px; background-color: hsl(<%= Math.round(hue * (360 / 24)) %>, 100%, <%= (i + 1) * (100 / 8) %>%);" onclick="changeColor('c<%= hue %><%= i %>', <%= Math.round(hue * (360 / 24)) %>, 100, <%= (i + 1) * (100 / 8) %>);"></td>
+      <% } -%>
+    </tr>
+    <% } -%>
+  </table>
   <div class="drawText">Draw a: <span id="word">TEST</span></div>
   <canvas id="tlsDrawCanvas" width="700" height="900"></canvas>
 </div>

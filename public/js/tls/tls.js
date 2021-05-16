@@ -3,6 +3,8 @@ var webcamBoxHeight = 300;
 
 var wsLocation = "tls";
 
+var round = new Audio('/wav/round.wav');
+
 var maxPlayers = 10;
 
 var maxSpectators = 20;
@@ -37,12 +39,27 @@ var prevY = 0;
 var flag = false;
 var dot_flag = false;
 
-var currentDrawing = []
+var currentDrawing = {}
+var currentThickness = 2;
+var currentHue = 0;
+var currentSaturation = 0;
+var currentLightness = 0;
+
+currentDrawing[currentThickness] = {}
+currentDrawing[currentThickness][currentHue] = {}
+currentDrawing[currentThickness][currentHue][currentSaturation] = {}
+currentDrawing[currentThickness][currentHue][currentSaturation][currentLightness] = []
 
 var scrollSteps = [80, 80, 900];
 
-var drawTimeLimit = 10;
+var drawTimeLimit = 30;
 var drawTimeLeft = 30;
+
+var guessTimeLimit = 30;
+var guessTimeLeft = 30;
+
+var autoSubmitTimeout = null;
+
 var countDownDisplayInterval = null;
 
 this.colorMap = {
@@ -94,6 +111,54 @@ function initGuessCanvas (canvasNew)
   tGuess = $("#tlsGuessCanvas").position().top;
 }
 
+function changeColor(cId, hue, sat, lig)
+{
+  $(".ctd").css("border", "2px solid #CCCCCC");
+  updateCss("#" + cId, "border", "2px solid green");
+  currentHue = hue;
+  currentSaturation = sat;
+  currentLightness = lig;
+  if (!(currentThickness in currentDrawing))
+  {
+    currentDrawing[currentThickness] = {}
+  }
+  if (!(currentHue in currentDrawing[currentThickness]))
+  {
+    currentDrawing[currentThickness][currentHue] = {}
+  }
+  if (!(currentSaturation in currentDrawing[currentThickness][currentHue]))
+  {
+    currentDrawing[currentThickness][currentHue][currentSaturation] = {}
+  }
+  if (!(currentLightness in currentDrawing[currentThickness][currentHue][currentSaturation]))
+  {
+    currentDrawing[currentThickness][currentHue][currentSaturation][currentLightness] = []
+  }
+}
+
+function changeThickness(tId, newThickness)
+{
+  $(".lineThickness").css("border", "2px solid #CCCCCC");
+  updateCss("#" + tId, "border", "2px solid green");
+  currentThickness = newThickness;
+  if (!(currentThickness in currentDrawing))
+  {
+    currentDrawing[currentThickness] = {}
+  }
+  if (!(currentHue in currentDrawing[currentThickness]))
+  {
+    currentDrawing[currentThickness][currentHue] = {}
+  }
+  if (!(currentSaturation in currentDrawing[currentThickness][currentHue]))
+  {
+    currentDrawing[currentThickness][currentHue][currentSaturation] = {}
+  }
+  if (!(currentLightness in currentDrawing[currentThickness][currentHue][currentSaturation]))
+  {
+    currentDrawing[currentThickness][currentHue][currentSaturation][currentLightness] = []
+  }
+}
+
 function processMouse (res, e)
 {
   
@@ -106,14 +171,14 @@ function processMouse (res, e)
     //console.log(currX + ", " + currY)
 
     flag = true;
-    dot_flag = true;
-    if (dot_flag) {
-      ctx.beginPath();
-      ctx.fillStyle = "#000000";
-      ctx.fillRect(currX, currY, 2, 2);
-      ctx.closePath();
-      dot_flag = false;
-    }
+    // dot_flag = true;
+    // if (dot_flag) {
+    //   ctx.beginPath();
+    //   ctx.fillStyle = "#000000";
+    //   ctx.fillRect(currX, currY, 2, 2);
+    //   ctx.closePath();
+    //   dot_flag = false;
+    // }
   }
   if (res == 'up' || res == "out") {
     flag = false;
@@ -131,45 +196,73 @@ function processMouse (res, e)
 }
 function draw ()
 {
-  this.currentDrawing.push({x0: this.prevX, y0: this.prevY, x1: this.currX, y1: this.currY});
+  currentDrawing[currentThickness][currentHue][currentSaturation][currentLightness].push({x0: this.prevX, y0: this.prevY, x1: this.currX, y1: this.currY});
+  
   //this.canvasFpsLimiter.update();
   ctx.beginPath();
   ctx.moveTo(prevX, prevY);
   ctx.lineTo(currX, currY);
-  ctx.strokeStyle = "#000000"
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = 'hsl(' + currentHue + ', ' + currentSaturation + '%, ' + currentLightness + '%)'
+  ctx.lineWidth = currentThickness;
   ctx.stroke();
   ctx.closePath();
 }
 
 function displayDrawingToGuess (drawing)
 {
-  for (let line of drawing)
-  {
-    //console.log(line)
-    guessCtx.beginPath();
-    guessCtx.moveTo(line.x0, line.y0);
-    guessCtx.lineTo(line.x1, line.y1);
-    guessCtx.strokeStyle = "#000000"
-    guessCtx.lineWidth = 2;
-    guessCtx.stroke();
-    guessCtx.closePath();
+  for (let lineWidth in drawing) {
+    for (let hue in drawing[lineWidth]) {
+      for (let saturation in drawing[lineWidth][hue]) {
+        for (let lightness in drawing[lineWidth][hue][saturation]) {
+          for (let line of drawing[lineWidth][hue][saturation][lightness])
+          {
+            //console.log(line)
+            guessCtx.beginPath();
+            guessCtx.moveTo(line.x0, line.y0);
+            guessCtx.lineTo(line.x1, line.y1);
+            guessCtx.strokeStyle = 'hsl(' + hue + ', ' + saturation + '%, ' + lightness + '%)';
+            guessCtx.lineWidth = lineWidth;
+            guessCtx.stroke();
+            guessCtx.closePath();
+          }
+        }
+      }
+    }
   }
+  // for (let line of drawing)
+  // {
+  //   //console.log(line)
+  //   guessCtx.beginPath();
+  //   guessCtx.moveTo(line.x0, line.y0);
+  //   guessCtx.lineTo(line.x1, line.y1);
+  //   guessCtx.strokeStyle = "#000000"
+  //   guessCtx.lineWidth = 2;
+  //   guessCtx.stroke();
+  //   guessCtx.closePath();
+  // }
 }
 
 function displayResultDrawing (resultCanvas, drawing)
 {
   resultCtx = resultCanvas.getContext("2d");
-  for (let line of drawing)
-  {
-    //console.log(line)
-    resultCtx.beginPath();
-    resultCtx.moveTo(line.x0, line.y0);
-    resultCtx.lineTo(line.x1, line.y1);
-    resultCtx.strokeStyle = "#000000"
-    resultCtx.lineWidth = 2;
-    resultCtx.stroke();
-    resultCtx.closePath();
+  for (let lineWidth in drawing) {
+    for (let hue in drawing[lineWidth]) {
+      for (let saturation in drawing[lineWidth][hue]) {
+        for (let lightness in drawing[lineWidth][hue][saturation]) {
+          for (let line of drawing[lineWidth][hue][saturation][lightness])
+          {
+            //console.log(line)
+            resultCtx.beginPath();
+            resultCtx.moveTo(line.x0, line.y0);
+            resultCtx.lineTo(line.x1, line.y1);
+            resultCtx.strokeStyle = 'hsl(' + hue + ', ' + saturation + '%, ' + lightness + '%)';
+            resultCtx.lineWidth = lineWidth;
+            resultCtx.stroke();
+            resultCtx.closePath();
+          }
+        }
+      }
+    }
   }
 }
 
@@ -285,22 +378,27 @@ $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
         }
       }
       erase();
-      currentDrawing = [];
+      currentDrawing = {};
+      changeThickness("t0", 2);
+      changeColor("cg0", 0, 0, 0);
       updateCss("#drawplane", "display", "block");
       updateCss("#guessplane", "display", "none");
       drawTimeLeft = drawTimeLimit;
+      if (countDownDisplayInterval !== null) clearInterval(countDownDisplayInterval)
       countDownDisplayInterval = setInterval(() => {
         drawTimeLeft--;
         $(".countdown").html(drawTimeLeft);
       }, 1000);
-      submitTimeout = setTimeout(() =>{
-        clearInterval(countDownDisplayInterval);
+      let submitTimeout = setTimeout(() =>{
+        if (countDownDisplayInterval !== null) clearInterval(countDownDisplayInterval)
+        countDownDisplayInterval = null;
         let sendData = {
           type: "submitDrawing",
           drawing: currentDrawing
         }
         clientController.sendCustomMessage(sendData)
       }, drawTimeLimit * 1000);
+      round.play();
     }
     else if (isGuessPhase(tlsGame.gameState))
     {
@@ -315,8 +413,30 @@ $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
         }
       }
 
+      guessTimeLeft = guessTimeLimit;
+      if (countDownDisplayInterval !== null) clearInterval(countDownDisplayInterval)
+      countDownDisplayInterval = setInterval(() => {
+        guessTimeLeft--;
+        $(".countdown").html(guessTimeLeft);
+      }, 1000);
+      autoSubmitTimeout = setTimeout(() =>{
+        if (countDownDisplayInterval !== null) clearInterval(countDownDisplayInterval);
+        autoSubmitTimeout = null;
+        countDownDisplayInterval = null;
+        let guess = $("#guess").val();
+        updateCss("#guessplane", "display", "none");
+        let sendData = {
+          type: "submitGuess",
+          guess: guess
+        }
+        clientController.sendCustomMessage(sendData)
+        $("#guess").val("");
+        
+      }, drawTimeLimit * 1000);
+
       updateCss("#guessplane", "display", "block");
       updateCss("#drawplane", "display", "none");
+      round.play();
     }
     else if (tlsGame.gameState == -1)
     {
@@ -350,7 +470,7 @@ $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
           }
           subjectHtml += "<div class='subjectWordText' style='background-color:" + playerThatDrewColor + "'><span style='font-weight: bold;'>" + playerThatDrew + "</span> drew:</div>";
           subjectHtml += "<canvas class='subjectCanvas' id='canvasSubject" + subject.id + "_" + round + "' width='700' height='900'></canvas>";
-          subjectHtml += "<div class='subjectWordText' style='background-color:" + playerThatGuessedColor + "'><span style='font-weight: bold;'>" + playerThatGuessed + "</span> guessed: " + subject.guesses[round].word + "</div>";
+          subjectHtml += "<div class='subjectWordText' style='background-color:" + playerThatGuessedColor + "'><span style='font-weight: bold;'>" + playerThatGuessed + "</span> guessed: <span style='font-weight: bold;'>" + subject.guesses[round].word + "</span></div>";
         }
         subjectHtml += "</div>"
         $("#subjectBox" + subject.id).html(subjectHtml)
@@ -427,6 +547,10 @@ $(document).on("clientControllerReady", function(e, newClientController){
   })
 
   $("#submitGuessBtn").on('click', (e) => {
+    clearTimeout(autoSubmitTimeout);
+    autoSubmitTimeout = null;
+    if (countDownDisplayInterval !== null) clearInterval(countDownDisplayInterval);
+    countDownDisplayInterval = null;
     let guess = $("#guess").val();
     //console.log(guess);
     if (typeof guess !== 'undefined' && guess !== '')
@@ -456,4 +580,10 @@ $(document).on("reset", function(e){
   $(".moveBtn").remove();
 })
 
+$(document).on("addWebcam", function(e, playerId, mirrored, muted){
+  updateCss("#scorebox" + playerId, "display", "block");
+});
 
+$(document).on("leftPeer", function(e, playerId){
+  updateCss("#scorebox" + playerId, "display", "none");
+});

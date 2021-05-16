@@ -1,8 +1,6 @@
-const fs = require('fs');
-var path = require('path');
-
 let Deck = require('../deck').Deck;
 let Card = require('../card').Card;
+let Scorebox = require('../scorebox').Scorebox;
 
 let Game = require('../base_game').Game;
 let TlsPlayerObject = require('./tls_player_object').TlsPlayerObject;
@@ -11,7 +9,7 @@ let TlsSubject = require('./tls_subject').TlsSubject
 let TlsDrawing = require('./tls_drawing').TlsDrawing
 let TlsGuess = require('./tls_guess').TlsGuess
 
-var wordArray = fs.readFileSync(path.join(__dirname, 'words_en.txt')).toString().split("\n");
+var wordArray = require('../word_lists/word_getter').WordGetter("nl", ['pictionary_idioms', 'pictionary_easy', 'pictionary_medium', 'pictionary_movies'])
 
 function getRandom(arr, n) {
   var result = new Array(n),
@@ -44,6 +42,8 @@ function getRandomNumberArray(n)
 
 function TLS_Game(wss, turnServer){
   this.game = new Game(wss, turnServer, this.resetGame, this.processClientMessage);
+  this.drawingTimeout = null;
+  this.guessingTimeout = null;
 }
 
 function getPerfectGrid(nOfSubjects)
@@ -205,7 +205,14 @@ TLS_Game.prototype.resetGame = function(game)
 
   game.gameObj.highestZ = 10000;
 
+  for (var i = 0; i < 10; i++)
+  {
+    game.gameObj.scoreboxes.push(new Scorebox(i));
+  }
+
   game.gameObj.tlsGameObject = new TlsGameObject();
+  if (this.drawingTimeout != null) clearTimeout(this.drawingTimeout)
+  if (this.guessingTimeout != null) clearTimeout(this.guessingTimeout)
 
   // for (let player of Object.values(game.gameObj.players))
   // {
@@ -249,6 +256,11 @@ TLS_Game.prototype.processClientMessage = function(client, player, json)
         y++;
       }
 
+      // set timeout for drawing
+      if (this.guessingTimeout != null) clearTimeout(this.guessingTimeout);
+      this.drawingTimeout = setTimeout(() => {
+        fillDrawings(this.gameObj.tlsGameObject, this)
+      }, 45000)
       this.broadcast();
     }
   }
@@ -264,7 +276,14 @@ TLS_Game.prototype.processClientMessage = function(client, player, json)
     }
     if (allDrawingsCollected(this.gameObj.tlsGameObject))
     {
+      if (this.drawingTimeout != null) clearTimeout(this.drawingTimeout)
       this.gameObj.tlsGameObject.gameState++;
+      // set timeout for guessing
+      this.guessingTimeout = setTimeout(() => {
+        fillGuesses(this.gameObj.tlsGameObject, this)
+      }, 45000)
+
+
       this.broadcast();
     }
   }
@@ -280,6 +299,7 @@ TLS_Game.prototype.processClientMessage = function(client, player, json)
     }
     if (allGuessesCollected(this.gameObj.tlsGameObject))
     {
+      if (this.guessingTimeout != null) clearTimeout(this.guessingTimeout)
       this.gameObj.tlsGameObject.gameState++;
       if (this.gameObj.tlsGameObject.gameState > this.gameObj.tlsGameObject.nOfRounds)
       {
@@ -296,6 +316,13 @@ TLS_Game.prototype.processClientMessage = function(client, player, json)
           // this.addToChangedCardsBuffer(subjectBox.id)
           // this.addToChangedCardsBuffer(moveBtnDeck.id)
         }
+      }
+      else
+      {
+        // set timeout for drawing
+        this.drawingTimeout = setTimeout(() => {
+          fillDrawings(this.gameObj.tlsGameObject, this)
+        }, 45000)
       }
       this.broadcast();
     }
@@ -363,6 +390,63 @@ function allGuessesCollected(tlsGameObj)
     }
   }
   return true;
+}
+
+function fillDrawings(tlsGameObj, that)
+{
+  let nOfDrawings = (tlsGameObj.gameState + 1) / 2;
+  for (let subject of tlsGameObj.subjects)
+  {
+    while (subject.drawings.length < nOfDrawings)
+    {
+      subject.drawings.push(new TlsDrawing(-1, {}))
+    }
+  }
+  tlsGameObj.gameState++;
+  that.broadcast();
+  that.drawingTimeout = null;
+  that.guessingTimeout = setTimeout(() => {
+    fillGuesses(tlsGameObj, that)
+  }, 45000);
+}
+
+function fillGuesses(tlsGameObj, that)
+{
+  let nOfGuesses = (tlsGameObj.gameState) / 2;
+  for (let subject of tlsGameObj.subjects)
+  {
+    if (subject.guesses.length < nOfGuesses)
+    {
+      subject.guesses.push(new TlsGuess(-1, subject.word))
+    }
+  }
+  tlsGameObj.gameState++;
+  if (tlsGameObj.gameState > tlsGameObj.nOfRounds)
+  {
+    that.gameObj.tlsGameObject.gameState = -1;
+    var startX = 510;
+    var startY = 0;
+    for (let subject of that.gameObj.tlsGameObject.subjects)
+    {
+      let moveBtnDeck = new Deck("subjectMoveBtn" + subject.id, startX, startY, 50, 50)
+      let subjectBox = new Card("subjectBox" + subject.id, startX, startY)
+      that.gameObj.cards[subjectBox.id] = subjectBox;
+      moveBtnDeck.attachedCards[subjectBox.id] = subjectBox;
+      that.gameObj.decks[moveBtnDeck.id] = moveBtnDeck;
+      // this.addToChangedCardsBuffer(subjectBox.id)
+      // this.addToChangedCardsBuffer(moveBtnDeck.id)
+    }
+  }
+  else
+  {
+    
+    
+    that.guessingTimeout = null;
+    that.drawingTimeout = setTimeout(() => {
+      fillDrawings(tlsGameObj, that)
+    }, 45000);
+  }
+  that.broadcast();
 }
 
 module.exports = {TLS_Game: TLS_Game}
