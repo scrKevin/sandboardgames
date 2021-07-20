@@ -1,0 +1,15 @@
+<table class='tiles'>
+  <% for (var r = 0; r < 5; r++) { -%>
+  <tr>
+    <% for (var c = 0; c < 5; c++) { -%>
+      <% if (r == 0 && c == 2) { -%>
+        <td class="redTile"></td>
+      <% } else if (r == 4 && c == 2){ -%>
+        <td class="blueTile"></td>
+      <% } else { -%>
+        <td></td>
+      <% } -%>
+    <% } -%>
+  </tr>
+  <% } -%>
+</table>

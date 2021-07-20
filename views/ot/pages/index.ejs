@@ -1,0 +1,17 @@
+<html>
+  <head>
+    <%- include ("../partials/head") %>
+  </head>
+  <body>
+    <%- include ('../../common/resetWebcamModal'); -%>
+    <%- include ('../../common/resetModal'); -%>
+    <div class="scaleplane">
+      <img style="position: absolute; top: 0; left: 0;" src="/img/ot/bg_arrows.png"/>
+      <%- include ('../partials/layout') %>
+      <%- include ('../../common/webcams', {webcamPos: webcamPos, fixedPlayers:fixedPlayers}); -%>
+      <%- include ('../partials/decks') %>
+      <%- include ('../partials/touchboxes') %>
+      <%- include ('../../common/cursors'); -%>
+    </div>
+  </body>
+</html>

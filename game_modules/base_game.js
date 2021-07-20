@@ -192,12 +192,39 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
                 card.isInAnOpenbox = false;
               }
             }
+            if (card.hasOwnProperty("rotatable") && this.gameObj.hasOwnProperty('playerRotation'))
+            {
+              var openboxData = {isInAnOpenBox: false, openbox: null};
+              for (let openbox of Object.values(this.gameObj.openboxes))
+              {
+                if (openbox.hasOwnProperty('rotation'))
+                {
+                  if (openbox.isInOpenBox(json.pos.x, json.pos.y))
+                  {
+                    openboxData.isInAnOpenbox = true;
+                    openboxData.openbox = openbox;
+                    // break;
+                  }
+                }
+              }
+              if (openboxData.isInAnOpenbox)
+              {
+                card.rotation = openboxData.openbox.rotation;
+                this.addToChangedCardsBuffer(card.id)
+              }
+              else
+              {
+                card.rotation = 0;
+                this.addToChangedCardsBuffer(card.id)
+              }
+            }
           }
         }
         this.broadcast();
       }
       else if (json.type == "clickcard")
       {
+        var toBroadcast = false;
         if (json.card in this.gameObj.cards)
         {
           var card = this.gameObj.cards[json.card];
@@ -209,7 +236,8 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
             card.setZ(this.gameObj.highestZ);
             
             this.addToChangedCardsBuffer(card.id);
-            this.broadcast();
+            toBroadcast = true;
+            // this.broadcast();
           }
           else
           {
@@ -245,8 +273,36 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
             }
             
             client.sendCardConflict(card.id, replacementCardId);
-            this.broadcast();
+            toBroadcast = true;
+            // this.broadcast();
           }
+
+          if (card.hasOwnProperty("rotatable") && this.gameObj.hasOwnProperty('playerRotation'))
+          {
+            // var openboxData = {isInAnOpenBox: false, openbox: null};
+            // for (let openbox of Object.values(this.gameObj.openboxes))
+            // {
+            //   if (openbox.hasOwnProperty('rotation'))
+            //   {
+            //     if (openbox.isInOpenBox(json.pos.x, json.pos.y))
+            //     {
+            //       openboxData.isInAnOpenbox = true;
+            //       openboxData.openbox = openbox;
+            //       // break;
+            //     }
+            //   }
+            // }
+            // if (openboxData.isInAnOpenBox)
+            // {
+            // card.rotation = (this.gameObj.playerRotation * id) % 360
+            // this.addToChangedCardsBuffer(card.id);
+            // toBroadcast = true;
+            // }
+          }
+        }
+        if (toBroadcast)
+        {
+          this.broadcast();
         }
       }
       else if (json.type == "touchcard")

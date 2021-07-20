@@ -23,6 +23,7 @@ var audioTrack = null;
 var myLatency = 5000;
 
 var myPlayerId = -1;
+var myRotation = 0;
 
 var state = {
   color: "#FFFFFF"
@@ -151,6 +152,10 @@ function addWebcam(stream, playerId, mirrored, muted)
   updateCss("#player" + playerId + "NameText", "display", "initial");
   updateCss("#player" + playerId + "Name", "display", "initial");
   $(document).trigger("addWebcam", [playerId, mirrored, muted]);
+  if (myRotation !== 0)
+  {
+    $(".webcam video").css("transform", "rotateZ(180deg)")
+  }
 }
 
 var gameInitialized = false;
@@ -205,6 +210,17 @@ function InitWebSocket()
 
     clientController.on("playerId", (playerId) => {
       myPlayerId = playerId;
+      if (myGameObj !== null)
+      {
+        if (myGameObj.hasOwnProperty('playerRotation'))
+        {
+          myRotation = (myPlayerId * myGameObj.playerRotation) % 360
+          if (myRotation !== 0)
+          {
+            $(".webcam video").css("transform", "rotateZ(180deg)")
+          }
+        }
+      }
       if (myPlayerId + 1 > maxPlayers)
       {
         $('#welcomeModal').modal('hide');
@@ -227,6 +243,17 @@ function InitWebSocket()
 
     clientController.on("updateGame", (gameObj, changedCardsBuffer, newDrawCoords, init) => {
       myGameObj = gameObj;
+      if (myPlayerId !== -1 && init)
+      {
+        if (myGameObj.hasOwnProperty('playerRotation'))
+        {
+          myRotation = (myPlayerId * myGameObj.playerRotation) % 360
+          if (myRotation !== 0)
+          {
+            $(".webcam video").css("transform", "rotateZ(180deg)")
+          }
+        }
+      }
       highestZ = gameObj.highestZ;
       if(init)
       {
@@ -433,8 +460,28 @@ $(document).bind('mousemove', function (e) {
   if (!gameInitialized) return;
   //e.preventDefault();
 
-  var currentXScaled = Math.round(e.pageX * (1 / scale));
-  var currentYScaled = Math.round(e.pageY * (1 / scale));
+  pageX = e.pageX
+  pageY = e.pageY
+
+  if (myRotation == 0)
+  {
+    var currentXScaled = Math.round(e.pageX * (1 / scale));
+    var currentYScaled = Math.round(e.pageY * (1 / scale));
+
+    
+  }
+  else
+  {
+    var currentXScaled = Math.round(e.pageX * (1 / scale));
+    var currentYScaled = Math.round(e.pageY * (1 / scale));
+    var rotatedCoords = rotateCoordinates(960, 540, currentXScaled, currentYScaled, myRotation)
+    currentXScaled = rotatedCoords[0]
+    currentYScaled = rotatedCoords[1]
+
+    var rotatedPageCoords = rotateCoordinates(960*scale, 540*scale, e.pageX, e.pageY, myRotation)
+    pageX = rotatedPageCoords[0]
+    pageY = rotatedPageCoords[1]
+  }
 
   var cardX = 0;
   var cardY = 0;
@@ -447,38 +494,50 @@ $(document).bind('mousemove', function (e) {
     if (dragCardId != null)
     {
       //cardX = (($("#" + dragCardId).position().left * (1 / scale)) - deltaX)
-      cardX = (((e.pageX - dragCardDeltaX) * (1 / scale)) - deltaX)
+      cardX = (((pageX - dragCardDeltaX) * (1 / scale)) - deltaX)
       if (cardX < 0)
       {
         cardX = 0;
       }
       //cardY = (($("#" + dragCardId).position().top * (1 / scale)) - deltaY)
-      cardY = (((e.pageY - dragCardDeltaY) * (1 / scale)) - deltaY)
+      cardY = (((pageY - dragCardDeltaY) * (1 / scale)) - deltaY)
       if (cardY < 0)
       {
         cardY = 0;
       }
       if (!isDeck(dragCardId))
       {
+        // var cardTransform = ""
         var isInADeck = false;
+
         for (let deck of Object.values(myGameObj.decks))
         {
           if (isInDeck(currentXScaled, currentYScaled, deck))
           {
             isInADeck = true;
+            // if (cardTransform != "")
+            // {
+            //   cardTransform += " "
+            // }
+            // cardTransform += "scale(" + deck.scale + ")"
             updateCss("#" + dragCardId, "transform", "scale(" + deck.scale + ")")
             continue;
           }
         }
         if (!isInADeck)
         {
+          // if (cardTransform != "")
+          // {
+          //   cardTransform += " "
+          // }
           updateCss("#" + dragCardId, "transform", "scale(1)");
+          //cardTransform += "scale(1)"
           if (myGameObj.hasOwnProperty("sharedPlayerbox") && myGameObj.cards[dragCardId].hasOwnProperty('show'))
           {
             if(isInOpenBox(cardX, cardY, myGameObj.sharedPlayerbox))
             {
               updateCardFaceId(dragCardId, "frontface");
-              updateCss("#" + dragCardId, "transform", "scale(1)")
+              // updateCss("#" + dragCardId, "transform", "scale(1)")
             }
             else
             {
@@ -487,20 +546,46 @@ $(document).bind('mousemove', function (e) {
             
           }
         }
+
+        // if (cardTransform != "")
+        // {
+        //   //updateCss("#" + dragCardId, "transform", cardTransform)
+        // }
       }
     }
     for (attachedCard of dragCardIds)
     {
-      cardXLocal = (($("#" + attachedCard).position().left * (1 / scale)) - deltaX)
-      if (cardXLocal < 0)
+      if (myRotation == 0)
       {
-        cardXLocal = 0;
+        cardXLocal = (($("#" + attachedCard).position().left * (1 / scale)) - deltaX)
+        if (cardXLocal < 0)
+        {
+          cardXLocal = 0;
+        }
+        cardYLocal = (($("#" + attachedCard).position().top * (1 / scale)) - deltaY)
+        if (cardYLocal < 0)
+        {
+          cardYLocal = 0;
+        }
+        
       }
-      cardYLocal = (($("#" + attachedCard).position().top * (1 / scale)) - deltaY)
-      if (cardYLocal < 0)
+      else
       {
-        cardYLocal = 0;
+        var cardOffset = $("#" + attachedCard).offset()
+        //console.log(cardOffset)
+        var rotatedCardCoords = rotateCoordinates(960*scale, 540*scale, cardOffset.left, cardOffset.top, myRotation)
+        cardXLocal = ((rotatedCardCoords[0] * (1 / scale)) - deltaX) - $("#" + attachedCard).innerWidth()
+        if (cardXLocal < 0)
+        {
+          cardXLocal = 0;
+        }
+        cardYLocal = ((rotatedCardCoords[1] * (1 / scale)) - deltaY)
+        // if (cardYLocal < 0)
+        // {
+        //   cardYLocal = 0;
+        // }
       }
+
       updateCss("#" + attachedCard, "left", cardXLocal + "px");
       updateCss("#" + attachedCard, "top", cardYLocal + "px");
     }
@@ -532,12 +617,25 @@ function cardMouseUp(e)
     // var cardPosition = $("#" + dragCardId).position();
     // var cardX = Math.round(cardPosition.left * (1 / scale));
     // var cardY = Math.round(cardPosition.top * (1 / scale));
-    var cardX = Math.round((e.pageX - dragCardDeltaX) * (1 / scale));
-    var cardY = Math.round((e.pageY - dragCardDeltaY) * (1 / scale));
-    if (cardX < 0) cardX = 0;
-    if (cardY < 0) cardY = 0;
-    var mouseX = e.pageX * (1 / scale);
-    var mouseY = e.pageY * (1 / scale)
+    if (myRotation == 0)
+    {
+      var cardX = Math.round((e.pageX - dragCardDeltaX) * (1 / scale));
+      var cardY = Math.round((e.pageY - dragCardDeltaY) * (1 / scale));
+      if (cardX < 0) cardX = 0;
+      if (cardY < 0) cardY = 0;
+      var mouseX = e.pageX * (1 / scale);
+      var mouseY = e.pageY * (1 / scale)
+    }
+    else
+    {
+      var rotatedCardCoords = rotateCoordinates(960*scale, 540*scale, e.pageX, e.pageY, myRotation)
+      var cardX = Math.round((rotatedCardCoords[0] - dragCardDeltaX) * (1 / scale));
+      var cardY = Math.round((rotatedCardCoords[1] - dragCardDeltaY) * (1 / scale));
+      if (cardX < 0) cardX = 0;
+      if (cardY < 0) cardY = 0;
+      var mouseX = rotatedCardCoords[0] * (1 / scale);
+      var mouseY = rotatedCardCoords[1] * (1 / scale)
+    }
 
     clientController.releaseCard(mouseX, mouseY, cardX, cardY);
     if(myGameObj.hasOwnProperty("sharedPlayerbox"))
@@ -616,6 +714,15 @@ $(document).on("initCardFunctions", (e) => {
   initCards(myGameObj)
 })
 
+function rotateCoordinates(cx, cy, x, y, angle) {
+  var radians = (Math.PI / 180) * angle,
+      cos = Math.cos(radians),
+      sin = Math.sin(radians),
+      nx = (cos * (x - cx)) + (sin * (y - cy)) + cx,
+      ny = (cos * (y - cy)) - (sin * (x - cx)) + cy;
+  return [nx, ny];
+}
+
 function initCardFunctions()
 {
   $(".card").on("mousedown", function(event){
@@ -672,11 +779,41 @@ function initCardFunctions()
 
       if (canEdit)
       {
-        var cardPosition = $(event.currentTarget).position();
-        dragCardDeltaX = event.pageX - cardPosition.left;
-        dragCardDeltaY = event.pageY - cardPosition.top;
-        var cardX = Math.round(cardPosition.left * (1 / scale));
-        var cardY = Math.round(cardPosition.top * (1 / scale));
+        
+        if (myRotation == 0)
+        {
+          var cardPosition = $(event.currentTarget).position();
+          //console.log(cardPosition)
+          dragCardDeltaX = event.pageX - cardPosition.left;
+          dragCardDeltaY = event.pageY - cardPosition.top;
+          var cardX = Math.round(cardPosition.left * (1 / scale));
+          var cardY = Math.round(cardPosition.top * (1 / scale));
+        }
+        else
+        {
+          var cardPosition = $(event.currentTarget).offset();
+          var w = $(event.currentTarget).innerWidth() * scale;
+          //console.log(w)
+          // console.log(scale)
+          // console.log(window.innerHeight)
+          // console.log(1080*scale)
+          // cardPosition.top = (cardPosition.top + (1080 * scale)) - window.innerHeight;
+          // cardPosition.left = cardPosition.left
+          var rotatedCardCoords = rotateCoordinates(960 * scale, 540 * scale, cardPosition.left, cardPosition.top, myRotation)
+          var rotatedPageCoords = rotateCoordinates(960 * scale, 540 * scale, event.pageX, event.pageY, myRotation)
+          // console.log(cardPosition)
+          // console.log(rotatedCardCoords)
+          // console.log(rotatedPageCoords)
+          cardPosition.left = rotatedCardCoords[0] - w
+          cardPosition.top = rotatedCardCoords[1]
+          //console.log(cardPosition)
+
+          dragCardDeltaX = rotatedPageCoords[0] - cardPosition.left;
+          dragCardDeltaY = rotatedPageCoords[1] - cardPosition.top;
+          var cardX = Math.round(cardPosition.left * (1 / scale));
+          var cardY = Math.round(cardPosition.top * (1 / scale));
+
+        }
         if(!draggableIsDeck)
         {
           updateCss("#" + dragCardId, "z-index", "10000000");
@@ -803,21 +940,47 @@ function adaptScale()
 
   var ratioWindow = width / height;
 
+  var spTransform = ""
   if (ratioWindow > ratio)
   {
     scale = height / 1080;
-    $(".scaleplane").css("transform", "scale(" + scale + ")")
+    //$(".scaleplane").css("transform", "scale(" + scale + ")")
+    spTransform += "scale(" + scale + ")"
   }
   else
   {
     scale = width / 1920;
-    $(".scaleplane").css("transform", "scale(" + scale + ")")
+    // $(".scaleplane").css("transform", "scale(" + scale + ")")
+    spTransform += "scale(" + scale + ")"
   }
   $(".scaleplane").css("width", (100 / scale) + "vw");
   $(".scaleplane").css("height", (100 / scale) + "vh");
 
   $(".scaleplane").css("perspective-origin", (50 / scale) + "vw " + (50 / scale) + "vh");
   $(".scaleplane").css("perspective", (3500 / scale) + "px");
+  if (myGameObj !== null)
+  {
+    if (myGameObj.hasOwnProperty('playerRotation'))
+    {
+      pRotation = ((myPlayerId * myGameObj.playerRotation) % 360)
+      //$(".scaleplane").css("transform", "rotateZ(" + ((myPlayerId * myGameObj.playerRotation) % 360) + "deg)");
+      spTransform = "rotateZ(" + pRotation + "deg) " + spTransform
+      if (pRotation != 0)
+      {
+        $(".scaleplane").css("left", (1920 * scale));
+        $(".scaleplane").css("top", (1080 * scale));
+      }
+      else
+      {
+        $(".scaleplane").css("left", "0");
+        $(".scaleplane").css("top", "0");
+      }
+    }
+  }
+  if (spTransform != "")
+  {
+    $(".scaleplane").css("transform", spTransform);
+  }
   clientController.canvasHandler.updateScale(scale);
   $(document).trigger("scale", scale);
 }
@@ -1110,6 +1273,15 @@ function init3dCard(card)
   }
 }
 
+function initRotatableCard(card)
+{
+  $("#" + card.id).html("<div class='rotateContainer'><div class='cardFace' style='transform:rotateY(0deg)'><img src='" + card.frontface + "'/></div><div class='cardFace'><img id='" + card.id + "BFimg' src='" + card.backface + "'/></div></div>")
+  var width = $("#" + card.id + "BFimg").outerWidth();
+
+  $("#" + card.id).css("width", width);
+  updateCss("#" + card.id + " .rotateContainer", "transform", "rotateZ(" + card.rotation + "deg)")  
+}
+
 function initCards(gameObj){
   adaptScale();
   for (let deck of Object.values(gameObj.decks))
@@ -1174,6 +1346,10 @@ function initCards(gameObj){
           }
         }
       }
+    }
+    if (card.hasOwnProperty('rotatable'))
+    {
+      initRotatableCard(card);
     }
     initDice(card);
   }
@@ -1269,13 +1445,35 @@ function updateCards(gameObj, changedCardsBuffer)
       }
     }
     updateCss("#" + card.id, "z-index", String(card.z + additionalZ));
+    var cardTransform = ""
+
+    if (card.hasOwnProperty('rotatable'))
+    {
+      updateCss("#" + card.id + " .rotateContainer", "transform", "rotateZ(" + card.rotation + "deg)")   
+    }
+
     if (card.hasOwnProperty("scale") && !projected)
     {
-      updateCss("#" + card.id, "transform", "scale(" + card.scale + ")");
+      // updateCss("#" + card.id, "transform", "scale(" + card.scale + ")");
+      if (cardTransform != "")
+      {
+        cardTransform += " "
+      }
+      cardTransform += "scale(" + card.scale + ")"
     }
     else if(!projected)
     {
-      updateCss("#" + card.id, "transform", "scale(1)");
+      // updateCss("#" + card.id, "transform", "scale(1)");
+      if (cardTransform != "")
+      {
+        cardTransform += " "
+      }
+      cardTransform += "scale(1)"
+    }
+
+    if (cardTransform != "")
+    {
+      updateCss("#" + card.id, "transform", cardTransform);
     }
 
     if(!blockCardChange.includes(card.id) && card.ownedBy != myPlayerId)

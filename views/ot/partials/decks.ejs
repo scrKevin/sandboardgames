@@ -1,0 +1,19 @@
+<div class='card deck' id='movesDeck'><button type="button" class="btn btn-primary btn-lg shuffleButton" style="width: 78px;" value='20'>Shuffle</button></div>
+<% for (var i = 0; i < 5; i++) { -%>
+  <% if (i !== 2) { -%>
+    <div class='card pSmall' id='r<%= i %>'><img src='/img/ot/r1.png'></div>
+  <% } else { -%>
+    <div class='card pLarge' id='r<%= i %>'><img src='/img/ot/r2.png'></div>
+  <% } -%>
+<% } -%>
+<% for (var i = 0; i < 5; i++) { -%>
+  <% if (i !== 2) { -%>
+    <div class='card pSmall' id='b<%= i %>'><img src='/img/ot/b1.png'></div>
+  <% } else { -%>
+    <div class='card pLarge' id='b<%= i %>'><img src='/img/ot/b2.png'></div>
+  <% } -%>
+<% } -%>
+
+<% for (var i = 1; i <= 16; i++) { -%>
+  <div class='card' id='m<%= i %>'><img src='/img/ot/m<%= i %>.png'></div>
+<% } -%>
