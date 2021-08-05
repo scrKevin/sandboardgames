@@ -9,7 +9,9 @@ let TlsSubject = require('./tls_subject').TlsSubject
 let TlsDrawing = require('./tls_drawing').TlsDrawing
 let TlsGuess = require('./tls_guess').TlsGuess
 
-var wordArray = require('../word_lists/word_getter').WordGetter("nl", ['pictionary_idioms', 'pictionary_easy', 'pictionary_medium', 'pictionary_movies'])
+var wordArray = {}
+wordArray["nl"] = require('../word_lists/word_getter').WordGetter("nl", ['pictionary_idioms', 'pictionary_easy', 'pictionary_medium', 'pictionary_movies'])
+wordArray["en"] = require('../word_lists/word_getter').WordGetter("en", ['pictionary_idioms', 'pictionary_easy', 'pictionary_medium', 'pictionary_movies'])
 
 function getRandom(arr, n) {
   var result = new Array(n),
@@ -25,9 +27,9 @@ function getRandom(arr, n) {
   return result;
 }
 
-function getRandomWords(n)
+function getRandomWords(n, language)
 {
-  return getRandom(wordArray, n);
+  return getRandom(wordArray[language], n);
 }
 
 function getRandomNumberArray(n)
@@ -237,7 +239,7 @@ TLS_Game.prototype.processClientMessage = function(client, player, json)
       if (nOfRounds % 2 !== 0) nOfRounds--;// uneven number of players
       this.gameObj.tlsGameObject.nOfRounds = nOfRounds;
 
-      let words = getRandomWords(nOfSubjects);
+      let words = getRandomWords(nOfSubjects, json.language);
       let wordIndex = 0;
       for (let word of words) {
         this.gameObj.tlsGameObject.subjects.push(new TlsSubject(wordIndex, word));

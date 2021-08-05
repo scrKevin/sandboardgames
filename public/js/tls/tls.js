@@ -326,13 +326,15 @@ $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
 
   if (tlsGame.gameState === 0 || tlsGame.gameState === -1)
   {
-    updateCss("#startGameBtn", "display", "block");
+    updateCss("#startGameBtnEN", "display", "block");
+    updateCss("#startGameBtnNL", "display", "block");
     updateCss("#guessplane", "display", "none");
     updateCss("#drawplane", "display", "none");
   }
   else
   {
-    updateCss("#startGameBtn", "display", "none");
+    updateCss("#startGameBtnEN", "display", "none");
+    updateCss("#startGameBtnNL", "display", "none");
   }
   var shouldBeVisibleArray = [];
   for (var i = 0; i < maxSpectators; i++)
@@ -539,9 +541,18 @@ $(document).on("clientControllerReady", function(e, newClientController){
   initCanvas(document.getElementById('tlsDrawCanvas'));
   initGuessCanvas(document.getElementById('tlsGuessCanvas'))
 
-  $("#startGameBtn").on('click', (e) => {
+  $("#startGameBtnEN").on('click', (e) => {
     let sendData = {
-      type: "start_tls_game"
+      type: "start_tls_game",
+      language: "en"
+    }
+    clientController.sendCustomMessage(sendData)
+  })
+
+  $("#startGameBtnNL").on('click', (e) => {
+    let sendData = {
+      type: "start_tls_game",
+      language: "nl"
     }
     clientController.sendCustomMessage(sendData)
   })
