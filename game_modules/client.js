@@ -140,6 +140,25 @@ Client.prototype.sendRadioRequest = function(forPlayerId){
   }
 }
 
+Client.prototype.sendWatchPartyRequest = function(forPlayerId){
+  var sendData = {
+    type: "newPeer",
+    playerId: forPlayerId,
+    wasReset: false,
+    peerType: "watchparty"
+  }
+  var strToSend = JSON.stringify(sendData);
+  var binaryString = this.constructMessage(strToSend);
+  if (this.ws.readyState === WebSocket.OPEN) {
+    this.ws.send(binaryString);
+    console.log("SENT newPeer (watchparty) of " + forPlayerId + " to " + this.playerId);
+  }
+  else
+  {
+    console.log("ERROR in sending (watchparty) newPeer of " + forPlayerId + " to " + this.playerId + ". ws.readyState not OPEN.");
+  }
+}
+
 Client.prototype.processNewPeerQueue = function()
 {
   //this.clearTimeouts();

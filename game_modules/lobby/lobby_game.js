@@ -53,6 +53,12 @@ Lobby_Game.prototype.resetGame = function(game)
     game.gameObj.decks[gameMoveBtnDeck.id] = gameMoveBtnDeck;
   }
 
+  var moveWatchPartyDeck = new Deck("watchPartyMoveBtn", 0, 0, 32, 32)
+  var watchPartyBox = new Card("watchPartyBox", 0, 0)
+  game.gameObj.cards[watchPartyBox.id] = watchPartyBox;
+  moveWatchPartyDeck.attachedCards[watchPartyBox.id] = watchPartyBox;
+  game.gameObj.decks[moveWatchPartyDeck.id] = moveWatchPartyDeck;
+
 }
 
 module.exports = {Lobby_Game: Lobby_Game, setGamesList: setGamesList};

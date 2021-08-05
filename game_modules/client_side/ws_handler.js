@@ -356,6 +356,15 @@ WsHandler.prototype.requestRadioFromPlayer = function(playerNumber)
   this.sendToWs(sendData);
 }
 
+WsHandler.prototype.requestWatchPartyFromPlayer = function(playerNumber)
+{
+  var sendData = {
+    type: "requestWatchPartyFromPlayer",
+    playerNumber: playerNumber
+  };
+  this.sendToWs(sendData);
+}
+
 WsHandler.prototype.sendCustomMessage = function(json)
 {
   var sendData = {

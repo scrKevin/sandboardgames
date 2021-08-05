@@ -82,6 +82,7 @@ var blockCardChange = [];
 
 var devToolsOpenedTimes = {};
 var listeningToRadio = -1;
+var isWatchingWatchPartyFrom = -1;
 
 function addRadio(stream)
 {
@@ -90,6 +91,23 @@ function addRadio(stream)
   $("#radioVolumeControl").val(100);
   video.srcObject = stream;
   video.play();
+}
+
+function addWatchParty(stream)
+{
+  var video = document.createElement('video');
+  $("#watchParty").html(video);
+  // $("#radioVolumeControl").val(100);
+  video.srcObject = stream;
+  video.play();
+  $(document).trigger("addWatchParty", []);
+}
+
+function removeWatchParty()
+{
+  console.log('removed watchparty.')
+  $("#watchParty").html("");
+  $(document).trigger("removeWatchParty", []);
 }
 
 function setRadioVolume(e)
@@ -243,6 +261,7 @@ function InitWebSocket()
 
     clientController.on("updateGame", (gameObj, changedCardsBuffer, newDrawCoords, init) => {
       myGameObj = gameObj;
+      // console.log("myplayerid: " + myPlayerId)
       if (myPlayerId !== -1 && init)
       {
         if (myGameObj.hasOwnProperty('playerRotation'))
@@ -252,6 +271,13 @@ function InitWebSocket()
           {
             $(".webcam video").css("transform", "rotateZ(180deg)")
           }
+        }
+      }
+      for (let player of Object.values(gameObj.players))
+      {
+        if (player.isHostingWatchParty && player !== myPlayerId)
+        {
+          joinWatchParty(player.id)
         }
       }
       highestZ = gameObj.highestZ;
@@ -324,6 +350,14 @@ function InitWebSocket()
           addRadio(stream);
         }
       }
+      else if(peerType == "watchparty")
+      {
+        // console.log("WATCHPARTY STREAM RECEIVED!")
+        if (stream != null)
+        {
+          addWatchParty(stream);
+        }
+      }
       else if (peerType == 'relay')
       {
         console.log("got stream for " + relayFor + " via relay from " + playerId);
@@ -344,6 +378,15 @@ function InitWebSocket()
           $(".radioControls").css("display", "none")
           listeningToRadio = -1;
         }
+      }
+      else if(peerType == "watchparty")
+      {
+        removeWatchParty();
+        // if (playerId == listeningToRadio)
+        // {
+        //   $(".radioControls").css("display", "none")
+        //   listeningToRadio = -1;
+        // }
       }
       else if (peerType == "relay")
       {
@@ -1038,6 +1081,7 @@ $( document ).ready(function() {
   $("#resetWebcamBtn").on('click', resetWebcam);
   $('#resetGameBtn').on('click', resetGame);
   $('#startCaptureBtn').on('click', startCapture);
+  $('#startWatchPartyBtn').on('click', startWatchParty);
   $('#takeSnapshotBtn').on('click', takeSnapshot);
   $('#recoverSnapshotBtn').on('click', recoverSnapshot);
   $(".shuffleButton").on('click', shuffleDeck);
@@ -1109,6 +1153,24 @@ async function startCapture(){
   
 }
 
+async function startWatchParty(){
+  try {
+    captureStream = await navigator.mediaDevices.getDisplayMedia({video:true, audio:true});
+    captureStream.getVideoTracks()[0].onended = function () {
+      console.log("captureStream ended.")
+      clientController.removeWatchPartyStream();
+      removeWatchParty()
+      captureStream = null;
+      
+    }
+    clientController.addWatchPartyStream(captureStream);
+    addWatchParty(captureStream)
+  } catch(err) {
+    console.error("Error: " + err);
+  }
+  
+}
+
 function toggleMic(e) {
   console.log(e)
   if (myStream != null)
@@ -1139,11 +1201,25 @@ function toggleRadio(e) {
   $(".radioControls").css("display", "block")
 }
 
+function joinWatchParty(playerNumber)
+{
+  if (isWatchingWatchPartyFrom != playerNumber)
+  {
+    isWatchingWatchPartyFrom = playerNumber
+    clientController.requestWatchPartyFromPlayer(playerNumber)
+  }
+  
+}
+
 function stopRadio(e){
   $(".radioControls").css("display", "none")
   clientController.stopRadio(listeningToRadio);
   removeRadio();
   listeningToRadio = -1;
+}
+
+function stopWatchParty(e){
+  removeWatchParty();
 }
 
 function valueExistsInDict(dict, value)

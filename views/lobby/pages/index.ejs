@@ -6,13 +6,14 @@
 		<%- include ('../../common/resetModal'); -%>
 		<%- include ('../../common/resetWebcamModal'); -%>
 		<div class="scaleplane">
+			<%- include ('../../common/watchParty'); -%>
 			<%  var i = 0;
 				for (game in gameInfo) { -%>
 				<div class="gamecard moveable" id='gamecard<%= i %>'>
 					<a href='<%= game %>'><img src='/img/<%= gameInfo[game]["lobbyIcon"] %>'/></a>
 					<span class="nOfPlayersText"><%= gameInfo[game]["nOfPlayers"] %></span>
 				</div>
-				<div class="card moveBtn" id="gamecardMoveBtn<%= i %>"><img src="/img/lobby/move.png"/></div>
+				<div class="card gameCardMoveBtn moveBtn" id="gamecardMoveBtn<%= i %>"><img src="/img/lobby/move.png"/></div>
 			<%  i++;} -%>
 			<%- include ('../../common/webcams', {fixedPlayers:fixedPlayers}); -%>
 			<%- include ('../../common/cursors'); -%>

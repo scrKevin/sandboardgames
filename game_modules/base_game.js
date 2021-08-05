@@ -430,6 +430,17 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
         player.isHostingCapture = false;
         this.broadcast();
       }
+      else if (json.type == "startWatchParty")
+      {
+        player.isHostingWatchParty = true;
+        this.broadcast();
+      }
+      else if (json.type == "stopWatchPartyHost")
+      {
+        console.log(id + " is stopping watchparty.")
+        player.isHostingWatchParty = false;
+        this.broadcast();
+      }
       else if (json.type == "requestRadioFromPlayer")
       {
         if (this.gameObj.players[json.playerNumber].isHostingCapture)
@@ -439,6 +450,20 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
             if (clientIS.playerId == json.playerNumber)
             {
               clientIS.sendRadioRequest(id);
+              continue;
+            }
+          }
+        }
+      }
+      else if (json.type == "requestWatchPartyFromPlayer")
+      {
+        if (this.gameObj.players[json.playerNumber].isHostingWatchParty)
+        {
+          for (clientIS of this.clients)
+          {
+            if (clientIS.playerId == json.playerNumber)
+            {
+              clientIS.sendWatchPartyRequest(id);
               continue;
             }
           }

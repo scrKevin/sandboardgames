@@ -8,6 +8,7 @@ function Player(){
   };
   this.drawArray = [];
   this.isHostingCapture = false;
+  this.isHostingWatchParty = false;
 }
 
 Player.prototype.setId = function(playerNumbers){

@@ -102,9 +102,22 @@ ClientController.prototype.removeCaptureStream = function(){
   this.webcamHandler.removeCaptureStream();
 }
 
+ClientController.prototype.addWatchPartyStream = function(newCaptureStream){
+  this.init && this.webcamHandler.addWatchPartyStream(newCaptureStream);
+}
+
+ClientController.prototype.removeWatchPartyStream = function(){
+  this.webcamHandler.removeWatchPartyStream();
+}
+
 ClientController.prototype.stopRadio = function(playerId)
 {
   this.init && this.webcamHandler.stopRadio(playerId);
+}
+
+ClientController.prototype.stopWatchParty = function(playerId)
+{
+  this.init && this.webcamHandler.stopWatchParty(playerId);
 }
 
 ClientController.prototype.mouseMove = function(x, y, cardX, cardY)
@@ -215,6 +228,11 @@ ClientController.prototype.reportPlaying = function(playerId)
 ClientController.prototype.requestRadioFromPlayer = function(playerNumber)
 {
   this.init && this.wsHandler.requestRadioFromPlayer(playerNumber);
+}
+
+ClientController.prototype.requestWatchPartyFromPlayer = function(playerNumber)
+{
+  this.init && this.wsHandler.requestWatchPartyFromPlayer(playerNumber);
 }
 
 ClientController.prototype.sendCustomMessage = function(json)

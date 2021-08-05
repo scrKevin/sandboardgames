@@ -61,6 +61,20 @@ $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
 
 });
 
+$(document).on("addWatchParty", function(e) {
+  toggleVisible(".gamecard", false)
+  toggleVisible(".gameCardMoveBtn", false)
+  toggleVisible("#watchPartyMoveBtn", true)
+  toggleVisible("#watchPartyBox", true)
+});
+
+$(document).on("removeWatchParty", function(e) {
+  toggleVisible(".gamecard", true)
+  toggleVisible(".gameCardMoveBtn", true)
+  toggleVisible("#watchPartyMoveBtn", false)
+  toggleVisible("#watchPartyBox", false)
+});
+
 function calcDistance(x1, x2, y1, y2)
 {
   var a = x1 - x2;
