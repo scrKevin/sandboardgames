@@ -12,6 +12,8 @@ else {
   console.log("not ios")
 }
 
+var useWebcams = false;
+
 var clientController = new ClientController()
 var welcomeModalshown = false;
 var myGameObj = null;
@@ -41,7 +43,11 @@ var colors = [
   "#FF8800",
   "#888888",
   "#0e8200",
-  "#ffbff7"
+  "#ffbff7",
+  "#2498D9",
+  "#BF24D9",
+  "#D96424",
+  "#3ED924",
 ]
 
 var filterMap = {
@@ -54,7 +60,11 @@ var filterMap = {
   "#FF8800": "invert(65%) sepia(50%) saturate(5390%) hue-rotate(2deg) brightness(105%) contrast(103%)",
   "#888888": "invert(60%) sepia(5%) saturate(5%) hue-rotate(344deg) brightness(89%) contrast(86%)",
   "#0e8200": "invert(27%) sepia(61%) saturate(2095%) hue-rotate(81deg) brightness(106%) contrast(104%)",
-  "#ffbff7": "invert(81%) sepia(19%) saturate(976%) hue-rotate(285deg) brightness(106%) contrast(106%)"
+  "#ffbff7": "invert(81%) sepia(19%) saturate(976%) hue-rotate(285deg) brightness(106%) contrast(106%)",
+  "#2498D9": "invert(11%) sepia(88%) saturate(7320%) hue-rotate(5deg) brightness(104%) contrast(114%)",
+  "#BF24D9": "invert(11%) sepia(88%) saturate(7320%) hue-rotate(5deg) brightness(104%) contrast(114%)",
+  "#D96424": "invert(11%) sepia(88%) saturate(7320%) hue-rotate(5deg) brightness(104%) contrast(114%)",
+  "#3ED924": "invert(11%) sepia(88%) saturate(7320%) hue-rotate(5deg) brightness(104%) contrast(114%)",
 }
 
 var cssFilterBorder = " drop-shadow(1px 1px 0px black) drop-shadow(-1px 1px 0px black) drop-shadow(1px -1px 0px black) drop-shadow(-1px -1px 0px black)"
@@ -124,45 +134,47 @@ function removeRadio()
 
 function addWebcam(stream, playerId, mirrored, muted)
 {
-  var video = document.createElement('video');
-  $("#webcam" + playerId).html(video)
-  if (mirrored)
-  {
-    $("#webcam" + playerId).css("transform", "scale(-1, 1)")
-  }
-  video.muted = muted;
-  video.srcObject = stream;
-  $("#webcam" + playerId + " video").attr('autoplay',"");
-  $("#webcam" + playerId + " video").attr('playsinline',"");
-  if (playerId != myPlayerId) {
-    $("#webcam" + playerId + " video").attr('controls',"");
-  }
-  video.addEventListener("playing", function () {
-    setTimeout(function () {
-      console.log("Stream dimensions: " + video.videoWidth + "x" + video.videoHeight);
-      var aspectRatio = video.videoWidth / video.videoHeight;
-      if (aspectRatio < 1)
-      {
-        var correctedHeight = video.videoHeight * (webcamBoxWidth / video.videoWidth);
-        $("#webcam" + playerId + " video").css("width", webcamBoxWidth + "px")
-        $("#webcam" + playerId + " video").css("height", correctedHeight + "px");
-        $("#webcam" + playerId + " video").css("margin-left", "0px")
-        $("#webcam" + playerId + " video").css("margin-top", ((webcamBoxHeight - correctedHeight) * 0.5) + "px")
-      }
-      else
-      {
-        var correctedWidth = video.videoWidth * (webcamBoxHeight / video.videoHeight);
-        $("#webcam" + playerId + " video").css("width", correctedWidth + "px")
-        $("#webcam" + playerId + " video").css("height", webcamBoxHeight + "px");
-        $("#webcam" + playerId + " video").css("margin-left", ((webcamBoxWidth - correctedWidth) * 0.5) + "px")
-        $("#webcam" + playerId + " video").css("margin-top", "0px")
-      }
-    }, 500);
-    if (playerId != myPlayerId) {
-      clientController.reportPlaying(playerId)
+  if (useWebcams) {
+    var video = document.createElement('video');
+    $("#webcam" + playerId).html(video)
+    if (mirrored)
+    {
+      $("#webcam" + playerId).css("transform", "scale(-1, 1)")
     }
-  });
-  video.play();
+    video.muted = muted;
+    video.srcObject = stream;
+    $("#webcam" + playerId + " video").attr('autoplay',"");
+    $("#webcam" + playerId + " video").attr('playsinline',"");
+    if (playerId != myPlayerId) {
+      $("#webcam" + playerId + " video").attr('controls',"");
+    }
+    video.addEventListener("playing", function () {
+      setTimeout(function () {
+        console.log("Stream dimensions: " + video.videoWidth + "x" + video.videoHeight);
+        var aspectRatio = video.videoWidth / video.videoHeight;
+        if (aspectRatio < 1)
+        {
+          var correctedHeight = video.videoHeight * (webcamBoxWidth / video.videoWidth);
+          $("#webcam" + playerId + " video").css("width", webcamBoxWidth + "px")
+          $("#webcam" + playerId + " video").css("height", correctedHeight + "px");
+          $("#webcam" + playerId + " video").css("margin-left", "0px")
+          $("#webcam" + playerId + " video").css("margin-top", ((webcamBoxHeight - correctedHeight) * 0.5) + "px")
+        }
+        else
+        {
+          var correctedWidth = video.videoWidth * (webcamBoxHeight / video.videoHeight);
+          $("#webcam" + playerId + " video").css("width", correctedWidth + "px")
+          $("#webcam" + playerId + " video").css("height", webcamBoxHeight + "px");
+          $("#webcam" + playerId + " video").css("margin-left", ((webcamBoxWidth - correctedWidth) * 0.5) + "px")
+          $("#webcam" + playerId + " video").css("margin-top", "0px")
+        }
+      }, 500);
+      if (playerId != myPlayerId) {
+        clientController.reportPlaying(playerId)
+      }
+    });
+    video.play();
+  }
   updateCss("#webcam" + playerId, "display", "block");
   updateCss("#player" + playerId + "box", "display", "block");
   updateCss("#scaledProjectionBox" + playerId, "display", "block");
@@ -279,6 +291,9 @@ function InitWebSocket()
         {
           joinWatchParty(player.id)
         }
+        if(!useWebcams) {
+          addWebcam(null, player.id, false, true)
+        }
       }
       highestZ = gameObj.highestZ;
       if(init)
@@ -305,7 +320,7 @@ function InitWebSocket()
             backdrop: 'static',
             keyboard: false
             });
-        }, 5000);
+        }, 0);
         
       }
 
@@ -324,6 +339,9 @@ function InitWebSocket()
       if (!wasReset && peerType == "webcam")
       {
         doorbell.play();
+      }
+      if (!useWebcams && peerType == "webcam") {
+        addWebcam(null, playerId, true, true)
       }
     });
 
@@ -456,6 +474,12 @@ function InitWebSocket()
       {
         updateCss("#" + dci, "transition-property", "none");
       }
+    });
+    clientController.on("pause", () => {
+      $(document).trigger("pause");
+    });
+    clientController.on("resume", () => {
+      $(document).trigger("resume");
     });
   }
   else
@@ -1084,6 +1108,8 @@ $( document ).ready(function() {
   $('#startWatchPartyBtn').on('click', startWatchParty);
   $('#takeSnapshotBtn').on('click', takeSnapshot);
   $('#recoverSnapshotBtn').on('click', recoverSnapshot);
+  $('#pauseBtn').on('click', pause);
+  $('#resumeBtn').on('click', resume);
   $(".shuffleButton").on('click', shuffleDeck);
   $(".rollButton").on('click', rollDeck);
   $(".inspectDeckButton").on('click', inspectDeck);
@@ -1117,23 +1143,27 @@ $( document ).ready(function() {
 
   console.log("Starting local webcam.")
 
-  navigator.mediaDevices.getUserMedia({video: {
-                          width: {
-                              max: 320,
-                              ideal: 160 
-                          },
-                          height: {
-                              max: 240,
-                              ideal: 120
-                          }
-                      }, audio: {
-                        echoCancellation: true
-                      }})
-    .then(function(stream) {
-      console.log("Started local webcam.")
-      myStream = stream;
-      InitWebSocket();
-  });
+  if (useWebcams) {
+    navigator.mediaDevices.getUserMedia({video: {
+                            width: {
+                                max: 320,
+                                ideal: 160 
+                            },
+                            height: {
+                                max: 240,
+                                ideal: 120
+                            }
+                        }, audio: {
+                          echoCancellation: true
+                        }})
+      .then(function(stream) {
+        console.log("Started local webcam.")
+        myStream = stream;
+        InitWebSocket();
+    });
+  } else {
+    InitWebSocket();
+  }
 
   $(document).trigger("clientControllerReady", clientController);
 });
@@ -1862,6 +1892,20 @@ function recoverSnapshot()
 {
   clientController.recoverSnapshot();
   $('#resetModal').modal('hide');
+}
+
+function pause() {
+  let sendData = {
+    type: "pause",
+  }
+  clientController.sendCustomMessage(sendData)
+}
+
+function resume () {
+  let sendData = {
+    type: "resume",
+  }
+  clientController.sendCustomMessage(sendData)
 }
 
 function isInOpenBox(x, y, openbox)

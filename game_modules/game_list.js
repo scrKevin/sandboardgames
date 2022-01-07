@@ -57,7 +57,7 @@ let availableGames = {
   'dx': new ImplementedGame("Dixit", "dx", DX_Game, "dx", "dx", "dx/dixit_lobby_icon.svg", "3-6", {playerboxStartPos: StartpositionsDX.playerBoxes, webcamPos: StartpositionsDX.webcamPos, fixedPlayers: 6}),
   'mp': new ImplementedGame("Monopoly", "mp", MP_Game, "mp", "mp", "mp/monopoly_lobby_icon.svg", "2-8", {playerboxStartPos: StartpositionsMP.playerBoxes, webcamPos: StartpositionsMP.webcamPos, fixedPlayers: 8, board: StartpositionsMP.board}),
   'cn': new ImplementedGame("Codenames", "cn", CN_Game, "cn", "cn", "cn/codenames_lobby_icon.svg", "4+", {fixedPlayers: 0}),
-  'tls': new ImplementedGame('Telestrations', 'tls', TLS_Game, "tls", 'tls', 'tls/telestrations.svg', "4-10", {playerboxStartPos: StartpositionsTLS.playerBoxes, webcamPos: StartpositionsTLS.webcamPos, fixedPlayers: 10}),
+  'tls': new ImplementedGame('Telestrations', 'tls', TLS_Game, "tls", 'tls', 'tls/telestrations.svg', "6-14", {playerboxStartPos: StartpositionsTLS.playerBoxes, webcamPos: StartpositionsTLS.webcamPos, fixedPlayers: 14}),
   'ot': new ImplementedGame('Onitama', 'ot', OT_Game, 'ot', 'ot', 'ot/onitama.svg', '2', {webcamPos: StartpositionsOT.webcamPos, fixedPlayers: 2})
 }
 

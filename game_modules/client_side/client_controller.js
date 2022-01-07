@@ -12,6 +12,7 @@ function ClientController()
   this.wsHandler = null
   this.webcamHandler = null;
   this.canvasHandler = new CanvasHandler();
+  this.useWebcams = false;
 }
 
 ClientController.prototype = Object.create(EventEmitter.prototype);
@@ -37,11 +38,15 @@ ClientController.prototype.initialize = function(ws, myStream)
     this.webcamHandler.turnCredentials(turnCredentials);
   });
   this.wsHandler.eventEmitter.on("newPeer", (playerId, wasReset, peerType) => {
-    this.webcamHandler.initWebcamPeer(playerId, peerType);
+    if (this.useWebcams) {
+      this.webcamHandler.initWebcamPeer(playerId, peerType);
+    }
     this.emit("newPeer", playerId, wasReset, peerType);
   });
   this.wsHandler.eventEmitter.on("leftPeer", (playerId, peerType) => {
-    this.webcamHandler.leftPeer(playerId, peerType);
+    if (this.useWebcams) {
+      this.webcamHandler.leftPeer(playerId, peerType);
+    }
     this.emit("leftPeer", playerId, peerType);
   });
   this.wsHandler.eventEmitter.on("relayLeft", (playerId, relayFor) => {
@@ -69,6 +74,12 @@ ClientController.prototype.initialize = function(ws, myStream)
   });
   this.wsHandler.eventEmitter.on("devToolsState", (playerId, opened) => {
     this.emit("devToolsState", playerId, opened);
+  });
+  this.wsHandler.eventEmitter.on("pause", () => {
+    this.emit("pause");
+  });
+  this.wsHandler.eventEmitter.on("resume", () => {
+    this.emit("resume");
   });
   this.wsHandler.eventEmitter.on("latency", (latency, playerId) => {
     this.init && this.mouseHandler.adjustLatency(latency);
@@ -184,6 +195,17 @@ ClientController.prototype.recoverSnapshot = function()
 {
   this.init && this.wsHandler.recoverSnapshot();
 }
+
+// ClientController.prototype.pause = function()
+// {
+//   this.init && this.wsHandler.pause();
+// }
+
+// ClientController.prototype.resume = function()
+// {
+//   this.init && this.wsHandler.resume();
+// }
+
 
 ClientController.prototype.typeName = function(name)
 {

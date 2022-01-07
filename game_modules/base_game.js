@@ -651,6 +651,26 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
         this.broadcastReset();
         this.broadcast();
       }
+      // else if (json.type == 'pause')
+      // {
+      //   this.restoreSnapshot();
+      //   for (let card of Object.values(this.gameObj.cards))
+      //   {
+      //     this.addToChangedCardsBuffer(card.id);
+      //   }
+      //   this.broadcastReset();
+      //   this.broadcast();
+      // }
+      // else if (json.type == 'resume')
+      // {
+      //   this.restoreSnapshot();
+      //   for (let card of Object.values(this.gameObj.cards))
+      //   {
+      //     this.addToChangedCardsBuffer(card.id);
+      //   }
+      //   this.broadcastReset();
+      //   this.broadcast();
+      // }
       else if (json.type == "draw")
       {
         player.addDrawCoordinates(json.coords);
@@ -667,6 +687,12 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
       {
         // pass it to game specific messages
         this.customMessageFunction(client, player, json.message);
+        if (json.message.type == "pause") {
+          this.broadcastPause();
+        }
+        else if (json.message.type == "resume") {
+          this.broadcastResume();
+        }
       }
       
     });
@@ -908,6 +934,36 @@ WS_distributor.prototype.broadcastReset = function ()
   //console.log("broadcasting left player " + playerId)
   var sendData = {
     type: "reset"
+  }
+  var strToSend = JSON.stringify(sendData);
+  var binaryString = this.constructMessage(strToSend);
+  this.wss.clients.forEach(function each(client) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(binaryString);
+    }
+  });
+}
+
+WS_distributor.prototype.broadcastPause = function ()
+{
+  //console.log("broadcasting left player " + playerId)
+  var sendData = {
+    type: "pause"
+  }
+  var strToSend = JSON.stringify(sendData);
+  var binaryString = this.constructMessage(strToSend);
+  this.wss.clients.forEach(function each(client) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(binaryString);
+    }
+  });
+}
+
+WS_distributor.prototype.broadcastResume = function ()
+{
+  //console.log("broadcasting left player " + playerId)
+  var sendData = {
+    type: "resume"
   }
   var strToSend = JSON.stringify(sendData);
   var binaryString = this.constructMessage(strToSend);

@@ -127,6 +127,14 @@ function WsHandler(ws)
       this.eventEmitter.emit("reset");
       this.eventEmitter.emit('updateGame', JSON.parse(this.lastGameObj), [], {}, true)
     }
+    else if (json.type == "pause")
+    {
+      this.eventEmitter.emit("pause");
+    }
+    else if (json.type == "resume")
+    {
+      this.eventEmitter.emit("resume");
+    }
     else if (json.type == "devToolsState")
     {
       this.eventEmitter.emit("devToolsState", json.playerId, json.opened);
@@ -262,6 +270,22 @@ WsHandler.prototype.recoverSnapshot = function()
   }
   this.sendToWs(sendData);
 }
+
+// WsHandler.prototype.pause = function()
+// {
+//   var sendData = {
+//     type: 'pause'
+//   }
+//   this.sendToWs(sendData);
+// }
+
+// WsHandler.prototype.resume = function()
+// {
+//   var sendData = {
+//     type: 'resume'
+//   }
+//   this.sendToWs(sendData);
+// }
 
 WsHandler.prototype.typeName = function(name)
 {

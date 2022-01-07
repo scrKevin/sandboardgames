@@ -10,8 +10,52 @@ let TlsDrawing = require('./tls_drawing').TlsDrawing
 let TlsGuess = require('./tls_guess').TlsGuess
 
 var wordArray = {}
-wordArray["nl"] = require('../word_lists/word_getter').WordGetter("nl", ['pictionary_idioms', 'pictionary_easy', 'pictionary_medium', 'pictionary_movies'])
+wordArray["nl"] = require('../word_lists/word_getter').WordGetter("nl", ['pictionary_idioms', 'pictionary_easy', 'pictionary_medium', 'pictionary_movies', 'karakters', 'custom'])
 wordArray["en"] = require('../word_lists/word_getter').WordGetter("en", ['pictionary_idioms', 'pictionary_easy', 'pictionary_medium', 'pictionary_movies'])
+
+console.log("shuffling wordarrays for telestrations")
+shuffle (wordArray["nl"])
+shuffle (wordArray["en"])
+
+var Timer = function(callback, delay) {
+  var timerId, start, remaining = delay;
+
+  this.pause = function() {
+      clearTimeout(timerId);
+      timerId = null;
+      //remaining -= Date.now() - start;
+      remaining -= 0
+  };
+
+  this.resume = function() {
+      if (timerId) {
+          return;
+      }
+
+      start = Date.now();
+      timerId = setTimeout(callback, remaining);
+  };
+
+  this.resume();
+};
+
+function shuffle(array) {
+  let currentIndex = array.length,  randomIndex;
+
+  // While there remain elements to shuffle...
+  while (currentIndex != 0) {
+
+    // Pick a remaining element...
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+
+    // And swap it with the current element.
+    [array[currentIndex], array[randomIndex]] = [
+      array[randomIndex], array[currentIndex]];
+  }
+
+  return array;
+}
 
 function getRandom(arr, n) {
   var result = new Array(n),
@@ -29,7 +73,8 @@ function getRandom(arr, n) {
 
 function getRandomWords(n, language)
 {
-  return getRandom(wordArray[language], n);
+  //return getRandom(wordArray[language], n);
+  return wordArray[language].splice(0, n);
 }
 
 function getRandomNumberArray(n)
@@ -213,8 +258,15 @@ TLS_Game.prototype.resetGame = function(game)
   }
 
   game.gameObj.tlsGameObject = new TlsGameObject();
-  if (this.drawingTimeout != null) clearTimeout(this.drawingTimeout)
-  if (this.guessingTimeout != null) clearTimeout(this.guessingTimeout)
+  var wordArrayInfo = {
+    "nl": {length: wordArray["nl"].length},
+    "en": {length: wordArray["en"].length},
+  }
+  game.gameObj.wordArrayInfo = wordArrayInfo;
+  // if (this.drawingTimeout != null) clearTimeout(this.drawingTimeout)
+  // if (this.guessingTimeout != null) clearTimeout(this.guessingTimeout)
+  if (this.drawingTimeout != null) this.drawingTimeout.pause()
+  if (this.guessingTimeout != null) this.guessingTimeout.pause()
 
   // for (let player of Object.values(game.gameObj.players))
   // {
@@ -240,6 +292,7 @@ TLS_Game.prototype.processClientMessage = function(client, player, json)
       this.gameObj.tlsGameObject.nOfRounds = nOfRounds;
 
       let words = getRandomWords(nOfSubjects, json.language);
+      this.gameObj.wordArrayInfo[json.language].length -= nOfSubjects;
       let wordIndex = 0;
       for (let word of words) {
         this.gameObj.tlsGameObject.subjects.push(new TlsSubject(wordIndex, word));
@@ -259,8 +312,13 @@ TLS_Game.prototype.processClientMessage = function(client, player, json)
       }
 
       // set timeout for drawing
-      if (this.guessingTimeout != null) clearTimeout(this.guessingTimeout);
-      this.drawingTimeout = setTimeout(() => {
+      // if (this.guessingTimeout != null) clearTimeout(this.guessingTimeout);
+      if (this.guessingTimeout != null) this.guessingTimeout.pause();
+      // this.drawingTimeout = setTimeout(() => {
+      //   fillDrawings(this.gameObj.tlsGameObject, this)
+      // }, 45000)
+      if (this.drawingTimeout != null) this.drawingTimeout.pause();
+      this.drawingTimeout = new Timer(() => {
         fillDrawings(this.gameObj.tlsGameObject, this)
       }, 45000)
       this.broadcast();
@@ -278,10 +336,15 @@ TLS_Game.prototype.processClientMessage = function(client, player, json)
     }
     if (allDrawingsCollected(this.gameObj.tlsGameObject))
     {
-      if (this.drawingTimeout != null) clearTimeout(this.drawingTimeout)
+      // if (this.drawingTimeout != null) clearTimeout(this.drawingTimeout)
+      if (this.drawingTimeout != null) this.drawingTimeout.pause();
       this.gameObj.tlsGameObject.gameState++;
       // set timeout for guessing
-      this.guessingTimeout = setTimeout(() => {
+      // this.guessingTimeout = setTimeout(() => {
+      //   fillGuesses(this.gameObj.tlsGameObject, this)
+      // }, 45000)
+      if (this.guessingTimeout != null) this.guessingTimeout.pause()
+      this.guessingTimeout = new Timer(() => {
         fillGuesses(this.gameObj.tlsGameObject, this)
       }, 45000)
 
@@ -301,7 +364,8 @@ TLS_Game.prototype.processClientMessage = function(client, player, json)
     }
     if (allGuessesCollected(this.gameObj.tlsGameObject))
     {
-      if (this.guessingTimeout != null) clearTimeout(this.guessingTimeout)
+      // if (this.guessingTimeout != null) clearTimeout(this.guessingTimeout)
+      if (this.guessingTimeout != null) this.guessingTimeout.pause()
       this.gameObj.tlsGameObject.gameState++;
       if (this.gameObj.tlsGameObject.gameState > this.gameObj.tlsGameObject.nOfRounds)
       {
@@ -322,7 +386,11 @@ TLS_Game.prototype.processClientMessage = function(client, player, json)
       else
       {
         // set timeout for drawing
-        this.drawingTimeout = setTimeout(() => {
+        // this.drawingTimeout = setTimeout(() => {
+        //   fillDrawings(this.gameObj.tlsGameObject, this)
+        // }, 45000)
+        if (this.drawingTimeout != null) this.drawingTimeout.pause();
+        this.drawingTimeout = new Timer(() => {
           fillDrawings(this.gameObj.tlsGameObject, this)
         }, 45000)
       }
@@ -366,6 +434,16 @@ TLS_Game.prototype.processClientMessage = function(client, player, json)
     }
     this.broadcast();
   }
+  else if (json.type == "pause")
+  {
+    if (this.guessingTimeout != null) this.guessingTimeout.pause();
+    if (this.drawingTimeout != null) this.drawingTimeout.pause();
+  }
+  else if (json.type == "resume")
+  {
+    if (this.guessingTimeout != null) this.guessingTimeout.resume();
+    if (this.drawingTimeout != null) this.drawingTimeout.resume();
+  }
 }
 
 function allDrawingsCollected(tlsGameObj)
@@ -406,8 +484,13 @@ function fillDrawings(tlsGameObj, that)
   }
   tlsGameObj.gameState++;
   that.broadcast();
+  if (that.drawingTimeout != null) that.drawingTimeout.pause();
   that.drawingTimeout = null;
-  that.guessingTimeout = setTimeout(() => {
+  // that.guessingTimeout = setTimeout(() => {
+  //   fillGuesses(tlsGameObj, that)
+  // }, 45000);
+  if (that.guessingTimeout != null) that.guessingTimeout.pause()
+  that.guessingTimeout = new Timer(() => {
     fillGuesses(tlsGameObj, that)
   }, 45000);
 }
@@ -442,9 +525,13 @@ function fillGuesses(tlsGameObj, that)
   else
   {
     
-    
+    if (that.guessingTimeout != null) that.guessingTimeout.pause()
     that.guessingTimeout = null;
-    that.drawingTimeout = setTimeout(() => {
+    // that.drawingTimeout = setTimeout(() => {
+    //   fillDrawings(tlsGameObj, that)
+    // }, 45000);
+    if (that.drawingTimeout != null) that.drawingTimeout.pause();
+    that.drawingTimeout = new Timer(() => {
       fillDrawings(tlsGameObj, that)
     }, 45000);
   }

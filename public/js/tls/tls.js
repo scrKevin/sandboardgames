@@ -5,7 +5,7 @@ var wsLocation = "tls";
 
 var round = new Audio('/wav/round.wav');
 
-var maxPlayers = 10;
+var maxPlayers = 14;
 
 var maxSpectators = 20;
 
@@ -61,6 +61,7 @@ var guessTimeLeft = 30;
 var autoSubmitTimeout = null;
 
 var countDownDisplayInterval = null;
+var enterAllowed = false;
 
 this.colorMap = {
   "#FF0000": "#FF5252",
@@ -72,7 +73,11 @@ this.colorMap = {
   "#FF8800": "#FF8800",
   "#888888": "#888888",
   "#0e8200": "#109E00",
-  "#ffbff7": "#ffbff7"
+  "#ffbff7": "#ffbff7",
+  "#2498D9": "#2498D9",
+  "#BF24D9": "#BF24D9",
+  "#D96424": "#D96424",
+  "#3ED924": "#3ED924"
 }
 
 function initCanvas (canvasNew)
@@ -109,6 +114,21 @@ function initGuessCanvas (canvasNew)
   hGuess = guessCanvas.height;
   lGuess = $("#tlsGuessCanvas").position().left;
   tGuess = $("#tlsGuessCanvas").position().top;
+
+  var input = document.getElementById("guess");
+
+  // Execute a function when the user releases a key on the keyboard
+  input.addEventListener("keyup", function(event) {
+    // Number 13 is the "Enter" key on the keyboard
+    if (event.keyCode === 13 && enterAllowed) {
+      // Cancel the default action, if needed
+      event.preventDefault();
+      // Trigger the button element with a click
+      
+      document.getElementById("submitGuessBtn").click();
+    }
+  });
+
 }
 
 function changeColor(cId, hue, sat, lig)
@@ -320,14 +340,20 @@ function isGuessPhase(gameState)
   return false;
 }
 
+var myTlsGame = null;
+
 $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
 
   let tlsGame = gameObj.tlsGameObject;
+
+  myTlsGame = tlsGame;
 
   if (tlsGame.gameState === 0 || tlsGame.gameState === -1)
   {
     updateCss("#startGameBtnEN", "display", "block");
     updateCss("#startGameBtnNL", "display", "block");
+    $("#startGameBtnNL").html("Start Game (NL) - " + gameObj.wordArrayInfo["nl"].length)
+    $("#startGameBtnEN").html("Start Game (EN) - " + gameObj.wordArrayInfo["en"].length)
     updateCss("#guessplane", "display", "none");
     updateCss("#drawplane", "display", "none");
   }
@@ -365,6 +391,7 @@ $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
 
     if (isDrawPhase(tlsGame.gameState))
     {
+      enterAllowed = false;
       for (let subject of tlsGame.subjects)
       {
         if (subject.seenBy[tlsGame.gameState - 1] == myPlayerId)
@@ -391,7 +418,8 @@ $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
         drawTimeLeft--;
         $(".countdown").html(drawTimeLeft);
       }, 1000);
-      let submitTimeout = setTimeout(() =>{
+      autoSubmitTimeout = setTimeout(() =>{
+        updateCss("#drawplane", "display", "none");
         if (countDownDisplayInterval !== null) clearInterval(countDownDisplayInterval)
         countDownDisplayInterval = null;
         let sendData = {
@@ -404,6 +432,7 @@ $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
     }
     else if (isGuessPhase(tlsGame.gameState))
     {
+      
       eraseGuessCanvas();
       for (let subject of tlsGame.subjects)
       {
@@ -422,6 +451,7 @@ $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
         $(".countdown").html(guessTimeLeft);
       }, 1000);
       autoSubmitTimeout = setTimeout(() =>{
+        enterAllowed = false;
         if (countDownDisplayInterval !== null) clearInterval(countDownDisplayInterval);
         autoSubmitTimeout = null;
         countDownDisplayInterval = null;
@@ -439,6 +469,8 @@ $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
       updateCss("#guessplane", "display", "block");
       updateCss("#drawplane", "display", "none");
       round.play();
+      $( "#guess" ).focus();
+      enterAllowed = true;
     }
     else if (tlsGame.gameState == -1)
     {
@@ -566,6 +598,7 @@ $(document).on("clientControllerReady", function(e, newClientController){
     //console.log(guess);
     if (typeof guess !== 'undefined' && guess !== '')
     {
+      enterAllowed = false;
       updateCss("#guessplane", "display", "none");
       $("#guess").val("");
       let sendData = {
@@ -598,3 +631,55 @@ $(document).on("addWebcam", function(e, playerId, mirrored, muted){
 $(document).on("leftPeer", function(e, playerId){
   updateCss("#scorebox" + playerId, "display", "none");
 });
+
+$(document).on("pause", function(e){
+  if (countDownDisplayInterval !== null) clearInterval(countDownDisplayInterval)
+  if (autoSubmitTimeout !== null) clearTimeout(autoSubmitTimeout);
+  round.play();
+})
+
+$(document).on("resume", function(e){
+
+  if (isDrawPhase(myTlsGame.gameState)) {
+    drawTimeLeft = drawTimeLimit;
+    countDownDisplayInterval = setInterval(() => {
+      drawTimeLeft--;
+      $(".countdown").html(drawTimeLeft);
+    }, 1000);
+    autoSubmitTimeout = setTimeout(() =>{
+      updateCss("#drawplane", "display", "none");
+      if (countDownDisplayInterval !== null) clearInterval(countDownDisplayInterval)
+      autoSubmitTimeout = null;
+      countDownDisplayInterval = null;
+      let sendData = {
+        type: "submitDrawing",
+        drawing: currentDrawing
+      }
+      clientController.sendCustomMessage(sendData)
+    }, drawTimeLimit * 1000);
+  }
+  else if (isGuessPhase(myTlsGame.gameState)) {
+    guessTimeLeft = guessTimeLimit;
+    countDownDisplayInterval = setInterval(() => {
+      guessTimeLeft--;
+      $(".countdown").html(guessTimeLeft);
+    }, 1000);
+    autoSubmitTimeout = setTimeout(() =>{
+      enterAllowed = false;
+      if (countDownDisplayInterval !== null) clearInterval(countDownDisplayInterval);
+      autoSubmitTimeout = null;
+      countDownDisplayInterval = null;
+      let guess = $("#guess").val();
+      updateCss("#guessplane", "display", "none");
+      let sendData = {
+        type: "submitGuess",
+        guess: guess
+      }
+      clientController.sendCustomMessage(sendData)
+      $("#guess").val("");
+      
+    }, drawTimeLimit * 1000);
+  }
+
+  round.play();
+})

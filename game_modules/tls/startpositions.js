@@ -8,7 +8,11 @@ module.exports.playerBoxes = {
   6: {top: 0, left: 260},
   7: {top: 780, left: 260},
   8: {top: 0, left: 1410},
-  9: {top: 780, left: 1410}
+  9: {top: 780, left: 1410},
+  10: {top: 0, left: 1920},
+  11: {top: 200, left: 1920},
+  12: {top: 400, left: 1920},
+  13: {top: 600, left: 1920},
 }
 
 module.exports.webcamPos = {
@@ -21,5 +25,9 @@ module.exports.webcamPos = {
   6: {top: 0, left: 260},
   7: {top: 780, left: 260},
   8: {top: 0, left: 1410},
-  9: {top: 780, left: 1410}
+  9: {top: 780, left: 1410},
+  10: {top: 0, left: 1920},
+  11: {top: 200, left: 1920},
+  12: {top: 400, left: 1920},
+  13: {top: 600, left: 1920},
 }

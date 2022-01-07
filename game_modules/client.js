@@ -6,6 +6,8 @@ var pako = require('pako');
 
 function Client(playerId, ws, distributor)
 {
+  this.useWebcams = false;
+
   this.distributor = distributor;
   this.initiated = false;
   this.useZip = false;
@@ -92,15 +94,35 @@ Client.prototype.sendCardConflict = function(cardId, replacementCardId)
 
 Client.prototype.sendNewPeer = function (otherClient)
 {
-  this.newPeerQueue.push(otherClient);
-  if (this.newPeerState == "idle")
-  {
-    //console.log(this.playerId + " is processing peer " + otherClient.playerId);
-    this.processNewPeerQueue();
+  if (this.useWebcams) {
+    this.newPeerQueue.push(otherClient);
+    if (this.newPeerState == "idle")
+    {
+      //console.log(this.playerId + " is processing peer " + otherClient.playerId);
+      this.processNewPeerQueue();
+    }
+    else
+    {
+      console.log("Queued newPeer of " + otherClient.playerId + " for " + this.playerId)
+    }
   }
-  else
-  {
-    console.log("Queued newPeer of " + otherClient.playerId + " for " + this.playerId)
+  else {
+    var sendData = {
+      type: "newPeer",
+      playerId: otherClient.playerId,
+      wasReset: false,
+      peerType: "webcam"
+    }
+    var strToSend = JSON.stringify(sendData);
+    var binaryString = this.constructMessage(strToSend);
+    if (this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(binaryString);
+      console.log("SENT newPeer of " + otherClient.playerId + " to " + this.playerId);
+    }
+    else
+    {
+      console.log("ERROR in sending newPeer of " + otherClient.playerId + " to " + this.playerId + ". ws.readyState not OPEN.");
+    }
   }
 }
 
