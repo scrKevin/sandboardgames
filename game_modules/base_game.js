@@ -25,6 +25,7 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
   this.turnServer = turnServer;
   this.wss = wss;
   this.playerNumbers = []
+  this.useWebcams = true;
   for (var i = 0; i < 20; i++)
   {
     this.playerNumbers.push(true);
@@ -51,7 +52,7 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
     var turnPass = crypto.randomBytes(20).toString('hex');
     this.turnServer.addUser(turnUsername, turnPass);
     console.log("added turnCredentials for player " + id + ": u:" + turnUsername + " p:" + turnPass);
-    var client = new Client(id, ws, this);
+    var client = new Client(id, ws, this, this.useWebcams);
 
     this.clients.push(client);
     this.gameObj.players[id] = player;//.push(player);
@@ -743,6 +744,11 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
   this.resetGame(this);
   this.lastSentGameObj = JSON.stringify(this.gameObj);
   this.snapshot = JSON.stringify(this.gameObj);
+}
+
+WS_distributor.prototype.setUseWebcams = function (useWebcams)
+{
+  this.useWebcams = useWebcams
 }
 
 WS_distributor.prototype.deconstructMessage = function (data)

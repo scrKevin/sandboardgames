@@ -64,7 +64,7 @@ if(process.env.NODE_ENV === 'development')
 {
   // create a test gameroom on startup, this speeds up development..
   console.log("test gameRoom created at /0/");
-  newGameRoom = new GameRoom("test", " ", availableGames, turnServer);
+  newGameRoom = new GameRoom("test", " ", availableGames, turnServer, true);
   newGameRoom.hash = "0";
   gameRooms.push(newGameRoom);
 }
@@ -110,12 +110,12 @@ app.get("/:hash/:location", (req, res) => {
   var index = gameRooms.map(function(item){ return item.hash;}).indexOf(req.params.hash);
   if (index != -1)
   {
-      res.render(availableGames[req.params.location].viewsLocation + "/pages/index", availableGames[req.params.location].objectToPassToView);
-    }
-    else
-    {
-      res.status(404).send('Not found');
-    }
+    res.render(availableGames[req.params.location].viewsLocation + "/pages/index", availableGames[req.params.location].objectToPassToView);
+  }
+  else
+  {
+    res.status(404).send('Not found');
+  }
 });
 
 app.get("/browsercheck", (req, res) => {
@@ -125,9 +125,10 @@ app.get("/browsercheck", (req, res) => {
 
 app.post("/api/create", (req, res) => {
   var index = gameRooms.map(function(item){ return item.name;}).indexOf(req.body.nameCreate);
+  var useWebcams = req.body.hasOwnProperty("useWebcams")
   if (index == -1)
   {
-    newGameRoom = new GameRoom(req.body.nameCreate, req.body.passCreate, availableGames, turnServer);
+    newGameRoom = new GameRoom(req.body.nameCreate, req.body.passCreate, availableGames, turnServer, useWebcams);
     gameRooms.push(newGameRoom);
     console.log("Created GameRoom '" + req.body.nameCreate + "'");
     res.redirect("/" + newGameRoom.hash + "/lobby");

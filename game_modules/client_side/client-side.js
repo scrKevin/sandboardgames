@@ -12,9 +12,9 @@ else {
   console.log("not ios")
 }
 
-var useWebcams = false;
+//var useWebcams = false;
 
-var clientController = new ClientController()
+var clientController = new ClientController(useWebcams)
 var welcomeModalshown = false;
 var myGameObj = null;
 var scale = 1;

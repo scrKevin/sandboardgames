@@ -4,10 +4,9 @@ var getPreferredMs = require('./fps_limiter').getPreferredMs;
 let diff_match_patch = require('diff-match-patch')
 var pako = require('pako');
 
-function Client(playerId, ws, distributor)
+function Client(playerId, ws, distributor, useWebcams)
 {
-  this.useWebcams = false;
-
+  this.useWebcams = useWebcams;
   this.distributor = distributor;
   this.initiated = false;
   this.useZip = false;
@@ -351,11 +350,11 @@ Client.prototype.echo = function()
   //   this.latencyTestCouterIncrement = 40
   // }
   this.latencyTestCouterIncrement = getPreferredMs(ms)
-  // if (ms > 3000)
-  // {
-  //   ms = 3000;
-  //   this.latencyTestCouterIncrement = 3000;
-  // }
+  if (ms > 2500)
+  {
+    ms = 2500;
+  }
+
 
   this.broadcastLimiter.setMs(ms);
   //console.log("player " + playerId + " latency = " + this.latency + " ms")

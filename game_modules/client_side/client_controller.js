@@ -5,14 +5,14 @@ let CanvasHandler = require("./canvas_handler").CanvasHandler;
 
 let EventEmitter = require('events').EventEmitter;
 
-function ClientController()
+function ClientController(useWebcams)
 {
   this.init = false;
   EventEmitter.call(this);
   this.wsHandler = null
   this.webcamHandler = null;
   this.canvasHandler = new CanvasHandler();
-  this.useWebcams = false;
+  this.useWebcams = useWebcams;
 }
 
 ClientController.prototype = Object.create(EventEmitter.prototype);

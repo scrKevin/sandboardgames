@@ -302,13 +302,21 @@ TLS_Game.prototype.processClientMessage = function(client, player, json)
       let grid = getPerfectGrid(nOfSubjects)
 
       let y = 0;
+      var playerMap = {}
+      var playerIndex = 0
+      for (let id of Object.keys(this.gameObj.players)) {
+        playerMap[playerIndex] = Number(id)
+        playerIndex++
+      }
+      console.log(playerMap)
       for (let subject of this.gameObj.tlsGameObject.subjects)
       {
         for (let x = 0; x < nOfRounds; x++)
         {
-          subject.seenBy.push(grid[y][x])
+          subject.seenBy.push(playerMap[grid[y][x]])
         }
         y++;
+        console.log(subject.seenBy)
       }
 
       // set timeout for drawing
@@ -320,7 +328,7 @@ TLS_Game.prototype.processClientMessage = function(client, player, json)
       if (this.drawingTimeout != null) this.drawingTimeout.pause();
       this.drawingTimeout = new Timer(() => {
         fillDrawings(this.gameObj.tlsGameObject, this)
-      }, 45000)
+      }, 60000)
       this.broadcast();
     }
   }
@@ -346,7 +354,7 @@ TLS_Game.prototype.processClientMessage = function(client, player, json)
       if (this.guessingTimeout != null) this.guessingTimeout.pause()
       this.guessingTimeout = new Timer(() => {
         fillGuesses(this.gameObj.tlsGameObject, this)
-      }, 45000)
+      }, 60000)
 
 
       this.broadcast();
@@ -392,7 +400,7 @@ TLS_Game.prototype.processClientMessage = function(client, player, json)
         if (this.drawingTimeout != null) this.drawingTimeout.pause();
         this.drawingTimeout = new Timer(() => {
           fillDrawings(this.gameObj.tlsGameObject, this)
-        }, 45000)
+        }, 60000)
       }
       this.broadcast();
     }
@@ -492,7 +500,7 @@ function fillDrawings(tlsGameObj, that)
   if (that.guessingTimeout != null) that.guessingTimeout.pause()
   that.guessingTimeout = new Timer(() => {
     fillGuesses(tlsGameObj, that)
-  }, 45000);
+  }, 60000);
 }
 
 function fillGuesses(tlsGameObj, that)
@@ -533,7 +541,7 @@ function fillGuesses(tlsGameObj, that)
     if (that.drawingTimeout != null) that.drawingTimeout.pause();
     that.drawingTimeout = new Timer(() => {
       fillDrawings(tlsGameObj, that)
-    }, 45000);
+    }, 60000);
   }
   that.broadcast();
 }

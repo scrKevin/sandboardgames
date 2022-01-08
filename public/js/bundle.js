@@ -2956,9 +2956,9 @@ else {
   console.log("not ios")
 }
 
-var useWebcams = false;
+//var useWebcams = false;
 
-var clientController = new ClientController()
+var clientController = new ClientController(useWebcams)
 var welcomeModalshown = false;
 var myGameObj = null;
 var scale = 1;
@@ -4871,14 +4871,14 @@ let CanvasHandler = require("./canvas_handler").CanvasHandler;
 
 let EventEmitter = require('events').EventEmitter;
 
-function ClientController()
+function ClientController(useWebcams)
 {
   this.init = false;
   EventEmitter.call(this);
   this.wsHandler = null
   this.webcamHandler = null;
   this.canvasHandler = new CanvasHandler();
-  this.useWebcams = false;
+  this.useWebcams = useWebcams;
 }
 
 ClientController.prototype = Object.create(EventEmitter.prototype);

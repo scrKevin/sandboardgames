@@ -1,8 +1,9 @@
 const crypto = require('crypto');
 const WebSocket = require('ws');
 
-function GameRoom(name, pass, availableGames, turnServer)
+function GameRoom(name, pass, availableGames, turnServer, useWebcams)
 {
+  this.useWebcams = useWebcams;
   this.name = name;
   this.turnServer = turnServer;
   this.hash = crypto.createHash('md5').update(name + pass).digest("hex")
@@ -12,8 +13,10 @@ function GameRoom(name, pass, availableGames, turnServer)
 
   for (gameName in this.availableGames)
   {
+    this.availableGames[gameName].objectToPassToView["useWebcams"] = this.useWebcams;
     var newWsServer = new WebSocket.Server({ noServer: true });
     var newGameHandler = new this.availableGames[gameName].GameClass(newWsServer, this.turnServer);
+    newGameHandler.game.setUseWebcams(this.useWebcams)
     this.games.push({wsLocation: this.availableGames[gameName].wsLocation, wsServer: newWsServer, gameHandler: newGameHandler})
   }
   this.flagAsInactive = false;
