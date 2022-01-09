@@ -109,96 +109,75 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
           this.addToChangedCardsBuffer(json.card.id);
           if (this.isDeck(json.card.id))
           {
-            var deck = this.gameObj.decks[json.card.id];
-
-            if (!deck.immovable)
+            if (json.card.id in this.gameObj.decks)
             {
-              if (deck.isMyDeck(id, json.mouseclicked) && json.mouseclicked || json.card.release)
+              var deck = this.gameObj.decks[json.card.id];
+
+              if (!deck.immovable)
               {
-                var movedDeck = deck.updatePos(json.card.pos)
-                for (let card of Object.values(deck.attachedCards))
+                if (deck.isMyDeck(id, json.mouseclicked) && json.mouseclicked || json.card.release)
                 {
-                  card.x -= movedDeck.deltaX - movedDeck.xCorrection;
-                  card.y -= movedDeck.deltaY - movedDeck.yCorrection;
-                  this.addToChangedCardsBuffer(card.id);
+                  var movedDeck = deck.updatePos(json.card.pos)
+                  for (let card of Object.values(deck.attachedCards))
+                  {
+                    card.x -= movedDeck.deltaX - movedDeck.xCorrection;
+                    card.y -= movedDeck.deltaY - movedDeck.yCorrection;
+                    this.addToChangedCardsBuffer(card.id);
+                  }
+                  for (let openbox of Object.values(deck.attachedOpenboxes))
+                  {
+                    openbox.x -= movedDeck.deltaX - movedDeck.xCorrection;
+                    openbox.y -= movedDeck.deltaY - movedDeck.yCorrection;
+                  }
                 }
-                for (let openbox of Object.values(deck.attachedOpenboxes))
+                if(!json.mouseclicked && deck.clickedBy == id)
                 {
-                  openbox.x -= movedDeck.deltaX - movedDeck.xCorrection;
-                  openbox.y -= movedDeck.deltaY - movedDeck.yCorrection;
+                  deck.clickedBy = -1;
                 }
-              }
-              if(!json.mouseclicked && deck.clickedBy == id)
-              {
-                deck.clickedBy = -1;
               }
             }
           }
           else
           {
-            var card = this.gameObj.cards[json.card.id];
-            card.setLastTouchedBy(id);
-            if((card.isMyCard(id, json.mouseclicked) && json.mouseclicked) || json.card.release)
+            //console.log(json.card.id)
+            if (json.card.id in this.gameObj.cards)
             {
-              card.updatePos(json.card.pos);
-              if (this.gameObj.hasOwnProperty("sharedPlayerbox"))
+              var card = this.gameObj.cards[json.card.id];
+              card.setLastTouchedBy(id);
+              if((card.isMyCard(id, json.mouseclicked) && json.mouseclicked) || json.card.release)
               {
-                if(this.gameObj.sharedPlayerbox.isInOpenBox(card.x, card.y))
+                card.updatePos(json.card.pos);
+                if (this.gameObj.hasOwnProperty("sharedPlayerbox"))
                 {
-                  card.ownedBy = id;
+                  if(this.gameObj.sharedPlayerbox.isInOpenBox(card.x, card.y))
+                  {
+                    card.ownedBy = id;
+                  }
+                  else
+                  {
+                    card.ownedBy = -1;
+                  }
                 }
-                else
+                for (let deck of Object.values(this.gameObj.decks))
                 {
-                  card.ownedBy = -1;
-                }
-              }
-              for (let deck of Object.values(this.gameObj.decks))
-              {
-                if(deck.isInDeck(json.pos.x, json.pos.y))
-                {
-                  if (deck.addToDeck(card, id)) this.addToChangedCardsBuffer(deck.id);
-                }
-                else
-                {
-                  if (deck.removeFromDeck(card, id)) this.addToChangedCardsBuffer(deck.id);
-                }
-              }
-            }
-            if (!json.mouseclicked && card.clickedBy == id)
-            {
-              card.clickedBy = -1;
-            }
-            if (card.hasOwnProperty("show"))
-            {
-              var openboxData = {isInAnOpenBox: false, openbox: null};
-              for (let openbox of Object.values(this.gameObj.openboxes))
-              {
-                if (openbox.isInOpenBox(json.pos.x, json.pos.y))
-                {
-                  openboxData.isInAnOpenbox = true;
-                  openboxData.openbox = openbox;
-                  // break;
+                  if(deck.isInDeck(json.pos.x, json.pos.y))
+                  {
+                    if (deck.addToDeck(card, id)) this.addToChangedCardsBuffer(deck.id);
+                  }
+                  else
+                  {
+                    if (deck.removeFromDeck(card, id)) this.addToChangedCardsBuffer(deck.id);
+                  }
                 }
               }
-              if (openboxData.isInAnOpenbox && (!json.mouseclicked || json.card.release))
+              if (!json.mouseclicked && card.clickedBy == id)
               {
-                this.addToChangedCardsBuffer(card.id);
-                card.show = openboxData.openbox.showFace;
-                card.isInAnOpenbox = true;
+                card.clickedBy = -1;
               }
-              else
+              if (card.hasOwnProperty("show"))
               {
-                this.addToChangedCardsBuffer(card.id);
-                card.show = 'backface';
-                card.isInAnOpenbox = false;
-              }
-            }
-            if (card.hasOwnProperty("rotatable") && this.gameObj.hasOwnProperty('playerRotation'))
-            {
-              var openboxData = {isInAnOpenBox: false, openbox: null};
-              for (let openbox of Object.values(this.gameObj.openboxes))
-              {
-                if (openbox.hasOwnProperty('rotation'))
+                var openboxData = {isInAnOpenBox: false, openbox: null};
+                for (let openbox of Object.values(this.gameObj.openboxes))
                 {
                   if (openbox.isInOpenBox(json.pos.x, json.pos.y))
                   {
@@ -207,16 +186,44 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
                     // break;
                   }
                 }
+                if (openboxData.isInAnOpenbox && (!json.mouseclicked || json.card.release))
+                {
+                  this.addToChangedCardsBuffer(card.id);
+                  card.show = openboxData.openbox.showFace;
+                  card.isInAnOpenbox = true;
+                }
+                else
+                {
+                  this.addToChangedCardsBuffer(card.id);
+                  card.show = 'backface';
+                  card.isInAnOpenbox = false;
+                }
               }
-              if (openboxData.isInAnOpenbox)
+              if (card.hasOwnProperty("rotatable") && this.gameObj.hasOwnProperty('playerRotation'))
               {
-                card.rotation = openboxData.openbox.rotation;
-                this.addToChangedCardsBuffer(card.id)
-              }
-              else
-              {
-                card.rotation = 0;
-                this.addToChangedCardsBuffer(card.id)
+                var openboxData = {isInAnOpenBox: false, openbox: null};
+                for (let openbox of Object.values(this.gameObj.openboxes))
+                {
+                  if (openbox.hasOwnProperty('rotation'))
+                  {
+                    if (openbox.isInOpenBox(json.pos.x, json.pos.y))
+                    {
+                      openboxData.isInAnOpenbox = true;
+                      openboxData.openbox = openbox;
+                      // break;
+                    }
+                  }
+                }
+                if (openboxData.isInAnOpenbox)
+                {
+                  card.rotation = openboxData.openbox.rotation;
+                  this.addToChangedCardsBuffer(card.id)
+                }
+                else
+                {
+                  card.rotation = 0;
+                  this.addToChangedCardsBuffer(card.id)
+                }
               }
             }
           }
