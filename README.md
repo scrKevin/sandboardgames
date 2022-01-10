@@ -17,8 +17,12 @@ SSH into your linode and execute:
  `cd sandboardgames`
 
  `export PORT=443`
- 
+
  `npm start`
+
+ Detach from Tmux: CTRL^B -> D
+
+ Re-attach: `tmux a -t 0`
 
 ### Requirements:
 

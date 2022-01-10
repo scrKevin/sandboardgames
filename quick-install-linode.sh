@@ -1,6 +1,8 @@
 #!/bin/bash
 echo 'Enter Domain:'
 read domain
+echo 'Enter your email - for Certbot notifications:'
+read email
 
 # Apt upgrade
 sudo apt update
@@ -34,7 +36,7 @@ npm audit fix
 # Group and the (sub)domain you want to use for the certificate pointing to the
 # pubic IP-address of the EC2-machine.
 
-sudo certbot certonly --standalone -d $domain
+sudo certbot certonly --standalone -d $domain -m $email --no-eff-email --agree-tos
 
 # Symlink the certificates into the sandboardgames installation
 mkdir security
