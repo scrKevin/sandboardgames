@@ -28,6 +28,7 @@ git clone https://github.com/scrKevin/sandboardgames.git
 cd sandboardgames
 
 npm install
+npm audit fix
 
 # At this point you'll need to make sure you have port 80 open in your Security
 # Group and the (sub)domain you want to use for the certificate pointing to the
@@ -36,7 +37,7 @@ npm install
 sudo certbot certonly --standalone -d $domain
 
 # Symlink the certificates into the sandboardgames installation
-
+mkdir security
 ln -s /etc/letsencrypt/live/$domain/fullchain.pem security/fullchain.pem
 ln -s /etc/letsencrypt/live/$domain/privkey.pem security/privkey.pem
 
