@@ -5,6 +5,13 @@ Play some board games with your friends around a virtual table.
 Sandbox style board game engine running on NodeJS.
 P2P Webcam support with WebRTC.
 
+### Quick Linode install:
+Create a Linode. "Debian 11" is fine.
+Edit A and AAAA records in DNS settings for your domain.
+SSH into your linode and execute:
+
+`curl -o- https://raw.githubusercontent.com/scrKevin/sandboardgames/master/quick-install-linode.sh | bash`
+
 ### Requirements:
 
 - You will need a SSL certificate for the webcams to work.
