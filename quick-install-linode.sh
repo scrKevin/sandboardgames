@@ -44,6 +44,4 @@ ln -s /etc/letsencrypt/live/$domain/privkey.pem security/privkey.pem
 # Install tmux
 sudo apt install -y tmux
 
-export PORT=443
-
-echo Install finished. Start tmux and run npm start.
+echo Install finished.
