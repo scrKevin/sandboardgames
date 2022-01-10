@@ -1,6 +1,6 @@
 #!/bin/bash
 
-read -p 'Enter Domain: ' domain
+read -p "Enter Domain: " domain
 
 # Apt upgrade
 sudo apt update
