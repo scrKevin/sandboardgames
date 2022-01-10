@@ -10,7 +10,7 @@ Create a Linode. "Debian 11" is fine.
 Edit A and AAAA records in DNS settings for your domain.
 SSH into your linode and execute:
 
-`curl -o- https://raw.githubusercontent.com/scrKevin/sandboardgames/master/quick-install-linode.sh | bash`
+`bash -c "$(curl -s https://raw.githubusercontent.com/scrKevin/sandboardgames/master/quick-install-linode.sh)`
 
 ### Requirements:
 
