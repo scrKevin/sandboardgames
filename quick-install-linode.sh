@@ -12,7 +12,7 @@ sudo apt install -y git
 curl -o- https://raw.githubusercontent.com/vinyll/certbot-install/master/install.sh | bash
 
 # install nvm (Node version manager)
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38/install.sh | bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" 
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
