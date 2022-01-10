@@ -6,17 +6,21 @@ read domain
 sudo apt update
 sudo apt upgrade
 
+sudo apt install -y git
+
 # install certbot (https://github.com/vinyll/certbot-install)
 curl -o- https://raw.githubusercontent.com/vinyll/certbot-install/master/install.sh | bash
 
 # install nvm (Node version manager)
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38/install.sh | bash
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" 
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
 # install latest Node version
 nvm install node
 
 # Install sandboardgames
-sudo apt install git
 
 cd ~/
 git clone https://github.com/scrKevin/sandboardgames.git
@@ -37,7 +41,7 @@ ln -s /etc/letsencrypt/live/$domain/fullchain.pem security/fullchain.pem
 ln -s /etc/letsencrypt/live/$domain/privkey.pem security/privkey.pem
 
 # Install tmux
-sudo apt install tmux
+sudo apt install -y tmux
 
 export PORT=443
 
