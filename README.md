@@ -13,8 +13,11 @@ SSH into your linode and execute:
  `bash <(curl https://raw.githubusercontent.com/scrKevin/sandboardgames/master/quick-install-linode.sh)`
 
  `tmux`
+
  `cd sandboardgames`
+
  `export PORT=443`
+ 
  `npm start`
 
 ### Requirements:
