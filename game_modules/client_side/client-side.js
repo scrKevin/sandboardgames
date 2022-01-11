@@ -12,8 +12,6 @@ else {
   console.log("not ios")
 }
 
-//var useWebcams = false;
-
 var clientController = new ClientController(useWebcams)
 var welcomeModalshown = false;
 var myGameObj = null;
@@ -50,6 +48,7 @@ var colors = [
   "#3ED924",
 ]
 
+// css filter from black (https://codepen.io/sosuke/pen/Pjoqqp)
 var filterMap = {
   "#FF0000": "invert(11%) sepia(88%) saturate(7320%) hue-rotate(5deg) brightness(104%) contrast(114%)",
   "#88ff91": "invert(93%) sepia(56%) saturate(660%) hue-rotate(52deg) brightness(104%) contrast(102%)",
@@ -61,10 +60,10 @@ var filterMap = {
   "#888888": "invert(60%) sepia(5%) saturate(5%) hue-rotate(344deg) brightness(89%) contrast(86%)",
   "#0e8200": "invert(27%) sepia(61%) saturate(2095%) hue-rotate(81deg) brightness(106%) contrast(104%)",
   "#ffbff7": "invert(81%) sepia(19%) saturate(976%) hue-rotate(285deg) brightness(106%) contrast(106%)",
-  "#2498D9": "invert(11%) sepia(88%) saturate(7320%) hue-rotate(5deg) brightness(104%) contrast(114%)",
-  "#BF24D9": "invert(11%) sepia(88%) saturate(7320%) hue-rotate(5deg) brightness(104%) contrast(114%)",
-  "#D96424": "invert(11%) sepia(88%) saturate(7320%) hue-rotate(5deg) brightness(104%) contrast(114%)",
-  "#3ED924": "invert(11%) sepia(88%) saturate(7320%) hue-rotate(5deg) brightness(104%) contrast(114%)",
+  "#2498D9": "invert(73%) sepia(68%) saturate(5187%) hue-rotate(173deg) brightness(90%) contrast(87%)",
+  "#BF24D9": "invert(24%) sepia(44%) saturate(6297%) hue-rotate(282deg) brightness(94%) contrast(97%)",
+  "#D96424": "invert(46%) sepia(23%) saturate(4427%) hue-rotate(352deg) brightness(92%) contrast(83%)",
+  "#3ED924": "invert(68%) sepia(69%) saturate(2157%) hue-rotate(64deg) brightness(101%) contrast(89%)",
 }
 
 var cssFilterBorder = " drop-shadow(1px 1px 0px black) drop-shadow(-1px 1px 0px black) drop-shadow(1px -1px 0px black) drop-shadow(-1px -1px 0px black)"

@@ -12,6 +12,7 @@ const StartpositionsDX = require("./dx/startpositions");
 const StartpositionsMP = require("./mp/startpositions");
 const StartpositionsTLS = require("./tls/startpositions");
 const StartpositionsOT = require("./ot/startpositions");
+const StartpositionsCRP = require("./crp/startpositions");
 
 let SY_Game = require("./sy/sy_game").SY_Game;
 let SH_Game = require("./sh/sh_game").SH_Game;
@@ -29,6 +30,7 @@ let MP_Game = require("./mp/mp_game").MP_Game;
 let CN_Game = require("./cn/cn_game").CN_Game;
 let TLS_Game = require("./tls/tls_game").TLS_Game;
 let OT_Game = require("./ot/ot_game").OT_Game;
+let CRP_Game = require("./crp/crp_game").CRP_Game;
 
 function ImplementedGame(name, wsLocation, GameClass, routerLocation, viewsLocation, iconLocation, nOfPlayers, objectToPassToView)
 {
@@ -58,7 +60,8 @@ let availableGames = {
   'mp': new ImplementedGame("Monopoly", "mp", MP_Game, "mp", "mp", "mp/monopoly_lobby_icon.svg", "2-8", {playerboxStartPos: StartpositionsMP.playerBoxes, webcamPos: StartpositionsMP.webcamPos, fixedPlayers: 8, board: StartpositionsMP.board}),
   'cn': new ImplementedGame("Codenames", "cn", CN_Game, "cn", "cn", "cn/codenames_lobby_icon.svg", "4+", {fixedPlayers: 0}),
   'tls': new ImplementedGame('Telestrations', 'tls', TLS_Game, "tls", 'tls', 'tls/telestrations.svg', "6-14", {playerboxStartPos: StartpositionsTLS.playerBoxes, webcamPos: StartpositionsTLS.webcamPos, fixedPlayers: 14}),
-  'ot': new ImplementedGame('Onitama', 'ot', OT_Game, 'ot', 'ot', 'ot/onitama.svg', '2', {webcamPos: StartpositionsOT.webcamPos, fixedPlayers: 2})
+  'ot': new ImplementedGame('Onitama', 'ot', OT_Game, 'ot', 'ot', 'ot/onitama.svg', '2', {webcamPos: StartpositionsOT.webcamPos, fixedPlayers: 2}),
+  'crp': new ImplementedGame("Cockroach Poker", 'crp', CRP_Game, 'crp', 'crp', 'mk/munckin_lobby_icon.svg', "4-6", {playerboxStartPos: StartpositionsCRP.playerBoxes, webcamPos: StartpositionsCRP.webcamPos, fixedPlayers: 6}),
 }
 
 // let availableGames = {
