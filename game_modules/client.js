@@ -93,19 +93,19 @@ Client.prototype.sendCardConflict = function(cardId, replacementCardId)
 
 Client.prototype.sendNewPeer = function (otherClient)
 {
-  if (this.useWebcams) {
-    this.newPeerQueue.push(otherClient);
-    if (this.newPeerState == "idle")
-    {
-      //console.log(this.playerId + " is processing peer " + otherClient.playerId);
-      this.processNewPeerQueue();
-    }
-    else
-    {
-      console.log("Queued newPeer of " + otherClient.playerId + " for " + this.playerId)
-    }
-  }
-  else {
+  // if (this.useWebcams) {
+  //   this.newPeerQueue.push(otherClient);
+  //   if (this.newPeerState == "idle")
+  //   {
+  //     //console.log(this.playerId + " is processing peer " + otherClient.playerId);
+  //     this.processNewPeerQueue();
+  //   }
+  //   else
+  //   {
+  //     console.log("Queued newPeer of " + otherClient.playerId + " for " + this.playerId)
+  //   }
+  // }
+  // else {
     var sendData = {
       type: "newPeer",
       playerId: otherClient.playerId,
@@ -122,7 +122,7 @@ Client.prototype.sendNewPeer = function (otherClient)
     {
       console.log("ERROR in sending newPeer of " + otherClient.playerId + " to " + this.playerId + ". ws.readyState not OPEN.");
     }
-  }
+  // }
 }
 
 Client.prototype.newPeerInitiated = function(fromPlayerId)
@@ -218,7 +218,7 @@ Client.prototype.processNewPeerQueue = function()
         }
         this.newPeerTimeouts[newPlayerId] = setTimeout(function(){
           console.log(this.playerId + ": newPeer for " + newPlayerId + " TIMEOUT")
-          this.peerStatus = 'idle';
+          this.newPeerState = 'idle';
           this.processNewPeerQueue();
         }.bind(this), 10000);
         break;

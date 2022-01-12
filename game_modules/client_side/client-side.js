@@ -93,6 +93,28 @@ var devToolsOpenedTimes = {};
 var listeningToRadio = -1;
 var isWatchingWatchPartyFrom = -1;
 
+window.addEventListener('online', () => {
+  clientController = null;
+  var myPlayerId = -1;
+  var myRotation = 0;
+  clientController = new ClientController(useWebcams)
+  
+  $('#offlineModal').modal('hide');
+
+  welcomeModalshown = false;
+  onload();
+  //window.location.reload();
+});
+window.addEventListener('offline', () => {
+  // clientController = null;
+  // var myGameObj = null;
+  $('#offlineModal').modal({
+    show: true,
+    backdrop: 'static',
+    keyboard: false
+    });
+});
+
 function addRadio(stream)
 {
   var video = document.createElement('video');
@@ -134,6 +156,7 @@ function removeRadio()
 function addWebcam(stream, playerId, mirrored, muted)
 {
   if (useWebcams) {
+    console.log("adding webcam for " + playerId + ", mirrored: " + mirrored)
     var video = document.createElement('video');
     $("#webcam" + playerId).html(video)
     if (mirrored)
@@ -167,7 +190,7 @@ function addWebcam(stream, playerId, mirrored, muted)
           $("#webcam" + playerId + " video").css("margin-left", ((webcamBoxWidth - correctedWidth) * 0.5) + "px")
           $("#webcam" + playerId + " video").css("margin-top", "0px")
         }
-      }, 500);
+      }, 50);
       if (playerId != myPlayerId) {
         clientController.reportPlaying(playerId)
       }
@@ -235,7 +258,7 @@ function InitWebSocket()
     var host = window.location.hostname;
     ws = new WebSocket(scheme + "://" + host + port + window.location.pathname);
 
-    clientController.initialize(ws, myStream);
+    clientController.initialize(ws)//, myStream);
 
     clientController.on("playerId", (playerId) => {
       myPlayerId = playerId;
@@ -256,7 +279,9 @@ function InitWebSocket()
       }
       if (!gameInitialized)
       {
-        addWebcam(myStream, myPlayerId, true, true);
+        if (myStream !== null) {
+          addWebcam(myStream, myPlayerId, true, true);
+        }
         gameInitialized = true;
       }
       else
@@ -421,7 +446,7 @@ function InitWebSocket()
         removePlayer(i);
       }
       clientController.removeAllListeners();
-      setTimeout(function(){InitWebSocket();}, 2000);
+      //setTimeout(function(){InitWebSocket();}, 2000);
     });
 
     clientController.on("devToolsState", (playerId, opened) => {
@@ -1079,7 +1104,21 @@ $( window ).resize(function() {
 });
 
 $( document ).ready(function() {
-  console.log(navigator.mediaDevices.getSupportedConstraints())
+  onload();
+});
+
+function onload() {
+  try {
+    console.log(navigator.mediaDevices.getSupportedConstraints())
+  } catch (err) {
+    console.log(err)
+    // $("#webcamError").html(err.name + ": " + err.message)
+    // $('#webcamErrorModal').modal({
+    //   show: true,
+    //   backdrop: 'static',
+    //   keyboard: false
+    //   });
+  }
   $(".touchbox").css("opacity", "0");
   $('img').attr('draggable', false);
   var colorSelectionHtml = "";
@@ -1143,29 +1182,47 @@ $( document ).ready(function() {
   console.log("Starting local webcam.")
 
   if (useWebcams) {
-    navigator.mediaDevices.getUserMedia({video: {
-                            width: {
-                                max: 320,
-                                ideal: 160 
-                            },
-                            height: {
-                                max: 240,
-                                ideal: 120
-                            }
-                        }, audio: {
-                          echoCancellation: true
-                        }})
-      .then(function(stream) {
-        console.log("Started local webcam.")
-        myStream = stream;
-        InitWebSocket();
-    });
-  } else {
-    InitWebSocket();
+    if (typeof navigator.mediaDevices !== 'undefined') {
+      navigator.mediaDevices.getUserMedia({video: {
+                              width: {
+                                  max: 320,
+                                  ideal: 160 
+                              },
+                              height: {
+                                  max: 240,
+                                  ideal: 120
+                              }
+                          }, audio: {
+                            echoCancellation: true
+                          }})
+        .then(function(stream) {
+          console.log("Started local webcam.")
+          myStream = stream;
+          if (myPlayerId != -1) {
+            addWebcam(myStream, myPlayerId, true, true);
+            clientController.setWebcamStream(myStream)
+          }
+        })
+        .catch(function(err) {
+          console.log(err)
+          $("#webcamError").html(err.name + ": " + err.message)
+          $('#webcamErrorModal').modal({
+            show: true,
+            backdrop: 'static',
+            keyboard: false
+            });
+        });
+    } else {
+      $("#webcamError").html("You do not have any mediadevices.")
+          $('#webcamErrorModal').modal({
+            show: true,
+            });
+    }
   }
+  InitWebSocket();
 
   $(document).trigger("clientControllerReady", clientController);
-});
+}
 
 async function startCapture(){
   try {

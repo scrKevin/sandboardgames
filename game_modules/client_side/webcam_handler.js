@@ -10,10 +10,11 @@ if(process.env.NODE_ENV === 'test')
   var wrtc = require('wrtc');
 }
 
-function WebcamHandler(wsHandler, myStream)
+function WebcamHandler(wsHandler)//, myStream)
 {
   this.wsHandler = wsHandler;
-  this.myStream = myStream;
+  //this.myStream = myStream;
+  this.myStream = false;
   this.captureStream = null;
   this.watchPartyStream = null;
   this.peers = {};
@@ -30,6 +31,13 @@ WebcamHandler.prototype = Object.create(EventEmitter.prototype);
 WebcamHandler.prototype.setPlayerId = function(playerId)
 {
   this.myPlayerId = playerId;
+}
+
+WebcamHandler.prototype.setWebcamStream = function(stream) {
+  this.myStream = stream
+  for (let peerId in this.peers) {
+    this.peers[peerId].addStream(this.myStream)
+  }
 }
 
 WebcamHandler.prototype.turnCredentials = function(turnCredentials)
@@ -102,7 +110,7 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId, peerType, optionalRe
     streamToSend = this.watchPartyStream;
     peerArray = this.watchPartyPeers;
   }
-  console.log("initiating peer for player " + playerId)
+  console.log("initiating peer " + peerType + " for player " + playerId)
   var peerOptions = {
     initiator: true,
     trickle: true,
@@ -162,6 +170,7 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId, peerType, optionalRe
   peerArray[playerId].on('error', err => {
     console.log("error in initWebcamPeer for player " + playerId)
     console.log(err);
+    console.log(err.code)
     if (err.code == "ERR_CONNECTION_FAILURE")
     {
       try {
@@ -193,6 +202,7 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId, peerType, optionalRe
     {
       console.log(error)
     }
+    delete peerArray[playerId]
     this.emit("peerClosed", playerId, peerType);
   });
   
@@ -287,6 +297,7 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp, peerType, op
     peerArray[fromPlayerId].on('error', err => {
       console.log("error in peerConnected from " + fromPlayerId + " peertype = " + peerType)
       console.log(err);
+      console.log(err.code)
       if (err.code == "ERR_CONNECTION_FAILURE")
       {
         try {
@@ -320,8 +331,12 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp, peerType, op
       this.emit("peerClosed", fromPlayerId, peerType, optionalRelayFor);
     });
   }
-
-  peerArray[fromPlayerId].signal(stp);
+  if (fromPlayerId in peerArray) {
+    if (peerArray[fromPlayerId].readable) {
+      peerArray[fromPlayerId].signal(stp);
+    }
+  }
+  
 }
 
 WebcamHandler.prototype.peerAccepted = function(fromPlayerId, stp, peerType, optionalRelayFor)
@@ -341,6 +356,30 @@ WebcamHandler.prototype.peerAccepted = function(fromPlayerId, stp, peerType, opt
   }
   console.log("peer accepted (" + peerType + ") from player " + fromPlayerId);
   peerArray[fromPlayerId].signal(stp);
+}
+
+WebcamHandler.prototype.resetWebcam = function() {
+  for (let peerId in this.peers) {
+    try {
+      this.peers[peerId].destroy();
+      
+    } catch (error) {
+      console.log(error)
+    }
+    delete this.peers[peerId]
+  }
+  for (let relayFor in this.relayPeers) {
+    for (let peerId in this.relayPeers[relayFor]) {
+      try {
+        this.relayPeers[relayFor][peerId].destroy();
+        
+      } catch (error) {
+        console.log(error)
+      }
+      delete this.relayPeers[relayFor][peerId]
+    }
+  }
+  
 }
 
 WebcamHandler.prototype.leftPeer = function(playerId, peerType)

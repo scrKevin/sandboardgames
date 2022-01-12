@@ -587,7 +587,7 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
           client.peerStatus[json.fromPlayerId] = "connectionFailure";
           for(clientI of this.clients)
           {
-            if(clientI.playerId == json.fromPlayerId)
+            if(clientI.playerId == json.fromPlayerId && clientI.playerId !== id)
             {
               console.log(`Found match, my ID=${id}, peerstatus[${json.fromPlayerId}]=${clientI.peerStatus[id]}`)
               if (clientI.peerStatus[id] == "connectionFailure" && clientI.initiated)
@@ -704,6 +704,10 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
       }
       
     });
+
+    ws.on('error', (error) =>{
+      console.log(error)
+    })
     
     ws.on('close', () => {
       this.turnServer.removeUser(this.turnServer);

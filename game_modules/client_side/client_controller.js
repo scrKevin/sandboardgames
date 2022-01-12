@@ -17,7 +17,7 @@ function ClientController(useWebcams)
 
 ClientController.prototype = Object.create(EventEmitter.prototype);
 
-ClientController.prototype.initialize = function(ws, myStream)
+ClientController.prototype.initialize = function(ws)//, myStream)
 {
   this.wsHandler = new WsHandler(ws);
   this.wsHandler.eventEmitter.on("playerId", (playerId) => {
@@ -92,7 +92,7 @@ ClientController.prototype.initialize = function(ws, myStream)
 
   this.mouseHandler = new MouseHandler(this.wsHandler);
   
-  this.webcamHandler = new WebcamHandler(this.wsHandler, myStream);
+  this.webcamHandler = new WebcamHandler(this.wsHandler)//, myStream);
   this.webcamHandler.on("stream", (playerId, stream, peerType, optionalRelayFor) => {
     this.emit("stream", playerId, stream, peerType, optionalRelayFor);
   });
@@ -183,7 +183,14 @@ ClientController.prototype.resetGame = function()
 
 ClientController.prototype.resetWebcam = function()
 {
-  this.init && this.wsHandler.resetWebcam();
+  if(this.init) {
+    this.webcamHandler.resetWebcam();
+    this.wsHandler.resetWebcam();
+  } 
+}
+
+ClientController.prototype.setWebcamStream = function(stream) {
+  this.init && this.webcamHandler.setWebcamStream(stream)
 }
 
 ClientController.prototype.takeSnapshot = function()
