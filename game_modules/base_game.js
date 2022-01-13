@@ -56,6 +56,12 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
 
     this.clients.push(client);
     this.gameObj.players[id] = player;//.push(player);
+    for (let otherPlayerId in this.gameObj.players) {
+      if (otherPlayerId != id) {
+        this.gameObj.players[otherPlayerId].peerStatus[id] = 'init'
+        player.peerStatus[otherPlayerId] = 'init'
+      }
+    }
 
     ws.on('message', (message) => {
       var json = JSON.parse(this.deconstructMessage(message));
@@ -567,6 +573,7 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
       else if (json.type == "reportPlaying")
       {
         client.peerStatus[json.playerId] = "playing"
+        this.gameObj.players[id].peerStatus[json.playerId] = "playing" 
         if (this.seekingRelay.length > 0)
         {
           for (let sr of this.seekingRelay)
@@ -578,6 +585,7 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
             }
           }
         }
+        this.broadcast();
       }
       else if (json.type == "connectionFailure")
       {
@@ -585,6 +593,7 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
         {
           console.log("connection failure reported by " + id + ", with " + json.fromPlayerId);
           client.peerStatus[json.fromPlayerId] = "connectionFailure";
+          this.gameObj.players[id].peerStatus[json.fromPlayerId] = "connectionFailure" 
           for(clientI of this.clients)
           {
             if(clientI.playerId == json.fromPlayerId && clientI.playerId !== id)
@@ -600,7 +609,8 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
               }
             }
           }
-      }
+          this.broadcast();
+        }
       }
       else if (json.type == "reset")
       {
@@ -742,14 +752,17 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
       // this.gameObj.players.splice(removeIndexGameObj, 1);
 
       delete this.gameObj.players[id];
+      for (let otherPlayerId in this.gameObj.players) {
+        delete this.gameObj.players[otherPlayerId].peerStatus[id]
+      }
 
       this.playerNumbers[id] = true;
       this.broadcastLeftPeer(id);
-
+      this.broadcast();
     });
 
     // this.broadcastNewPeer(id, ws);
-    
+    this.broadcast();
   });
 
   this.resetGame(this);
@@ -895,6 +908,7 @@ WS_distributor.prototype.broadcastLeftPeer = function (playerId)
   {
     if (clientI.playerId != playerId)
     {
+      this.gameObj.players[clientI.playerId].peerStatus[playerId] = "peerLeft"
       //delete clientI.peerStatus[playerId];
       clientI.sendBinaryString(binaryString);
     }
@@ -921,6 +935,7 @@ WS_distributor.prototype.broadcastNewPeer = function (client, playerId, newWs){
   {
     if (clientI.playerId != playerId)
     {
+      this.gameObj.players[clientI.playerId].peerStatus[playerId] = "newPeerSent"
       // console.log("clientI.peerStatus[" + playerId + "] = " + clientI.peerStatus[playerId])
       if(clientI.initiated)// && clientI.peerStatus[playerId] != "streamReceived" && clientI.peerStatus[playerId] != "peerAccepted")
       {

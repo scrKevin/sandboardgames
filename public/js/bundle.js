@@ -3286,6 +3286,31 @@ function InitWebSocket()
 
     clientController.on("updateGame", (gameObj, changedCardsBuffer, newDrawCoords, init) => {
       myGameObj = gameObj;
+      if ($('#resetWebcamModal').hasClass('in')) {
+        console.log("updating webcam matrix")
+        var webcamTableHtml = "<table>"
+        webcamTableHtml += "<tr>"
+        webcamTableHtml += "<td></td>"
+        for (let playerId in gameObj.players) {
+          webcamTableHtml += "<td>" + playerId + "</td>"
+        }
+        webcamTableHtml += "</tr>"
+        for (let playerId in gameObj.players) {
+          webcamTableHtml += "<tr>"
+          webcamTableHtml += "<td>" + playerId + "</td>"
+          for (let otherPlayerId in gameObj.players) {
+            if (otherPlayerId != playerId) {
+              webcamTableHtml += "<td>" + gameObj.players[playerId].peerStatus[otherPlayerId] + "</td>"
+            } else {
+              webcamTableHtml += "<td></td>"
+            }
+          }
+          webcamTableHtml += "</tr>"
+        }
+        webcamTableHtml += "</table>"
+        $("#webcamMatrix").html(webcamTableHtml)
+        $("#webcamMatrix td").css("border", "1px solid black")
+      }
       // console.log("myplayerid: " + myPlayerId)
       if (myPlayerId !== -1 && init)
       {
@@ -4014,10 +4039,19 @@ window.addEventListener('devtoolschange', event => {
   clientController.devToolsState(event.detail.isOpen);
 });
 
+function GetBrowserDim() {
+  if (window.innerHeight) {
+      return { w: window.innerWidth, h: window.innerHeight};
+  } else {
+      return { w: document.body.clientWidth, h: document.body.clientHeight };
+  }
+}
+
 function adaptScale()
 {
-  var width = $(window).width();
-  var height = $(window).height();
+  var dim = GetBrowserDim()
+  var width = dim.w
+  var height = dim.h
 
   var ratio = 1920 / 1080;
 
@@ -4162,6 +4196,9 @@ function onload(initial) {
   {
     canvas = document.getElementById('drawCanvas');
     clientController.canvasHandler.init(canvas);
+    $('canvas').bind('contextmenu', function(e){
+      return false;
+  }); 
   }
 
   if($("#varTextInput").length)

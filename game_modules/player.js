@@ -9,6 +9,7 @@ function Player(){
   this.drawArray = [];
   this.isHostingCapture = false;
   this.isHostingWatchParty = false;
+  this.peerStatus = {};
 }
 
 Player.prototype.setId = function(playerNumbers){
