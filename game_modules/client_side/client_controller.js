@@ -100,6 +100,10 @@ ClientController.prototype.initialize = function(ws)//, myStream)
     this.emit("peerClosed", playerId, peerType, optionalRelayFor);
   });
 
+  this.webcamHandler.on("connectionFailure", (playerId, peerType, errorCode) => {
+    this.emit("peerConnectionFailure", playerId, peerType, errorCode);
+  });
+
   this.canvasHandler.initWsHandler(this.wsHandler)
 
   this.init = true;

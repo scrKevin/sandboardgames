@@ -35,7 +35,9 @@ WebcamHandler.prototype.setPlayerId = function(playerId)
 
 WebcamHandler.prototype.setWebcamStream = function(stream) {
   this.myStream = stream
+  
   for (let peerId in this.peers) {
+    console.log("sending my webcam stream to player " + peerId)
     this.peers[peerId].addStream(this.myStream)
   }
 }
@@ -110,13 +112,15 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId, peerType, optionalRe
     streamToSend = this.watchPartyStream;
     peerArray = this.watchPartyPeers;
   }
-  console.log("initiating peer " + peerType + " for player " + playerId)
+  console.log("initiating peer " + peerType + " for player " + playerId + ", peerOptions:")
+  
   var peerOptions = {
     initiator: true,
     trickle: true,
     config: peerConfig,
     stream: streamToSend
   }
+  console.log(peerOptions)
   if(process.env.NODE_ENV === 'test')
   {
     peerOptions.wrtc = wrtc;
@@ -171,7 +175,8 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId, peerType, optionalRe
     console.log("error in initWebcamPeer for player " + playerId)
     console.log(err);
     console.log(err.code)
-    if (err.code == "ERR_CONNECTION_FAILURE")
+    //if (err.code == "ERR_CONNECTION_FAILURE")
+    if (true)
     {
       try {
         peerArray[playerId].destroy();
@@ -183,6 +188,7 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId, peerType, optionalRe
       }
       //delete this.peers[playerId]
       delete peerArray[playerId]
+      this.emit("connectionFailure", playerId,  peerType, err.code)
       var sendData = {
         type: "connectionFailure",
         fromPlayerId: playerId,
@@ -236,13 +242,14 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp, peerType, op
   }
   if (!(fromPlayerId in peerArray))
   {
-    console.log("peer (" + peerType + ") connected from player " + fromPlayerId)
+    console.log("peer (" + peerType + ") connected from player " + fromPlayerId + "; peerOptions:")
     var peerOptions = {
       initiator: false,
       trickle: true,
       config: peerConfig,
       stream: streamToSend
     }
+    console.log(peerOptions)
     if(process.env.NODE_ENV === 'test')
     {
       peerOptions.wrtc = wrtc;
@@ -298,7 +305,8 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp, peerType, op
       console.log("error in peerConnected from " + fromPlayerId + " peertype = " + peerType)
       console.log(err);
       console.log(err.code)
-      if (err.code == "ERR_CONNECTION_FAILURE")
+      //if (err.code == "ERR_CONNECTION_FAILURE")
+      if (true)
       {
         try {
           console.log(peerArray);
@@ -309,6 +317,7 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp, peerType, op
           console.log(error)
         }
         delete peerArray[fromPlayerId]
+        this.emit("connectionFailure", fromPlayerId,  peerType, err.code)
         var sendData = {
           type: "connectionFailure",
           fromPlayerId: fromPlayerId,

@@ -102,7 +102,7 @@ window.addEventListener('online', () => {
   $('#offlineModal').modal('hide');
 
   welcomeModalshown = false;
-  onload();
+  onload(false);
   //window.location.reload();
 });
 window.addEventListener('offline', () => {
@@ -195,7 +195,13 @@ function addWebcam(stream, playerId, mirrored, muted)
         clientController.reportPlaying(playerId)
       }
     });
-    video.play();
+    video.play().catch(error => {
+      console.log(error)
+      $("#playError").html(error.message)
+      $('#playResetModal').modal({
+        show: true,
+      });
+    });
   }
   updateCss("#webcam" + playerId, "display", "block");
   updateCss("#player" + playerId + "box", "display", "block");
@@ -208,6 +214,38 @@ function addWebcam(stream, playerId, mirrored, muted)
   {
     $(".webcam video").css("transform", "rotateZ(180deg)")
   }
+}
+
+function removeWebcam(playerId)
+{
+  $("#webcam" + playerId).html("<img src='/img/common/webcam_initial.svg'></img><div style='color:white;position:absolute;width:" + webcamBoxWidth + ";text-align:center;top:20px'>Initializing</div>");
+  updateCss("#webcam" + playerId, "display", "none");
+  var correctedWidth = 480 * (webcamBoxHeight / 360);
+  $("#webcam" + playerId + " img").css("width", correctedWidth + "px")
+  $("#webcam" + playerId + " img").css("height", webcamBoxHeight + "px");
+  $("#webcam" + playerId + " img").css("margin-left", ((webcamBoxWidth - correctedWidth) * 0.5) + "px")
+  $("#webcam" + playerId + " img").css("margin-top", "0px")
+}
+
+function initWebcamBoxes() {
+  for (let playerId = 0; playerId <= 20; playerId++) {
+    $("#webcam" + playerId).html("<img src='/img/common/webcam_initial.svg'></img><div style='color:white;position:absolute;width:" + webcamBoxWidth + ";text-align:center;top:20px'>Initializing</div>");
+    var correctedWidth = 480 * (webcamBoxHeight / 360);
+    $("#webcam" + playerId + " img").css("width", correctedWidth + "px")
+    $("#webcam" + playerId + " img").css("height", webcamBoxHeight + "px");
+    $("#webcam" + playerId + " img").css("margin-left", ((webcamBoxWidth - correctedWidth) * 0.5) + "px")
+    $("#webcam" + playerId + " img").css("margin-top", "0px")
+  }
+}
+
+function showConnectionFailure(playerId, errorCode) {
+  $("#webcam" + playerId).html("<img src='/img/common/webcam_initial.svg'></img><div style='color:white;position:absolute;width:" + webcamBoxWidth + ";text-align:center;top:20px'>" + errorCode + "</div>");
+  updateCss("#webcam" + playerId, "display", "block");
+  var correctedWidth = 480 * (webcamBoxHeight / 360);
+  $("#webcam" + playerId + " img").css("width", correctedWidth + "px")
+  $("#webcam" + playerId + " img").css("height", webcamBoxHeight + "px");
+  $("#webcam" + playerId + " img").css("margin-left", ((webcamBoxWidth - correctedWidth) * 0.5) + "px")
+  $("#webcam" + playerId + " img").css("margin-top", "0px")
 }
 
 var gameInitialized = false;
@@ -259,6 +297,9 @@ function InitWebSocket()
     ws = new WebSocket(scheme + "://" + host + port + window.location.pathname);
 
     clientController.initialize(ws)//, myStream);
+    if (myStream !== null) {
+      clientController.setWebcamStream(myStream)
+    }
 
     clientController.on("playerId", (playerId) => {
       myPlayerId = playerId;
@@ -410,7 +451,8 @@ function InitWebSocket()
     clientController.on("peerClosed", (playerId, peerType, optionalRelayFor) => {
       if(peerType == "webcam")
       {
-        removeWebcam(playerId)
+        showConnectionFailure(playerId, "Closed connection")
+        //removeWebcam(playerId)
       }
       else if(peerType == "capture")
       {
@@ -434,6 +476,14 @@ function InitWebSocket()
       {
         console.log("clear webcam " + optionalRelayFor + " relayed from " + playerId)
         removeWebcam(optionalRelayFor);
+      }
+    });
+
+    clientController.on("peerConnectionFailure", (playerId, peerType, errorCode) => {
+      console.log("peerConnectionFailure - " + errorCode + ", from " + playerId + " (" + peerType + ")")
+      if(peerType == "webcam")
+      {
+        showConnectionFailure(playerId, errorCode)
       }
     });
 
@@ -527,12 +577,6 @@ function removePlayer(playerId)
   updateCss("#scaledProjectionBox" + playerId, "background-color", "#FFFFFF00");
   updateHtml("#player" + playerId + "NameText", "");
   $(document).trigger("leftPeer", [playerId]);
-}
-
-function removeWebcam(playerId)
-{
-  $("#webcam" + playerId).html("");
-  updateCss("#webcam" + playerId, "display", "none");
 }
 
 function isInDeck(x, y, deck)
@@ -1104,21 +1148,20 @@ $( window ).resize(function() {
 });
 
 $( document ).ready(function() {
-  onload();
+  onload(true);
 });
 
-function onload() {
+function onload(initial) {
   try {
     console.log(navigator.mediaDevices.getSupportedConstraints())
   } catch (err) {
     console.log(err)
-    // $("#webcamError").html(err.name + ": " + err.message)
+    // $("#webcamError").html("Oops, there was an error with your webcam.")
     // $('#webcamErrorModal').modal({
     //   show: true,
-    //   backdrop: 'static',
-    //   keyboard: false
     //   });
   }
+  initWebcamBoxes();
   $(".touchbox").css("opacity", "0");
   $('img').attr('draggable', false);
   var colorSelectionHtml = "";
@@ -1141,6 +1184,7 @@ function onload() {
   $('#enterGameBtn').attr('disabled',true);
   $('#enterGameBtn').on('click', enterGame);
   $("#resetWebcamBtn").on('click', resetWebcam);
+  $("#resetPlayingWebcams").on('click', resetPlayingWebcams);
   $('#resetGameBtn').on('click', resetGame);
   $('#startCaptureBtn').on('click', startCapture);
   $('#startWatchPartyBtn').on('click', startWatchParty);
@@ -1179,9 +1223,10 @@ function onload() {
     })
   }
 
-  console.log("Starting local webcam.")
+  
 
-  if (useWebcams) {
+  if (useWebcams && initial) {
+    console.log("Starting local webcam.")
     if (typeof navigator.mediaDevices !== 'undefined') {
       navigator.mediaDevices.getUserMedia({video: {
                               width: {
@@ -1208,8 +1253,6 @@ function onload() {
           $("#webcamError").html(err.name + ": " + err.message)
           $('#webcamErrorModal').modal({
             show: true,
-            backdrop: 'static',
-            keyboard: false
             });
         });
     } else {
@@ -1936,6 +1979,17 @@ function resetWebcam()
 {
   clientController.resetWebcam();
   $('#resetWebcamModal').modal('hide');
+}
+
+function resetPlayingWebcams()
+{
+  for(let playerId = 0; playerId < 20; playerId++) {
+    let vid = $("#webcam" + playerId + " video").get(0)
+    if (typeof(vid) !== 'undefined') {
+      vid.play()
+    }
+  }
+  $('#playResetModal').modal('hide')
 }
 
 function takeSnapshot()

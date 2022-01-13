@@ -109,7 +109,7 @@ Client.prototype.sendNewPeer = function (otherClient)
     var sendData = {
       type: "newPeer",
       playerId: otherClient.playerId,
-      wasReset: false,
+      wasReset: otherClient.isReset,
       peerType: "webcam"
     }
     var strToSend = JSON.stringify(sendData);
@@ -182,12 +182,14 @@ Client.prototype.sendWatchPartyRequest = function(forPlayerId){
 
 Client.prototype.processNewPeerQueue = function()
 {
-  //this.clearTimeouts();
+  console.log("PROCESS NEW PEER QUEUE for player " + this.playerId)
   if (this.newPeerQueue.length > 0)
   {
     var found = false;
+    console.log("QUEUE:")
     for (var i = 0; i < this.newPeerQueue.length; i++)
     {
+      console.log(i + " for player: " + this.newPeerQueue[i].playerId + ": newPeerstate = " + this.newPeerQueue[i].newPeerState + "; acceptPeerState = " + this.newPeerQueue[i].acceptPeerState)
       if (this.newPeerQueue[i].acceptPeerState == "idle")
       {
         found = true;
