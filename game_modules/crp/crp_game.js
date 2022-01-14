@@ -51,7 +51,7 @@ CRP_Game.prototype.resetGame = function(game)
   for (let cardType of types) {
     for (var i = 0; i < 8; i++)
     {
-      newCard = new Card('card' + cardId, startX, startY + 60);
+      newCard = new Card('card' + cardId, startX, startY + 100);
       newCard.backface = '/img/crp/bf.png';
       newCard.frontface = '/img/crp/' + cardType + '.png';
       newCard.show = 'backface';

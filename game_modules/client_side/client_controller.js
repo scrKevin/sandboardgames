@@ -81,6 +81,10 @@ ClientController.prototype.initialize = function(ws)//, myStream)
   this.wsHandler.eventEmitter.on("resume", () => {
     this.emit("resume");
   });
+  this.wsHandler.eventEmitter.on("newSeating", (newSeating) => {
+    //console.log(newSeating)
+    this.emit("newSeating", newSeating);
+  });
   this.wsHandler.eventEmitter.on("latency", (latency, playerId) => {
     this.init && this.mouseHandler.adjustLatency(latency);
     this.init && this.canvasHandler.adjustLatency(latency);
@@ -170,6 +174,11 @@ ClientController.prototype.shuffleDeck = function(deckId, xStackMinimum)
   this.init && this.wsHandler.shuffleDeck(deckId, xStackMinimum);
 }
 
+ClientController.prototype.autoDealDeck = function(deckId)
+{
+  this.init && this.wsHandler.autoDealDeck(deckId);
+}
+
 ClientController.prototype.rollDeck = function(deckId)
 {
   this.init && this.wsHandler.rollDeck(deckId);
@@ -195,6 +204,11 @@ ClientController.prototype.resetWebcam = function()
 
 ClientController.prototype.setWebcamStream = function(stream) {
   this.init && this.webcamHandler.setWebcamStream(stream)
+}
+
+ClientController.prototype.shuffleSeating = function(currentSeating) {
+  console.log(currentSeating)
+  this.init && this.wsHandler.shuffleSeating(currentSeating)
 }
 
 ClientController.prototype.takeSnapshot = function()

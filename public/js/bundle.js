@@ -3493,6 +3493,9 @@ function InitWebSocket()
         }
       }
     });
+    clientController.on("newSeating", (newSeating) => {
+      $(document).trigger("newSeating", [newSeating])
+    });
     clientController.on("latency", (latency, playerId) => {
       console.log("my current latency: " + latency);
 
@@ -4168,6 +4171,7 @@ function onload(initial) {
   $("#resetWebcamBtn").on('click', resetWebcam);
   $("#resetPlayingWebcams").on('click', resetPlayingWebcams);
   $('#resetGameBtn').on('click', resetGame);
+  $('#shuffleSeating').on('click', shuffleSeating);
   $('#startCaptureBtn').on('click', startCapture);
   $('#startWatchPartyBtn').on('click', startWatchParty);
   $('#takeSnapshotBtn').on('click', takeSnapshot);
@@ -4175,6 +4179,7 @@ function onload(initial) {
   $('#pauseBtn').on('click', pause);
   $('#resumeBtn').on('click', resume);
   $(".shuffleButton").on('click', shuffleDeck);
+  $(".autoDealButton").on('click', autoDealDeck);
   $(".rollButton").on('click', rollDeck);
   $(".inspectDeckButton").on('click', inspectDeck);
 
@@ -4623,6 +4628,10 @@ function updateCards(gameObj, changedCardsBuffer)
     var projected = false;
     if (card.ownedBy == myPlayerId)
     {
+      if (dragCardId == null && dragCardIds.length == 0) {
+        updateCss("#" + card.id, "left", card.x + "px");
+        updateCss("#" + card.id, "top", card.y + "px");
+      }
       updateCardFace(card, "frontface");
       additionalZ += 100000;
     }
@@ -4906,6 +4915,11 @@ function shuffleDeck(e){
   clientController.shuffleDeck(deckId, xStackMinimum);
 }
 
+function autoDealDeck(e){
+  var deckId = e.target.parentElement.id;
+  clientController.autoDealDeck(deckId);
+}
+
 function rollDeck(e){
   var deckId = e.target.parentElement.id;
   clientController.rollDeck(deckId);
@@ -4958,6 +4972,11 @@ function resetGame()
 {
   clientController.resetGame();
   $('#resetModal').modal('hide');
+}
+
+function shuffleSeating()
+{
+  $(document).trigger("shuffleSeating")
 }
 
 function resetWebcam()
@@ -5098,6 +5117,10 @@ ClientController.prototype.initialize = function(ws)//, myStream)
   this.wsHandler.eventEmitter.on("resume", () => {
     this.emit("resume");
   });
+  this.wsHandler.eventEmitter.on("newSeating", (newSeating) => {
+    //console.log(newSeating)
+    this.emit("newSeating", newSeating);
+  });
   this.wsHandler.eventEmitter.on("latency", (latency, playerId) => {
     this.init && this.mouseHandler.adjustLatency(latency);
     this.init && this.canvasHandler.adjustLatency(latency);
@@ -5187,6 +5210,11 @@ ClientController.prototype.shuffleDeck = function(deckId, xStackMinimum)
   this.init && this.wsHandler.shuffleDeck(deckId, xStackMinimum);
 }
 
+ClientController.prototype.autoDealDeck = function(deckId)
+{
+  this.init && this.wsHandler.autoDealDeck(deckId);
+}
+
 ClientController.prototype.rollDeck = function(deckId)
 {
   this.init && this.wsHandler.rollDeck(deckId);
@@ -5212,6 +5240,11 @@ ClientController.prototype.resetWebcam = function()
 
 ClientController.prototype.setWebcamStream = function(stream) {
   this.init && this.webcamHandler.setWebcamStream(stream)
+}
+
+ClientController.prototype.shuffleSeating = function(currentSeating) {
+  console.log(currentSeating)
+  this.init && this.wsHandler.shuffleSeating(currentSeating)
 }
 
 ClientController.prototype.takeSnapshot = function()
@@ -6079,6 +6112,11 @@ function WsHandler(ws)
     {
       this.eventEmitter.emit("hostRelay", json.peerId1, json.peerId2);
     }
+    else if (json.type == "newSeating")
+    {
+      //console.log(json.newSeating)
+      this.eventEmitter.emit("newSeating", json.newSeating);
+    }
   }.bind(this);
   this.ws.onclose = function()
   { 
@@ -6130,6 +6168,15 @@ WsHandler.prototype.shuffleDeck = function(deckId, xStackMinimum)
   var sendData = {
     type: "shuffleDeck",
     xStackMinimum: xStackMinimum,
+    deckId: deckId
+  }
+  this.sendToWs(sendData);
+}
+
+WsHandler.prototype.autoDealDeck = function(deckId, xStackMinimum)
+{
+  var sendData = {
+    type: "autoDeal",
     deckId: deckId
   }
   this.sendToWs(sendData);
@@ -6317,6 +6364,15 @@ WsHandler.prototype.requestWatchPartyFromPlayer = function(playerNumber)
   var sendData = {
     type: "requestWatchPartyFromPlayer",
     playerNumber: playerNumber
+  };
+  this.sendToWs(sendData);
+}
+
+WsHandler.prototype.shuffleSeating = function(currentSeating)
+{
+  var sendData = {
+    type: "shuffleSeating",
+    currentSeating: currentSeating
   };
   this.sendToWs(sendData);
 }

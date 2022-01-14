@@ -545,6 +545,9 @@ function InitWebSocket()
         }
       }
     });
+    clientController.on("newSeating", (newSeating) => {
+      $(document).trigger("newSeating", [newSeating])
+    });
     clientController.on("latency", (latency, playerId) => {
       console.log("my current latency: " + latency);
 
@@ -1220,6 +1223,7 @@ function onload(initial) {
   $("#resetWebcamBtn").on('click', resetWebcam);
   $("#resetPlayingWebcams").on('click', resetPlayingWebcams);
   $('#resetGameBtn').on('click', resetGame);
+  $('#shuffleSeating').on('click', shuffleSeating);
   $('#startCaptureBtn').on('click', startCapture);
   $('#startWatchPartyBtn').on('click', startWatchParty);
   $('#takeSnapshotBtn').on('click', takeSnapshot);
@@ -1227,6 +1231,7 @@ function onload(initial) {
   $('#pauseBtn').on('click', pause);
   $('#resumeBtn').on('click', resume);
   $(".shuffleButton").on('click', shuffleDeck);
+  $(".autoDealButton").on('click', autoDealDeck);
   $(".rollButton").on('click', rollDeck);
   $(".inspectDeckButton").on('click', inspectDeck);
 
@@ -1675,6 +1680,10 @@ function updateCards(gameObj, changedCardsBuffer)
     var projected = false;
     if (card.ownedBy == myPlayerId)
     {
+      if (dragCardId == null && dragCardIds.length == 0) {
+        updateCss("#" + card.id, "left", card.x + "px");
+        updateCss("#" + card.id, "top", card.y + "px");
+      }
       updateCardFace(card, "frontface");
       additionalZ += 100000;
     }
@@ -1958,6 +1967,11 @@ function shuffleDeck(e){
   clientController.shuffleDeck(deckId, xStackMinimum);
 }
 
+function autoDealDeck(e){
+  var deckId = e.target.parentElement.id;
+  clientController.autoDealDeck(deckId);
+}
+
 function rollDeck(e){
   var deckId = e.target.parentElement.id;
   clientController.rollDeck(deckId);
@@ -2010,6 +2024,11 @@ function resetGame()
 {
   clientController.resetGame();
   $('#resetModal').modal('hide');
+}
+
+function shuffleSeating()
+{
+  $(document).trigger("shuffleSeating")
 }
 
 function resetWebcam()

@@ -147,6 +147,11 @@ function WsHandler(ws)
     {
       this.eventEmitter.emit("hostRelay", json.peerId1, json.peerId2);
     }
+    else if (json.type == "newSeating")
+    {
+      //console.log(json.newSeating)
+      this.eventEmitter.emit("newSeating", json.newSeating);
+    }
   }.bind(this);
   this.ws.onclose = function()
   { 
@@ -198,6 +203,15 @@ WsHandler.prototype.shuffleDeck = function(deckId, xStackMinimum)
   var sendData = {
     type: "shuffleDeck",
     xStackMinimum: xStackMinimum,
+    deckId: deckId
+  }
+  this.sendToWs(sendData);
+}
+
+WsHandler.prototype.autoDealDeck = function(deckId, xStackMinimum)
+{
+  var sendData = {
+    type: "autoDeal",
     deckId: deckId
   }
   this.sendToWs(sendData);
@@ -385,6 +399,15 @@ WsHandler.prototype.requestWatchPartyFromPlayer = function(playerNumber)
   var sendData = {
     type: "requestWatchPartyFromPlayer",
     playerNumber: playerNumber
+  };
+  this.sendToWs(sendData);
+}
+
+WsHandler.prototype.shuffleSeating = function(currentSeating)
+{
+  var sendData = {
+    type: "shuffleSeating",
+    currentSeating: currentSeating
   };
   this.sendToWs(sendData);
 }

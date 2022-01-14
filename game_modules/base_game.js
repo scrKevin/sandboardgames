@@ -396,6 +396,89 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
         }
         this.broadcast();
       }
+      else if (json.type == "autoDeal")
+      {
+        let deck = this.gameObj.decks[json.deckId];
+        let playerMap = {}
+        let playerIndex = 0
+        for (let pId in this.gameObj.players) {
+          playerMap[playerIndex] = {}
+          playerMap[playerIndex].id = pId
+          playerMap[playerIndex].cards = []
+          playerIndex++
+        }
+        
+        let maxCardsPerPlayer = Math.ceil(Object.keys(deck.attachedCards).length / playerIndex)
+        //console.log("max cards per player: " + maxCardsPerPlayer)
+
+        let cardArray = Object.keys(deck.attachedCards)
+        let currentIndex = cardArray.length, randomIndex;
+
+        // While there remain elements to shuffle...
+        while (currentIndex != 0) {
+
+          // Pick a remaining element...
+          randomIndex = Math.floor(Math.random() * currentIndex);
+          currentIndex--;
+
+          // And swap it with the current element.
+          [cardArray[currentIndex], cardArray[randomIndex]] = [
+            cardArray[randomIndex], cardArray[currentIndex]];
+        }
+        
+        for (let cardId of cardArray)
+        {
+          let dealt = false
+          while (!dealt) {
+            var nextPlayer = Math.floor(Math.random() * playerIndex);
+            if (playerMap[nextPlayer].cards.length < maxCardsPerPlayer) {
+              dealt = true
+              playerMap[nextPlayer].cards.push(cardId)
+            }
+          }
+        }
+
+        
+        for (let pId in playerMap) {
+          let cardIndex = 0
+          let tPlayerId = Number(playerMap[pId].id)
+          // let currentIndex = playerMap[pId].cards.length, randomIndex;
+
+          // // While there remain elements to shuffle...
+          // while (currentIndex != 0) {
+
+          //   // Pick a remaining element...
+          //   randomIndex = Math.floor(Math.random() * currentIndex);
+          //   currentIndex--;
+
+          //   // And swap it with the current element.
+          //   [playerMap[pId].cards[currentIndex], playerMap[pId].cards[randomIndex]] = [
+          //     playerMap[pId].cards[randomIndex], playerMap[pId].cards[currentIndex]];
+          // }
+          for (let cardId of playerMap[pId].cards) {
+            let card = this.gameObj.cards[cardId];
+            deck.removeFromDeck(card, tPlayerId)
+            card.clickedBy = tPlayerId
+            card.ownedBy = tPlayerId
+            card.x = ((cardIndex % 6) * 81) + 20
+            card.y = (Math.floor(cardIndex / 6) * 124) + 50
+            cardIndex++
+            this.addToChangedCardsBuffer(cardId)
+          }
+        }
+        this.broadcast()
+        //console.log(playerMap)
+        // for (let clientIS of this.clients)
+        // {
+        //   for (let pId in playerMap) {
+        //     if (clientIS.playerId == playerMap[pId].id)
+        //     {
+        //       clientIS.sendDealtCards(playerMap[pId].cards)
+        //     }
+        //   }
+          
+        // }
+      }
       else if (json.type == "rollDeck")
       {
         let deck = this.gameObj.decks[json.deckId];
@@ -625,6 +708,36 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
         }
         this.broadcastReset();
         this.broadcast();
+      }
+      else if (json.type == "shuffleSeating")
+      {
+        //console.log("unshuffled list:")
+        //console.log(json.currentSeating)
+        let currentIndex = json.currentSeating.length,  randomIndex;
+
+        // While there remain elements to shuffle...
+        while (currentIndex != 0) {
+
+          // Pick a remaining element...
+          randomIndex = Math.floor(Math.random() * currentIndex);
+          currentIndex--;
+
+          // And swap it with the current element.
+          [json.currentSeating[currentIndex], json.currentSeating[randomIndex]] = [
+            json.currentSeating[randomIndex], json.currentSeating[currentIndex]];
+        }
+        //console.log("shuffled list:")
+        //console.log(json.currentSeating)
+        if (this.gameObj.hasOwnProperty("projectionBoxes")) {
+          this.gameObj.projectionBoxes = []
+          for (let p = 0; p < json.currentSeating.length; p++) {
+            let y = Number((json.currentSeating[p].playerbox.top).replace("px", ""))
+            let x = Number((json.currentSeating[p].playerbox.left).replace("px", ""))
+            this.gameObj.projectionBoxes.push({y: y, x: x})
+          }
+        }
+        this.broadcastNewSeating(json.currentSeating)
+        //this.broadcast();
       }
       else if (json.type == "resetWebcam")
       {
@@ -967,6 +1080,22 @@ WS_distributor.prototype.broadcastReset = function ()
   var sendData = {
     type: "reset"
   }
+  var strToSend = JSON.stringify(sendData);
+  var binaryString = this.constructMessage(strToSend);
+  this.wss.clients.forEach(function each(client) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(binaryString);
+    }
+  });
+}
+
+WS_distributor.prototype.broadcastNewSeating = function (newSeating)
+{
+  var sendData = {
+    type: "newSeating",
+    newSeating: newSeating
+  }
+  //console.log(sendData)
   var strToSend = JSON.stringify(sendData);
   var binaryString = this.constructMessage(strToSend);
   this.wss.clients.forEach(function each(client) {

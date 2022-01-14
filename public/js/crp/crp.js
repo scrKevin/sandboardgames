@@ -7,6 +7,9 @@ var maxPlayers = 6;
 
 var maxSpectators = 20;
 
+//////
+var clientController = null;
+
 function toggleVisible(selector, shouldBeVisible)
 {
   var displayValue = shouldBeVisible ? "block":"none"
@@ -42,6 +45,35 @@ $(document).on("gameObj", function(e, gameObj, myPlayerId, scale){
     toggleVisible("#webcambox" + index, shouldBeVisible);
   });
 
+});
+
+$(document).on("clientControllerReady", function(e, newClientController){
+  clientController = newClientController;
+});
+
+$(document).on("shuffleSeating", function(e) {
+  var pos = []
+  for (let p = 0; p < maxPlayers; p++) {
+    var newPos = {}
+    newPos.webcam = {}
+    newPos.webcam.left = $("#webcam" + p).css("left")
+    newPos.webcam.top = $("#webcam" + p).css("top")
+    newPos.playerbox = {}
+    newPos.playerbox.left = $("#scaledProjectionBox" + p).css("left")
+    newPos.playerbox.top = $("#scaledProjectionBox" + p).css("top")
+    pos.push(newPos)
+  }
+  clientController.shuffleSeating(pos)
+})
+
+$(document).on("newSeating", function(e, newSeating){
+  console.log(newSeating)
+  for (let p = 0; p < maxPlayers; p++) {
+    $("#webcam" + p).css("left", newSeating[p].webcam.left)
+    $("#webcam" + p).css("top", newSeating[p].webcam.top)
+    $("#scaledProjectionBox" + p).css("left", newSeating[p].playerbox.left)
+    $("#scaledProjectionBox" + p).css("top", newSeating[p].playerbox.top)
+  }
 });
 
 $(document).on("addWebcam", function(e, playerId, mirrored, muted){

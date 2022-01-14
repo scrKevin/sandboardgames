@@ -378,6 +378,20 @@ Client.prototype.sendLatency = function()
   }
 }
 
+Client.prototype.sendDealtCards = function(cards)
+{
+  var sendData = {
+    type: "dealtCards",
+    cards: cards
+  }
+  var strToSend = JSON.stringify(sendData);
+
+  var binaryString = this.constructMessage(strToSend); //pako.deflate(strToSend, { to: 'string' });
+  if (this.ws.readyState === WebSocket.OPEN) {
+    this.ws.send(binaryString);
+  }
+}
+
 Client.prototype.sendBinaryString = function(binaryString)
 {
   if (this.ws.readyState === WebSocket.OPEN) {
