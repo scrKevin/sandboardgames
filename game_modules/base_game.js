@@ -48,8 +48,8 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
 
     var player = new Player();
     var id = player.setId(this.playerNumbers);
-    // var turnUsername =  crypto.randomBytes(20).toString('hex');
-    // var turnPass = crypto.randomBytes(20).toString('hex');
+    var turnUsername =  crypto.randomBytes(20).toString('hex');
+    var turnPass = crypto.randomBytes(20).toString('hex');
     // this.turnServer.addUser(turnUsername, turnPass);
     // console.log("added turnCredentials for player " + id + ": u:" + turnUsername + " p:" + turnPass);
     var client = new Client(id, ws, this, this.useWebcams);
