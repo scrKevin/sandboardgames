@@ -35,25 +35,47 @@ app.set("view engine", "ejs");
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: true }))
 
-const httpsOptions = {
-    key: require('fs').readFileSync('./security/privkey.pem'),
-    cert: require('fs').readFileSync('./security/fullchain.pem')
+var privKeyPath = './security/privkey.pem'
+var fullchainPath = './security/fullchain.pem'
+
+var certificatesExist = false;
+try {
+  if (fs.existsSync(privKeyPath) && fs.existsSync(fullchainPath)) {
+    certificatesExist = true
+  }
+} catch(err) {
+  console.error(err)
 }
 
-var httpsServer = https.createServer(httpsOptions, app);
+if (certificatesExist) {
+
+  const httpsOptions = {
+      key: fs.readFileSync('./security/privkey.pem'),
+      cert: fs.readFileSync('./security/fullchain.pem')
+  }
+
+  var httpsServer = https.createServer(httpsOptions, app);
+
+}
 if (process.env.NODE_ENV === 'development') {
   var httpServer = http.createServer(app);
 }
 else if (process.env.NODE_ENV === 'production') {
-  var redirectApp = express ()
-  var httpServer = http.createServer(redirectApp);
+  if (certificatesExist) {
+    var redirectApp = express ()
+    var httpServer = http.createServer(redirectApp);
 
-  redirectApp.use(function requireHTTPS(req, res, next) {
-    if (!req.secure) {
-      return res.redirect('https://' + req.headers.host + req.url);
-    }
-    next();
-  })
+    redirectApp.use(function requireHTTPS(req, res, next) {
+      if (!req.secure) {
+        return res.redirect('https://' + req.headers.host + req.url);
+      }
+      next();
+    })
+  }
+  else
+  {
+    var httpServer = http.createServer(app);
+  }
 }
 
 var gameRooms = [];
@@ -92,11 +114,19 @@ function onUpgrade(request, socket, head)
   }
 }
 
-httpsServer.on('upgrade', function upgrade(request, socket, head) {
-  onUpgrade(request, socket, head);
-});
+if (certificatesExist) {
 
-if (process.env.NODE_ENV === 'development') {
+  httpsServer.on('upgrade', function upgrade(request, socket, head) {
+    onUpgrade(request, socket, head);
+  });
+
+} else {
+  httpServer.on('upgrade', function upgrade(request, socket, head) {
+    onUpgrade(request, socket, head);
+  });
+}
+
+if (process.env.NODE_ENV === 'development' && certificatesExist) {
   httpServer.on('upgrade', function upgrade(request, socket, head) {
     onUpgrade(request, socket, head);
   });
@@ -155,10 +185,11 @@ app.post("/api/join", (req, res) => {
     }
 });
 
-
-httpsServer.listen(httpsPort, () => {
-  console.log('httpsServer running at ' + httpsPort)
-});
+if (certificatesExist) {
+  httpsServer.listen(httpsPort, () => {
+    console.log('httpsServer running at ' + httpsPort)
+  });
+}
 
 httpServer.listen(httpPort, () => {
   console.log('httpServer running at ' + httpPort)
