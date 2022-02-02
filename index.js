@@ -1,11 +1,11 @@
 require('./game_modules/consoleTimestamp')();
 
-var Turn = require('node-turn');
-var turnServer = new Turn({
-  // set options
-  authMech: 'long-term'
-});
-turnServer.start();
+// var Turn = require('node-turn');
+// var turnServer = new Turn({
+//   // set options
+//   authMech: 'long-term'
+// });
+// turnServer.start();
 
 const express = require('express');
 const path = require("path");
