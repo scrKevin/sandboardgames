@@ -81,7 +81,7 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
       else if (json.type == "requestId")
       {
         console.log(id + " is requesting id");
-        client.setGameObj(this.gameObj, {username: turnUsername, pass: turnPass});
+        client.setGameObj(this.gameObj, {username: "coturn", pass: "oursecret"});
         // this.broadcastNewPeer(id, ws);
       }
       else if (json.type == "initiated")
