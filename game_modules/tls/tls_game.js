@@ -9,7 +9,9 @@ let TlsSubject = require('./tls_subject').TlsSubject
 let TlsDrawing = require('./tls_drawing').TlsDrawing
 let TlsGuess = require('./tls_guess').TlsGuess
 
-
+var wordArray = {}
+wordArray["nl"] = require('../word_lists/word_getter').WordGetter("nl", ['pictionary_idioms', 'pictionary_easy', 'pictionary_medium', 'pictionary_movies', 'karakters', 'custom'])
+wordArray["en"] = require('../word_lists/word_getter').WordGetter("en", ['pictionary_idioms', 'pictionary_easy', 'pictionary_medium', 'pictionary_movies'])
 
 var Timer = function(callback, delay) {
   var timerId, start, remaining = delay;
@@ -239,7 +241,7 @@ function getPerfectGrid(nOfSubjects)
 
 TLS_Game.prototype.resetGame = function(game)
 {
-  var wordArray = {}
+  wordArray = {}
   wordArray["nl"] = require('../word_lists/word_getter').WordGetter("nl", ['pictionary_idioms', 'pictionary_easy', 'pictionary_medium', 'pictionary_movies', 'karakters', 'custom'])
   wordArray["en"] = require('../word_lists/word_getter').WordGetter("en", ['pictionary_idioms', 'pictionary_easy', 'pictionary_medium', 'pictionary_movies'])
 
