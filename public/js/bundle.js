@@ -5513,7 +5513,7 @@ module.exports = {MouseHandler: MouseHandler}
 let SimplePeer = require('simple-peer');
 let EventEmitter = require('events').EventEmitter;
 
-var icehost = window.location.hostname;
+var icehost = "turn." + window.location.hostname;
 console.log("icehost: " + icehost);
 var peerConfig = {};
 
