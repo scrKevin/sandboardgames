@@ -26,7 +26,7 @@ if (process.env.NODE_ENV === 'development') {
   httpPort = "8080";
 }
 else if (process.env.NODE_ENV === 'production') {
-  httpPort = "80";
+  httpPort = "8080";
 }
 
 console.log("PORTS: https: " + httpsPort + ", http: " + httpPort);
