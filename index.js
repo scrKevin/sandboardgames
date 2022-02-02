@@ -86,7 +86,7 @@ if(process.env.NODE_ENV === 'development')
 {
   // create a test gameroom on startup, this speeds up development..
   console.log("test gameRoom created at /0/");
-  newGameRoom = new GameRoom("test", " ", availableGames, turnServer, true);
+  newGameRoom = new GameRoom("test", " ", availableGames, true);
   newGameRoom.hash = "0";
   gameRooms.push(newGameRoom);
 }
@@ -158,7 +158,7 @@ app.post("/api/create", (req, res) => {
   var useWebcams = req.body.hasOwnProperty("useWebcams")
   if (index == -1)
   {
-    newGameRoom = new GameRoom(req.body.nameCreate, req.body.passCreate, availableGames, turnServer, useWebcams);
+    newGameRoom = new GameRoom(req.body.nameCreate, req.body.passCreate, availableGames, useWebcams);
     gameRooms.push(newGameRoom);
     console.log("Created GameRoom '" + req.body.nameCreate + "'");
     res.redirect("/" + newGameRoom.hash + "/lobby");

@@ -1,11 +1,11 @@
 const crypto = require('crypto');
 const WebSocket = require('ws');
 
-function GameRoom(name, pass, availableGames, turnServer, useWebcams)
+function GameRoom(name, pass, availableGames, useWebcams)
 {
   this.useWebcams = useWebcams;
   this.name = name;
-  this.turnServer = turnServer;
+  this.turnServer = null;
   this.hash = crypto.createHash('md5').update(name + pass).digest("hex")
   this.availableGames = availableGames;
 

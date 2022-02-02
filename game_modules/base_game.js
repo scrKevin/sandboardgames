@@ -48,10 +48,10 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
 
     var player = new Player();
     var id = player.setId(this.playerNumbers);
-    var turnUsername =  crypto.randomBytes(20).toString('hex');
-    var turnPass = crypto.randomBytes(20).toString('hex');
-    this.turnServer.addUser(turnUsername, turnPass);
-    console.log("added turnCredentials for player " + id + ": u:" + turnUsername + " p:" + turnPass);
+    // var turnUsername =  crypto.randomBytes(20).toString('hex');
+    // var turnPass = crypto.randomBytes(20).toString('hex');
+    // this.turnServer.addUser(turnUsername, turnPass);
+    // console.log("added turnCredentials for player " + id + ": u:" + turnUsername + " p:" + turnPass);
     var client = new Client(id, ws, this, this.useWebcams);
 
     this.clients.push(client);
@@ -833,8 +833,8 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
     })
     
     ws.on('close', () => {
-      this.turnServer.removeUser(this.turnServer);
-      console.log("removed turnCredentials for player " + id);
+      // this.turnServer.removeUser(this.turnServer);
+      // console.log("removed turnCredentials for player " + id);
       client.clearTimeouts();
       client.initiated = false;
       for (let clientI of this.clients)
