@@ -145,6 +145,7 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId, peerType, optionalRe
 
   peerArray[playerId].on('stream', stream => {
     console.log("got stream for player " + playerId)
+    console.log(stream)
     ////// Delete this V
     // if (this.myPlayerId == 1 && playerId == 2)
     // {
@@ -262,6 +263,7 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp, peerType, op
 
     peerArray[fromPlayerId].on('stream', (stream) => {
       console.log("got stream for player " + fromPlayerId);
+      console.log(stream)
        ////// Delete this V
       // if (this.myPlayerId == 2 && fromPlayerId == 1)
       // {
