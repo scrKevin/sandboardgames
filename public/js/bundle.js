@@ -5817,7 +5817,7 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp, peerType, op
       console.log(data);
       if (data.transceiverRequest) {
         console.log("TransceiverRequest...")
-        
+        sendWebcamStream(peerArray[fromPlayerId])
       }
       var sendData = {
         type: "acceptPeer",
