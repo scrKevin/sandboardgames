@@ -294,6 +294,10 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp, peerType, op
     peerArray[fromPlayerId].on('signal', (data) => {
       console.log("got peer signal (" + peerType + ") from player " + fromPlayerId + ", stp:")
       console.log(data);
+      if (data.transceiverRequest) {
+        console.log("TransceiverRequest...")
+        return
+      }
       var sendData = {
         type: "acceptPeer",
         fromPlayerId: fromPlayerId,
