@@ -342,6 +342,7 @@ function InitWebSocket()
     clientController.on("updateGame", (gameObj, changedCardsBuffer, newDrawCoords, init) => {
       if (!webcamReadySent && myStream !== null) {
         clientController.sendWebcamReady()
+        console.log("Sent webcamready in updateGame")
         webcamReadySent = true
       }
       myGameObj = gameObj;
@@ -1297,6 +1298,7 @@ function onload(initial) {
             clientController.setWebcamStream(myStream)
             if (!webcamReadySent) {
               clientController.sendWebcamReady()
+              console.log("Sent webcamready in navigator Mediadevices")
               webcamReadySent = true
             }
           }
