@@ -26,6 +26,14 @@ function WebcamHandler(wsHandler)//, myStream)
   EventEmitter.call(this);
 }
 
+function sendWebcamStream (toPeer) {
+  if (this.myStream !== false) {
+    toPeer.addStream(this.myStream)
+  } else {
+    console.log("Steam is still FALSE...")
+  }
+}
+
 WebcamHandler.prototype = Object.create(EventEmitter.prototype);
 
 WebcamHandler.prototype.setPlayerId = function(playerId)
@@ -297,7 +305,7 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp, peerType, op
       console.log(data);
       if (data.transceiverRequest) {
         console.log("TransceiverRequest...")
-        return
+        
       }
       var sendData = {
         type: "acceptPeer",
