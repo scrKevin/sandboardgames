@@ -38,6 +38,7 @@ WebcamHandler.prototype.setWebcamStream = function(stream) {
   
   for (let peerId in this.peers) {
     console.log("sending my webcam stream to player " + peerId)
+    console.log(this.peers[peerId])
     this.peers[peerId].addStream(this.myStream)
   }
 }
