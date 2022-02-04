@@ -44,12 +44,12 @@ WebcamHandler.prototype.setWebcamStream = function(stream) {
 
 WebcamHandler.prototype.turnCredentials = function(turnCredentials)
 {
-  peerConfig = {iceServers: [ {
-    urls: "turn:" + icehost + ":3478",
-    username: "coturn",
-    credential: "oursecret"
-  }]}
-  // peerConfig = {}
+  // peerConfig = {iceServers: [ {
+  //   urls: "turn:" + icehost + ":3478",
+  //   username: "coturn",
+  //   credential: "oursecret"
+  // }]}
+  peerConfig = {iceServers: []}
 }
 
 WebcamHandler.prototype.addCaptureStream = function(newCaptureStream){
