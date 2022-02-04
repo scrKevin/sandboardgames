@@ -27,6 +27,7 @@ function WebcamHandler(wsHandler)//, myStream)
 }
 
 function sendWebcamStream (toPeer) {
+  console.log(this.myStream)
   if (this.myStream !== false) {
     toPeer.addStream(this.myStream)
   } else {
