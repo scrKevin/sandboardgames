@@ -131,8 +131,8 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId, peerType, optionalRe
   peerArray[playerId] = new SimplePeer(peerOptions);
 
   peerArray[playerId].on('signal', (data) => {
-    console.log("initiator ready - peer for player " + playerId)
-    //console.log(data);
+    console.log("initiator ready - peer for player " + playerId + ", stp:")
+    console.log(data);
     var sendData = {
       type: "initiatorReady",
       playerId: playerId,
@@ -292,8 +292,8 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp, peerType, op
     });
 
     peerArray[fromPlayerId].on('signal', (data) => {
-      console.log("got peer signal (" + peerType + ") from player " + fromPlayerId)
-      //console.log(data);
+      console.log("got peer signal (" + peerType + ") from player " + fromPlayerId + ", stp:")
+      console.log(data);
       var sendData = {
         type: "acceptPeer",
         fromPlayerId: fromPlayerId,
@@ -366,7 +366,8 @@ WebcamHandler.prototype.peerAccepted = function(fromPlayerId, stp, peerType, opt
   {
     peerArray = this.watchPartyPeers;
   }
-  console.log("peer accepted (" + peerType + ") from player " + fromPlayerId);
+  console.log("peer accepted (" + peerType + ") from player " + fromPlayerId, ", signalling: ");
+  console.log(stp)
   peerArray[fromPlayerId].signal(stp);
 }
 
