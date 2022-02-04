@@ -198,6 +198,14 @@ WsHandler.prototype.requestPlayerId = function()
   this.sendToWs(sendData);
 }
 
+WsHandler.prototype.sendWebcamReady = function()
+{
+  var sendData = {
+    type: "webcamReady",
+  }
+  this.sendToWs(sendData);
+}
+
 WsHandler.prototype.shuffleDeck = function(deckId, xStackMinimum)
 {
   var sendData = {

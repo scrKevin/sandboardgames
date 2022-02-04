@@ -141,7 +141,7 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId, peerType, optionalRe
   peerArray[playerId].on('signal', (data) => {
     console.log("initiator ready - peer for player " + playerId + ", stp:")
     console.log(data);
-    if (!data.transceiverRequest && !data.renegotiate) {
+    // if (!data.transceiverRequest && !data.renegotiate) {
       var sendData = {
         type: "initiatorReady",
         playerId: playerId,
@@ -150,7 +150,7 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId, peerType, optionalRe
       }
       if (peerType == 'relay') sendData.relayFor = optionalRelayFor
       this.wsHandler.sendToWs(sendData);
-    }
+    // }
   });
 
   peerArray[playerId].on('stream', stream => {
@@ -306,11 +306,11 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp, peerType, op
     peerArray[fromPlayerId].on('signal', (data) => {
       console.log("got peer signal (" + peerType + ") from player " + fromPlayerId + ", stp:")
       console.log(data);
-      if (data.transceiverRequest) {
-        console.log("TransceiverRequest...")
-        //this.sendWebcamStream(peerArray[fromPlayerId])
-      }
-      if (!data.transceiverRequest && !data.renegotiate) {
+      // if (data.transceiverRequest) {
+      //   console.log("TransceiverRequest...")
+      //   //this.sendWebcamStream(peerArray[fromPlayerId])
+      // }
+      //if (!data.transceiverRequest && !data.renegotiate) {
         var sendData = {
           type: "acceptPeer",
           fromPlayerId: fromPlayerId,
@@ -319,7 +319,7 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp, peerType, op
         }
         if (peerType == 'relay') sendData.relayFor = optionalRelayFor
         this.wsHandler.sendToWs(sendData);
-      }
+      //}
     });
 
     peerArray[fromPlayerId].on('error', err => {

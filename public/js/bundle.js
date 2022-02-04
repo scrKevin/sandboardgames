@@ -2973,6 +2973,8 @@ var myLatency = 5000;
 var myPlayerId = -1;
 var myRotation = 0;
 
+var webcamReadySent = false;
+
 var state = {
   color: "#FFFFFF"
 }
@@ -3270,6 +3272,7 @@ function InitWebSocket()
       {
         if (myStream !== null) {
           addWebcam(myStream, myPlayerId, true, true);
+          
         }
         gameInitialized = true;
       }
@@ -3285,6 +3288,10 @@ function InitWebSocket()
     });
 
     clientController.on("updateGame", (gameObj, changedCardsBuffer, newDrawCoords, init) => {
+      if (!webcamReadySent && myStream !== null) {
+        clientController.sendWebcamReady()
+        webcamReadySent = true
+      }
       myGameObj = gameObj;
       if ($('#resetWebcamModal').hasClass('in')) {
         console.log("updating webcam matrix")
@@ -4236,6 +4243,10 @@ function onload(initial) {
           if (myPlayerId != -1) {
             addWebcam(myStream, myPlayerId, true, true);
             clientController.setWebcamStream(myStream)
+            if (!webcamReadySent) {
+              clientController.sendWebcamReady()
+              webcamReadySent = true
+            }
           }
         })
         .catch(function(err) {
@@ -4246,7 +4257,7 @@ function onload(initial) {
             });
         });
     } else {
-      $("#webcamError").html("You do not have any mediadevices.")
+      $("#webcamError").html("You do not have any mediadevices / webcams.")
           $('#webcamErrorModal').modal({
             show: true,
             });
@@ -5238,6 +5249,10 @@ ClientController.prototype.resetWebcam = function()
   } 
 }
 
+ClientController.prototype.sendWebcamReady = function() {
+  this.init && this.wsHandler.sendWebcamReady()
+}
+
 ClientController.prototype.setWebcamStream = function(stream) {
   this.init && this.webcamHandler.setWebcamStream(stream)
 }
@@ -5653,7 +5668,7 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId, peerType, optionalRe
   peerArray[playerId].on('signal', (data) => {
     console.log("initiator ready - peer for player " + playerId + ", stp:")
     console.log(data);
-    if (!data.transceiverRequest && !data.renegotiate) {
+    // if (!data.transceiverRequest && !data.renegotiate) {
       var sendData = {
         type: "initiatorReady",
         playerId: playerId,
@@ -5662,7 +5677,7 @@ WebcamHandler.prototype.initWebcamPeer = function(playerId, peerType, optionalRe
       }
       if (peerType == 'relay') sendData.relayFor = optionalRelayFor
       this.wsHandler.sendToWs(sendData);
-    }
+    // }
   });
 
   peerArray[playerId].on('stream', stream => {
@@ -5818,11 +5833,11 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp, peerType, op
     peerArray[fromPlayerId].on('signal', (data) => {
       console.log("got peer signal (" + peerType + ") from player " + fromPlayerId + ", stp:")
       console.log(data);
-      if (data.transceiverRequest) {
-        console.log("TransceiverRequest...")
-        //this.sendWebcamStream(peerArray[fromPlayerId])
-      }
-      if (!data.transceiverRequest && !data.renegotiate) {
+      // if (data.transceiverRequest) {
+      //   console.log("TransceiverRequest...")
+      //   //this.sendWebcamStream(peerArray[fromPlayerId])
+      // }
+      //if (!data.transceiverRequest && !data.renegotiate) {
         var sendData = {
           type: "acceptPeer",
           fromPlayerId: fromPlayerId,
@@ -5831,7 +5846,7 @@ WebcamHandler.prototype.peerConnected = function(fromPlayerId, stp, peerType, op
         }
         if (peerType == 'relay') sendData.relayFor = optionalRelayFor
         this.wsHandler.sendToWs(sendData);
-      }
+      //}
     });
 
     peerArray[fromPlayerId].on('error', err => {
@@ -6181,6 +6196,14 @@ WsHandler.prototype.requestPlayerId = function()
   console.log("requesting Player ID.")
   var sendData = {
     type: "requestId"
+  }
+  this.sendToWs(sendData);
+}
+
+WsHandler.prototype.sendWebcamReady = function()
+{
+  var sendData = {
+    type: "webcamReady",
   }
   this.sendToWs(sendData);
 }

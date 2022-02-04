@@ -202,6 +202,10 @@ ClientController.prototype.resetWebcam = function()
   } 
 }
 
+ClientController.prototype.sendWebcamReady = function() {
+  this.init && this.wsHandler.sendWebcamReady()
+}
+
 ClientController.prototype.setWebcamStream = function(stream) {
   this.init && this.webcamHandler.setWebcamStream(stream)
 }

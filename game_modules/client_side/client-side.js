@@ -25,6 +25,8 @@ var myLatency = 5000;
 var myPlayerId = -1;
 var myRotation = 0;
 
+var webcamReadySent = false;
+
 var state = {
   color: "#FFFFFF"
 }
@@ -322,6 +324,7 @@ function InitWebSocket()
       {
         if (myStream !== null) {
           addWebcam(myStream, myPlayerId, true, true);
+          
         }
         gameInitialized = true;
       }
@@ -337,6 +340,10 @@ function InitWebSocket()
     });
 
     clientController.on("updateGame", (gameObj, changedCardsBuffer, newDrawCoords, init) => {
+      if (!webcamReadySent && myStream !== null) {
+        clientController.sendWebcamReady()
+        webcamReadySent = true
+      }
       myGameObj = gameObj;
       if ($('#resetWebcamModal').hasClass('in')) {
         console.log("updating webcam matrix")
@@ -1288,6 +1295,10 @@ function onload(initial) {
           if (myPlayerId != -1) {
             addWebcam(myStream, myPlayerId, true, true);
             clientController.setWebcamStream(myStream)
+            if (!webcamReadySent) {
+              clientController.sendWebcamReady()
+              webcamReadySent = true
+            }
           }
         })
         .catch(function(err) {
@@ -1298,7 +1309,7 @@ function onload(initial) {
             });
         });
     } else {
-      $("#webcamError").html("You do not have any mediadevices.")
+      $("#webcamError").html("You do not have any mediadevices / webcams.")
           $('#webcamErrorModal').modal({
             show: true,
             });

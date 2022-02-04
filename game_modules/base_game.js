@@ -89,6 +89,10 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
         client.initiated = true;
         client.reportPatched();
         console.log("player " + id + " initiated.")
+        //this.broadcastNewPeer(client, id, ws);
+      }
+      else if (json.type == "webcamReady")
+      {
         this.broadcastNewPeer(client, id, ws);
       }
       else if(json.type == "varText")
