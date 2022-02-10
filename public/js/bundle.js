@@ -5530,7 +5530,7 @@ module.exports = {MouseHandler: MouseHandler}
 let SimplePeer = require('simple-peer');
 let EventEmitter = require('events').EventEmitter;
 
-var icehost = "turn." + window.location.hostname;
+var icehost = window.location.hostname;
 console.log("icehost: " + icehost);
 var peerConfig = {};
 
@@ -5585,8 +5585,8 @@ WebcamHandler.prototype.turnCredentials = function(turnCredentials)
 {
   peerConfig = {iceServers: [ {
     urls: "turn:" + icehost + ":3478",
-    username: "coturn",
-    credential: "oursecret"
+    username: turnCredentials.username,
+    credential: turnCredentials.pass
   }]}
   // peerConfig = {iceServers: []}
 }

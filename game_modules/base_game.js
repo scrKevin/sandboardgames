@@ -50,8 +50,8 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
     var id = player.setId(this.playerNumbers);
     var turnUsername =  crypto.randomBytes(20).toString('hex');
     var turnPass = crypto.randomBytes(20).toString('hex');
-    // this.turnServer.addUser(turnUsername, turnPass);
-    // console.log("added turnCredentials for player " + id + ": u:" + turnUsername + " p:" + turnPass);
+    this.turnServer.addUser(turnUsername, turnPass);
+    console.log("added turnCredentials for player " + id + ": u:" + turnUsername + " p:" + turnPass);
     var client = new Client(id, ws, this, this.useWebcams);
 
     this.clients.push(client);
@@ -81,7 +81,7 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
       else if (json.type == "requestId")
       {
         console.log(id + " is requesting id");
-        client.setGameObj(this.gameObj, {username: "coturn", pass: "oursecret"});
+        client.setGameObj(this.gameObj, {username: turnPass, pass: turnPass});
         // this.broadcastNewPeer(id, ws);
       }
       else if (json.type == "initiated")
@@ -837,8 +837,8 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
     })
     
     ws.on('close', () => {
-      // this.turnServer.removeUser(this.turnServer);
-      // console.log("removed turnCredentials for player " + id);
+      this.turnServer.removeUser(this.turnServer);
+      console.log("removed turnCredentials for player " + id);
       client.clearTimeouts();
       client.initiated = false;
       for (let clientI of this.clients)
