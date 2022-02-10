@@ -5,6 +5,8 @@ var turnServer = new Turn({
   // set options
   authMech: 'long-term',
   realm: 'sandboardgames',
+  minPort: 49152,
+  maxPort: 49552,
   debugLevel: "INFO",
   debug: function(dl, message) {
     console.log("TS (" + dl + "): " + message)
