@@ -9,5 +9,4 @@ services:
     ports: 
       - '8080:8080'
       - '3478:3478/udp'
-      - '49152-65535:49152-65535/udp'
     restart: unless-stopped
