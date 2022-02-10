@@ -8,6 +8,5 @@ services:
       - /usr/app/node_modules
     ports: 
       - '8080:8080'
-      - '3478:3478'
-      - '49152-65535:49152-65535'
+      - '3478:3478/udp'
     restart: unless-stopped
