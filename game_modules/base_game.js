@@ -81,7 +81,7 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
       else if (json.type == "requestId")
       {
         console.log(id + " is requesting id");
-        client.setGameObj(this.gameObj, {username: turnPass, pass: turnPass});
+        client.setGameObj(this.gameObj, {username: turnUsername, pass: turnPass});
         // this.broadcastNewPeer(id, ws);
       }
       else if (json.type == "initiated")
@@ -837,7 +837,7 @@ function WS_distributor(wss, turnServer, resetGameFunction, customMessageFunctio
     })
     
     ws.on('close', () => {
-      this.turnServer.removeUser(this.turnServer);
+      this.turnServer.removeUser(turnUsername);
       console.log("removed turnCredentials for player " + id);
       client.clearTimeouts();
       client.initiated = false;

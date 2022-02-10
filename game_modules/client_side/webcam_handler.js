@@ -54,11 +54,19 @@ WebcamHandler.prototype.sendWebcamStream = function(toPeer) {
 
 WebcamHandler.prototype.turnCredentials = function(turnCredentials)
 {
-  peerConfig = {iceServers: [ {
-    urls: "turn:" + icehost + ":3478",
-    username: turnCredentials.username,
-    credential: turnCredentials.pass
-  }]}
+  console.log(turnCredentials)
+  peerConfig = {iceServers: [
+    // {
+    //   urls:"stun:" + icehost + ":3478"
+    // },
+    {
+      urls: "turn:" + icehost + ":3478",
+      username: turnCredentials.username,
+      credential: turnCredentials.pass
+    }
+  ]}
+  console.log("peerconfig:")
+  console.log(peerConfig)
   // peerConfig = {iceServers: []}
 }
 
