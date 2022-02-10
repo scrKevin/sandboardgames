@@ -4,7 +4,11 @@ var Turn = require('node-turn');
 var turnServer = new Turn({
   // set options
   authMech: 'long-term',
-  realm: 'sandboardgames'
+  realm: 'sandboardgames',
+  debugLevel: "INFO",
+  debug: function(dl, message) {
+    console.log("TS (" + dl + "): " + message)
+  }
 });
 turnServer.start();
 
