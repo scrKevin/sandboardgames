@@ -5585,9 +5585,9 @@ WebcamHandler.prototype.turnCredentials = function(turnCredentials)
 {
   console.log(turnCredentials)
   peerConfig = {iceServers: [
-    // {
-    //   urls:"stun:" + icehost + ":3478"
-    // },
+    {
+      urls:"stun:" + icehost + ":3478"
+    },
     {
       urls: "turn:" + icehost + ":3478",
       username: turnCredentials.username,
