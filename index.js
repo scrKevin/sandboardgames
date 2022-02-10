@@ -7,8 +7,8 @@ var turnServer = new Turn({
   // set options
   authMech: 'long-term',
   realm: 'sandboardgames',
-  minPort: 49152,
-  maxPort: 49252,
+  // minPort: 49152,
+  // maxPort: 49252,
   externalIps: String(process.env.EXTERNAL_IP),
   debugLevel: "INFO",
   debug: function(dl, message) {

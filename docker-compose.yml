@@ -6,10 +6,7 @@ services:
     volumes:
       - .:/usr/app/
       - /usr/app/node_modules
-    ports: 
-      - '8080:8080'
-      - '3478:3478/udp'
-      - '49152-49252:49152-49252'
+    network_mode: "host"
     env_file:
       - .env
     restart: unless-stopped
