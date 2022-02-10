@@ -1,5 +1,7 @@
 require('./game_modules/consoleTimestamp')();
 
+
+
 var Turn = require('node-turn');
 var turnServer = new Turn({
   // set options
@@ -7,6 +9,7 @@ var turnServer = new Turn({
   realm: 'sandboardgames',
   minPort: 49152,
   maxPort: 49252,
+  externalIps: String(process.env.EXTERNAL_IP),
   debugLevel: "INFO",
   debug: function(dl, message) {
     console.log("TS (" + dl + "): " + message)
